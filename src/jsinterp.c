@@ -6727,7 +6727,7 @@ interrupt:
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED117:
+//          L_JSOP_UNUSED117:
 
 #else /* !JS_THREADED_INTERP */
           default:
