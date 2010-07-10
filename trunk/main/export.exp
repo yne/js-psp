@@ -1,12 +1,31 @@
-PSP_BEGIN_EXPORTS
-
-PSP_EXPORT_START(syslib, 0, 0x8000)
-PSP_EXPORT_FUNC(module_start)
+PSP_BEGIN_EXPORTS 
+ 
+PSP_EXPORT_START(syslib, 0, 0x8000) 
+PSP_EXPORT_FUNC(module_start) 
 PSP_EXPORT_VAR(module_info)
-PSP_EXPORT_END
-
+PSP_EXPORT_END 
+ 
 PSP_EXPORT_START(JSE, 0, 0x0001)
-PSP_EXPORT_FUNC_HASH(js_test)
+PSP_EXPORT_FUNC(js_test)
+PSP_EXPORT_FUNC(js_addFunc)
+PSP_EXPORT_FUNC(js_addObj)
+PSP_EXPORT_FUNC(js_addVar)
+PSP_EXPORT_FUNC(js_getContext)
+PSP_EXPORT_FUNC(js_getGlobalObject)
+PSP_EXPORT_FUNC(js_convertArguments)
+PSP_EXPORT_FUNC(js_getElement)
+PSP_EXPORT_FUNC(js_getProperty)
+PSP_EXPORT_FUNC(js_setProperty)
+PSP_EXPORT_FUNC(js_getStringBytes)
+PSP_EXPORT_FUNC(js_valueToNumber)
+PSP_EXPORT_FUNC(js_newString)
+PSP_EXPORT_FUNC(js_convertValue)
+PSP_EXPORT_FUNC(js_valueToObject)
+PSP_EXPORT_FUNC(js_valueToString)
+PSP_EXPORT_FUNC(js_valueToECMAUint32)
+PSP_EXPORT_FUNC(js_valueToUint16)
+PSP_EXPORT_FUNC(js_strdup)
+PSP_EXPORT_FUNC(js_malloc)
 PSP_EXPORT_END
-
-PSP_END_EXPORTS
+ 
+PSP_END_EXPORTS 
