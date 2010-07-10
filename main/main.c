@@ -1,8 +1,10 @@
 #include <pspkernel.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "src/jsapi.h"
-#include "src/jsarray.h"
+
+#define MAIN 1
+
+#include "shared.h"
 
 #include "functions.h"
 
@@ -10,14 +12,8 @@ PSP_MODULE_INFO("JSE", 0, 1, 1);
 //PSP_HEAP_SIZE_KB(-1);//left 253kB free (not enought)
 PSP_HEAP_SIZE_KB(-1024);//left 1.25MB free
 
-JSContext *cx;
-JSObject *gobj;
-
 /* The class of the global object. */
 
-int js_test(int in){
-	return in*3;
-}
 static JSClass global_class = {
 	"global", JSCLASS_GLOBAL_FLAGS,
 	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,

@@ -11,6 +11,8 @@ $(shell psp-build-exports -s ${PRX_EXPORTS})
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
 
+INCDIR = ../../
+
 BUILD_PRX = 1
 
 PSPSDK=$(shell psp-config --pspsdk-path)

@@ -13,6 +13,7 @@ USE_PSPSDK_LIBS = 1
 #export don't work with KERNEL lib ...
 #USE_KERNEL_LIBC = 1
 #USE_KERNEL_LIBS = 1
+INCDIR = ../../
 
 BUILD_PRX = 1
 

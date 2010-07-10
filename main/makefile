@@ -1,5 +1,5 @@
 TARGET = ../main
-OBJS = main.o functions.o ../prx/user/modU.o ../prx/kernel/modK.o
+OBJS = main.o functions.o shared.o ../prx/user/modU.o ../prx/kernel/modK.o
 
 CFLAGS = -G0 -Wall -O2
 ASFLAGS = $(CFLAGS)
