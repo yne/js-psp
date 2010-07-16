@@ -25,11 +25,13 @@ JSBool js_include(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 	int ret = 0;
 	int mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
 	if(mod != uid){
-		if(mod == 0x8002012E)printf("<%s> not found!\n",path);
-		if(mod == 0x8002013B)printf("<%s> already loaded/started\n",path);
-		if(mod == 0x80020190)printf("can't start prx : try to compile with PSPSDKlibC\n");
-		if(mod == 0x8002013C)printf("can't start prx : User compiled as kernel\n");
-		printf("Error 0x%08X when starting (ret:%X)\n", mod, ret);
+		printf("Error 0x%08X ", mod);
+		if(mod == 0x8002012E)printf(": <%s> not found!",path);
+		if(mod == 0x8002013B)printf(": <%s> already loaded/started",path);
+		if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
+		if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
+		printf("\n");
+		return JS_FALSE;
 	}
 	JSObject* target = js_addObj(" ");//you cant find me :3
 	if(strstr(path,"_driver")){
