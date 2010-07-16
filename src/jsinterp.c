@@ -2496,7 +2496,9 @@ js_Interpret(JSContext *cx)
     JSString *str, *str2;
     jsint i, j;
     jsdouble d, d2;
+#ifdef DEBUG
     JSClass *clasp;
+#endif
     JSFunction *fun;
     JSType type;
 #if !JS_THREADED_INTERP && defined DEBUG
@@ -2665,6 +2667,7 @@ js_Interpret(JSContext *cx)
         regs.sp = fp->spbase;
         fp->regs = &regs;
     } else {
+		#if JS_HAS_GENERATORS
         JSGenerator *gen;
 
         JS_ASSERT(fp->flags & JSFRAME_GENERATOR);
@@ -2691,6 +2694,7 @@ js_Interpret(JSContext *cx)
 #endif
             goto error;
         }
+				#endif
     }
 
 #if JS_THREADED_INTERP
@@ -6971,8 +6975,10 @@ interrupt:
         fp->regs = NULL;
         js_FreeRawStack(cx, mark);
     } else {
+
         JS_ASSERT(fp->flags & JSFRAME_GENERATOR);
         if (fp->flags & JSFRAME_YIELDING) {
+				#if JS_HAS_GENERATORS
             JSGenerator *gen;
 
             gen = FRAME_TO_GENERATOR(fp);
@@ -6980,6 +6986,7 @@ interrupt:
             gen->frame.regs = &gen->savedRegs;
             JS_PROPERTY_CACHE(cx).disabled -= js_CountWithBlocks(cx, fp);
             JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
+				#endif
         } else {
             fp->regs = NULL;
             fp->spbase = NULL;

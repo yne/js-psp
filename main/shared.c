@@ -18,6 +18,7 @@ JSObject* js_getGlobalObject(void){
 }
 /* exported functions */
 int js_test(int in){
+	printf("test called !!\n\n");
 	return in*3;
 }
 typedef struct JSPropertiesSpec{
@@ -33,6 +34,7 @@ int js_addVar(JSPropertiesSpec* ps, JSObject* obj){
 	return JS_TRUE;
 }
 int js_addFunc(JSFunctionSpec* functions, JSObject * obj){
+	printf("js_addFunc %08X %i\n",(int)functions,(int)obj);
 	if(!obj)obj=gobj;
 	return !JS_DefineFunctions(cx, obj, functions);
 }

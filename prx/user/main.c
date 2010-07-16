@@ -26,11 +26,14 @@ static JSPropertiesSpec var[] = {
 	{0}
 };
 JSPropertiesSpec* modU_GetVar(void){
+	printf("modU_GetVar called\n");
 	return var;
 }
 int module_start(SceSize args, char* argp[]){
+while(1){
 	printf("[modU] started !\n");
 	printf("[modU] call js_test : %08X\n",js_test(5));//(5*3=15=F)
+	}
 	return 0;//lib not started if != 0
 }
 int module_stop(SceSize args, void *argp){

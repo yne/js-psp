@@ -12,8 +12,6 @@ PSP_MODULE_INFO("JSE", 0, 1, 1);
 //PSP_HEAP_SIZE_KB(-1);//left 253kB free (not enought)
 PSP_HEAP_SIZE_KB(-1024);//left 1.25MB free
 
-/* The class of the global object. */
-
 static JSClass global_class = {
 	"global", JSCLASS_GLOBAL_FLAGS,
 	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
@@ -31,7 +29,11 @@ int main(int argc, const char *argv[]){
 	gobj = JS_NewObject(cx, &global_class, NULL, NULL);// Create the global object.
 	JS_InitStandardClasses(cx, gobj); //Populate the global object with the standard globals (String,Object,Array...)
 	JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
-	JSScript *script = JS_CompileFile(cx, gobj, "js/main.js");
+	JSScript *script;
+	if(argc>1)
+		script=JS_CompileFile(cx, gobj, argv[1]);
+	else
+		script=JS_CompileFile(cx, gobj, "js/main.js");
 	jsval result;
 	while(1){
 		if(!script){
