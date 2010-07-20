@@ -33,16 +33,28 @@ JSBool js_include(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 		printf("\n");
 		return JS_FALSE;
 	}
+	/* module_start *should* call addInfo (yep, kernel can't) */
 	JSObject* target = js_addObj(" ");//you cant find me :3
-	if(strstr(path,"_driver")){
-	/*function are correctly called but the reply can't be read ...*/
-		printf("%08X %08X %08X\n",(int)modK_GetFun(),(int)modK_GetVar(),Kfun());
-		//js_addFunc(modK_GetFun(),target);//functions are defined as local
-		//js_addVar(modK_GetVar(),NULL);//variables are defined as global (local can be get by local function)
-	}else{
-		js_addFunc(modU_GetFun(),target);//functions are defined as local
-		js_addVar(modU_GetVar(),NULL);//variables are defined as global (local can be get by local function)
+	if(mod_tmp_lfun)
+		JS_DefineFunctions(cx,target,mod_tmp_lfun);
+	if(mod_tmp_gfun)
+		JS_DefineFunctions(cx,gobj,mod_tmp_gfun);
+	if(mod_tmp_lvar){
+		while(mod_tmp_lvar->name){
+			JS_SetProperty(cx,target,mod_tmp_lvar->name,&mod_tmp_lvar->vp);
+			mod_tmp_lvar++;
+		}
 	}
+	if(mod_tmp_gvar){
+		while(mod_tmp_gvar->name){
+			JS_SetProperty(cx,gobj,mod_tmp_gvar->name,&mod_tmp_gvar->vp);
+			mod_tmp_gvar++;
+		}
+	}
+	mod_tmp_lfun=NULL;
+	mod_tmp_gfun=NULL;
+	mod_tmp_lvar=NULL;
+	mod_tmp_gvar=NULL;
 	*rval = O2J(target);
 	return JS_TRUE;
 }
