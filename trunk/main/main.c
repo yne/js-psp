@@ -23,9 +23,13 @@ JSFunctionSpec my_functions[] = {
 	{"include",js_include, 1},
 	{0}
 };
+void reportError(JSContext *cx, const char *message, JSErrorReport *report){
+	printf("%s:%u:%s\n",report->filename ? report->filename : "<no filename>",(unsigned int) report->lineno,message);
+}
 int main(int argc, const char *argv[]){
 	JSRuntime *rt = JS_NewRuntime(8 * 1024 * 1024);// runtime
 	cx = JS_NewContext(rt, 8192); // Context
+	JS_SetErrorReporter(cx, reportError);//the error callback
 	gobj = JS_NewObject(cx, &global_class, NULL, NULL);// Create the global object.
 	JS_InitStandardClasses(cx, gobj); //Populate the global object with the standard globals (String,Object,Array...)
 	JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
