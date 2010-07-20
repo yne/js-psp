@@ -24,7 +24,10 @@ JSFunctionSpec my_functions[] = {
 	{0}
 };
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
-	printf("%s:%u:%s\n",report->filename ? report->filename : "<no filename>",(unsigned int) report->lineno,message);
+	if(report->filename)// error in file
+		printf("%s:%u:%s\n",report->filename,(unsigned int) report->lineno,message);
+	else// internal error
+		printf("%s\n",message);
 }
 int main(int argc, const char *argv[]){
 	JSRuntime *rt = JS_NewRuntime(8 * 1024 * 1024);// runtime

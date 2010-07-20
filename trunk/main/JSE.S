@@ -4,9 +4,8 @@
 
 	STUB_START "JSE",0x00090000,0x00140005
 	STUB_FUNC  0x95935AFC,js_test
-	STUB_FUNC  0x95DAA152,js_addFunc
+	STUB_FUNC  0x8D642FB1,js_addModule
 	STUB_FUNC  0x1776BE04,js_addObj
-	STUB_FUNC  0xC99191B6,js_addVar
 	STUB_FUNC  0x7AC58FDC,js_getContext
 	STUB_FUNC  0x5E233C36,js_getGlobalObject
 	STUB_FUNC  0x6EB05312,js_convertArguments
@@ -23,4 +22,5 @@
 	STUB_FUNC  0xDEF43686,js_valueToUint16
 	STUB_FUNC  0x3465956E,js_strdup
 	STUB_FUNC  0xFC4105A3,js_malloc
+	STUB_FUNC  0xDD8A2A2F,js_free
 	STUB_END

@@ -3,7 +3,7 @@
 #include "pspaalib.h"
 #include "../../main/shared.h"
 
-PSP_MODULE_INFO("mod",PSP_MODULE_USER,0,0);
+PSP_MODULE_INFO("aalib",PSP_MODULE_USER,0,0);
 
 /*you cant printf in user module (did i missed something ?)*/
 int Ufun(void){
@@ -87,17 +87,12 @@ static JSFunctionSpec functions[] = {
 		{"Test",js_AalibTest, 1},
 		{0}
 };
-JSFunctionSpec* modU_GetFun(void){
-	return functions;
-}
 static JSPropertiesSpec var[] = {
 	{"AALIB_IS_LOADED",I2J(1)},
 	{0}
 };
-JSPropertiesSpec* modU_GetVar(void){
-	return var;
-}
 int module_start(SceSize args, void *argp){
+	js_addModule(functions,0,0,var);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){

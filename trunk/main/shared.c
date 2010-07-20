@@ -25,20 +25,17 @@ typedef struct JSPropertiesSpec{
     const char      *name;
     jsval           vp;
 }JSPropertiesSpec;
-int js_addVar(JSPropertiesSpec* ps, JSObject* obj){
-	if(!obj)obj=gobj;
-	while(ps->name){
-		JS_SetProperty(cx,obj,ps->name,&ps->vp);
-		ps++;
-	}
-	return JS_TRUE;
+/* bridge beetwen module_start and js_include */
+JSFunctionSpec* mod_tmp_lfun;
+JSFunctionSpec* mod_tmp_gfun;
+JSPropertiesSpec* mod_tmp_lvar;
+JSPropertiesSpec* mod_tmp_gvar;
+void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lvar,JSPropertiesSpec* gvar){
+	mod_tmp_lfun=lfun;
+	mod_tmp_gfun=gfun;
+	mod_tmp_lvar=lvar;
+	mod_tmp_gvar=gvar;
 }
-int js_addFunc(JSFunctionSpec* functions, JSObject * obj){
-	printf("js_addFunc %08X %i\n",(int)functions,(int)obj);
-	if(!obj)obj=gobj;
-	return !JS_DefineFunctions(cx, obj, functions);
-}
-
 JSBool js_convertArguments(uintN argc, jsval *argv, const char *format, ...){
 	va_list ap;
 	va_start(ap, format);
@@ -103,5 +100,10 @@ char* js_strdup(const char* str){
 	return JS_strdup(cx,str);
 }
 void* js_malloc(size_t nbytes){
-	return JS_malloc(cx,nbytes);
+	void* p = JS_malloc(cx,nbytes);
+	printf("malloc : %i => 0x%08X\n",nbytes,(u32)p);
+	return p;
+}
+void js_free(void *p){
+	JS_free(cx,p);
 }
