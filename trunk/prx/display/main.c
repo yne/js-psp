@@ -9,47 +9,59 @@
 PSP_MODULE_INFO("sceDisplay",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
 
-JSBool SetMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SetMode){
+	*rval = I2J(sceDisplaySetMode(J2I(argv[0]),J2I(argv[1]),J2I(argv[2])));
+	return JS_TRUE;
+}
+JS_FUN(GetMode){
+	JSObject*rslt;
+	if(argv[0])
+		rslt=J2O(argv[0]);
+	else
+		rslt=js_addObj(" ");
 	int mode,width,height;
-	if (!js_convertArguments(argc, argv, "iii", &mode,&width,&height))
-		return JS_FALSE;
-	*rval = INT_TO_JSVAL(sceDisplaySetMode(mode,width,height));
+	sceDisplayGetMode(&mode,&width,&height);
+	js_setProperty(rslt,"mode",I2J(mode));
+	js_setProperty(rslt,"width",I2J(width));
+	js_setProperty(rslt,"height",I2J(height));
+	*rval = O2J(rslt);
 	return JS_TRUE;
 }
-JSBool GetMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
-	int mode,width,height;
-	if (!js_convertArguments(argc, argv, "iii", &mode,&width,&height))
-		return JS_FALSE;
-	*rval = INT_TO_JSVAL(sceDisplayGetMode(&mode,&width,&height));
+JS_FUN(SetFrameBuf){
+	*rval = I2J(sceDisplaySetFrameBuf((void*)J2U(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3])));
 	return JS_TRUE;
 }
-JSBool SetFrameBuf(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
-//int 	sceDisplaySetFrameBuf (void *topaddr, int bufferwidth, int pixelformat, int sync)
-	*rval = JSVAL_VOID;
+JS_FUN(GetFrameBuf){
+	int sync=0;
+	if(argc>0)
+		sync=J2U(argv[0]);
+	static int bufferwidth, pixelformat;
+	static u32* topaddr;
+	sceDisplayGetFrameBuf((void*)&topaddr, &bufferwidth, &pixelformat, sync);
+	JSObject*rslt=js_addObj(" ");
+	js_setProperty(rslt,"topaddr",I2J(topaddr));
+	js_setProperty(rslt,"bufferwidth",I2J(bufferwidth));
+	js_setProperty(rslt,"pixelformat",I2J(pixelformat));
+	*rval = O2J(rslt);
 	return JS_TRUE;
 }
-JSBool GetFrameBuf(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
-//int 	sceDisplayGetFrameBuf (void **topaddr, int *bufferwidth, int *pixelformat, int sync)
-	*rval = JSVAL_VOID;
-	return JS_TRUE;
-}
-JSBool GetVcount(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(GetVcount){
 	*rval = INT_TO_JSVAL(sceDisplayGetVcount());
 	return JS_TRUE;
 }
-JSBool WaitVblankStart(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(WaitVblankStart){
 	*rval = INT_TO_JSVAL(sceDisplayWaitVblankStart());
 	return JS_TRUE;
 }
-JSBool WaitVblankStartCB(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(WaitVblankStartCB){
 	*rval = INT_TO_JSVAL(sceDisplayWaitVblankStartCB());
 	return JS_TRUE;
 }
-JSBool WaitVblank(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(WaitVblank){
 	*rval = INT_TO_JSVAL(sceDisplayWaitVblank());
 	return JS_TRUE;
 }
-JSBool WaitVblankCB(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(WaitVblankCB){
 	*rval = INT_TO_JSVAL(sceDisplayWaitVblankCB());
 	return JS_TRUE;
 }

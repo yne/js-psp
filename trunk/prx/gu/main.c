@@ -16,51 +16,51 @@ typedef struct ScePspCVector3 {
 unsigned* list;
 PspGeContext __attribute__((aligned(16))) geContext;
 
-JSBool DepthBuffer(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DepthBuffer){
 	sceGuDepthBuffer((void*)J2U(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DispBuffer(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DispBuffer){
 	sceGuDispBuffer(J2I(argv[0]),J2I(argv[1]),(void*)J2U(argv[2]),J2I(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DrawBuffer(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DrawBuffer){
 	sceGuDrawBuffer(J2I(argv[0]),(void*)J2U(argv[1]),J2I(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DrawBufferList(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DrawBufferList){
 	sceGuDrawBufferList(J2I(argv[0]),(void*)J2U(argv[1]),J2I(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Display(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Display){
 	*rval = I2J(sceGuDisplay(J2I(argv[0])));
 	return JS_TRUE;
 }
-JSBool DepthFunc(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DepthFunc){
 	sceGuDepthFunc(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DepthMask(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DepthMask){
 	sceGuDepthMask(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DepthOffset(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DepthOffset){
 	sceGuDepthOffset(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DepthRange(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DepthRange){
 	sceGuDepthRange(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Fog(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Fog){
 	float near,far;
 	if (!js_convertArguments(argc, argv, "dd", &near,&far))
 		return JS_FALSE;
@@ -68,34 +68,34 @@ JSBool Fog(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Init(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Init){
 	list=js_malloc(0x40000);
 	sceGuInit();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Term(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Term){
 	sceGuTerm();
 	js_free(list);
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Break(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Break){
 	sceGuBreak(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Continue(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Continue){
 	sceGuContinue();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Signal(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Signal){
 	sceGuSignal(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SendCommandf(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SendCommandf){
 	int cmd;
 	float argument;
 	if (!js_convertArguments(argc, argv, "id", &cmd,&argument))
@@ -104,89 +104,89 @@ JSBool SendCommandf(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsva
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SendCommandi(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SendCommandi){
 	sceGuSendCommandi(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool GetMemory(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(GetMemory){
 	*rval = I2J(sceGuGetMemory(J2I(argv[0])));
 	return JS_TRUE;
 }
-JSBool Start(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Start){
 	sceGuStart(J2I(argv[0]),list);
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Finish(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Finish){
 	*rval = I2J(sceGuFinish());
 	return JS_TRUE;
 }
-JSBool FinishId(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(FinishId){
 	*rval = I2J(sceGuFinishId(J2U(argv[0])));
 	return JS_TRUE;
 }
-JSBool CallList(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(CallList){
 	sceGuCallList(list);
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool CallMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(CallMode){
 	sceGuCallMode(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool CheckList(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(CheckList){
 	*rval = I2J(sceGuCheckList());
 	return JS_TRUE;
 }
-JSBool SendList(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SendList){
 	sceGuSendList(J2I(argv[0]),list,&geContext);
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SwapBuffers(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SwapBuffers){
 	*rval = I2J(sceGuSwapBuffers());
 	return JS_TRUE;
 }
-JSBool Sync(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Sync){
 	*rval = I2J(sceGuSync(J2I(argv[0]),J2I(argv[1])));
 	return JS_TRUE;
 }
-JSBool EndObject(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(EndObject){
 	sceGuEndObject();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SetStatus(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SetStatus){
 	sceGuSetStatus(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool GetStatus(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(GetStatus){
 	*rval = I2J(sceGuGetStatus(J2I(argv[0])));
 	return JS_TRUE;
 }
-JSBool SetAllStatus(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SetAllStatus){
 	sceGuSetAllStatus(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool GetAllStatus(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(GetAllStatus){
 	*rval = I2J(sceGuGetAllStatus());
 	return JS_TRUE;
 }
-JSBool Enable(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Enable){
 	sceGuEnable(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Disable(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Disable){
 	sceGuDisable(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DrawArray(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DrawArray){
 	JSObject *matrix=J2O(argv[4]);
 	int n;
 	void* vert=NULL;
@@ -229,7 +229,7 @@ JSBool DrawArray(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DrawArrayN(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DrawArrayN){
 	JSObject *matrix=J2O(argv[5]);
 	ScePspFVector3* vertices=(ScePspFVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspFVector3));
 	int n;
@@ -243,17 +243,17 @@ JSBool DrawArrayN(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval 
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool BeginObject(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(BeginObject){
 	sceGuBeginObject(J2I(argv[0]),J2I(argv[1]),(void*)J2U(argv[2]),(void*)J2U(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SetCallback(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SetCallback){
 	sceGuSetCallback(J2I(argv[0]),(void*)J2U(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Light(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Light){
 	JSObject *matrix=J2O(argv[3]);//array
 	ScePspFVector3 * vertices=(ScePspFVector3 *)sceGuGetMemory(sizeof(ScePspFVector3 ));
 	jsval vector=js_getElement(matrix,0);
@@ -264,22 +264,22 @@ JSBool Light(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool LightAtt(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(LightAtt){
 	sceGuLightAtt(J2I(argv[0]),J2L(argv[1]),J2L(argv[2]),J2L(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool LightColor(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(LightColor){
 	sceGuLightColor(J2I(argv[0]),J2I(argv[1]),J2U(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool LightMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(LightMode){
 	sceGuLightMode(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool LightSpot(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(LightSpot){
 	JSObject *matrix=J2O(argv[3]);//array
 	ScePspFVector3 * vertices=(ScePspFVector3 *)sceGuGetMemory(sizeof(ScePspFVector3 ));
 	jsval vector=js_getElement(matrix,0);
@@ -290,132 +290,132 @@ JSBool LightSpot(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Clear(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Clear){
 	sceGuClear(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ClearColor(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ClearColor){
 	sceGuClearColor(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ClearDepth(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ClearDepth){
 	sceGuClearDepth(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ClearStencil(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ClearStencil){
 	sceGuClearStencil(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool PixelMask(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(PixelMask){
 	sceGuPixelMask(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Color(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Color){
 	sceGuColor(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Ambient(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Ambient){
 	sceGuAmbient(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool AmbientColor(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(AmbientColor){
 	sceGuAmbientColor(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ColorFunc(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ColorFunc){
 	sceGuColorFunc(J2I(argv[0]),J2I(argv[1]),J2U(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ColorMaterial(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ColorMaterial){
 	sceGuColorMaterial(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool AlphaFunc(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(AlphaFunc){
 	sceGuAlphaFunc(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool BlendFunc(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(BlendFunc){
 	sceGuBlendFunc(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2U(argv[3]),J2U(argv[4]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Material(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Material){
 	sceGuMaterial(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ModelColor(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ModelColor){
 	sceGuModelColor(J2U(argv[0]),J2U(argv[1]),J2U(argv[2]),J2U(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool StencilFunc(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(StencilFunc){
 	sceGuStencilFunc(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool StencilOp(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(StencilOp){
 	sceGuStencilOp(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Specular(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Specular){
 	sceGuSpecular(J2L(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool FrontFace(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(FrontFace){
 	sceGuFrontFace(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool LogicalOp(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(LogicalOp){
 	sceGuLogicalOp(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ShadeModel(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ShadeModel){
 	sceGuShadeModel(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexEnvColor(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexEnvColor){
 	sceGuTexEnvColor(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexFilter(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexFilter){
 	sceGuTexFilter(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexFlush(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexFlush){
 	sceGuTexFlush();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexFunc(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexFunc){
 	sceGuTexFunc(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexMapMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexMapMode){
 	sceGuTexMapMode(J2I(argv[0]),J2U(argv[1]),J2U(argv[2]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SetDither(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SetDither){
 	int xx,xy,xz,xw,
 			yx,yy,yz,yw,
 			zx,zy,zz,zw,
@@ -432,112 +432,112 @@ JSBool SetDither(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexImage(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexImage){
 	sceGuTexImage(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexLevelMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexLevelMode){
 	sceGuTexLevelMode(J2U(argv[0]),J2L(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexMode){
 	sceGuTexMode(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexOffset(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexOffset){
 	sceGuTexOffset(J2L(argv[0]),J2L(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexProjMapMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexProjMapMode){
 	sceGuTexProjMapMode(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexScale(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexScale){
 	sceGuTexScale(J2L(argv[0]),J2L(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexSlope(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexSlope){
 	sceGuTexSlope(J2L(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexSync(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexSync){
 	sceGuTexSync();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool TexWrap(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(TexWrap){
 	sceGuTexWrap(J2I(argv[0]),J2I(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ClutLoad(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ClutLoad){
 	sceGuClutLoad(J2I(argv[0]),(void*)J2U(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool ClutMode(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(ClutMode){
 	sceGuClutMode(J2U(argv[0]),J2U(argv[1]),J2U(argv[2]),J2U(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Offset(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Offset){
 	sceGuOffset(J2U(argv[0]),J2U(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Scissor(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Scissor){
 	sceGuScissor(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool Viewport(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(Viewport){
 	sceGuViewport(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool PatchDivide(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(PatchDivide){
 	sceGuPatchDivide(J2U(argv[0]),J2U(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool PatchFrontFace(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(PatchFrontFace){
 	sceGuPatchFrontFace(J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool PatchPrim(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(PatchPrim){
 	sceGuPatchPrim(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool MorphWeight(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(MorphWeight){
 	sceGuMorphWeight(J2I(argv[0]),J2L(argv[1]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DrawBezier(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DrawBezier){
 	sceGuDrawBezier(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)J2U(argv[4]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool DrawSpline(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(DrawSpline){
 	sceGuDrawSpline(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),J2I(argv[4]),(void*)J2U(argv[5]),(void*)J2U(argv[6]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SwapBuffersBehaviour(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SwapBuffersBehaviour){
 	guSwapBuffersBehaviour(J2I(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool BoneMatrix(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(BoneMatrix){
 	u32 index;
 	float xx,xy,xz,xw,
 				yx,yy,yz,yw,
@@ -555,7 +555,7 @@ JSBool BoneMatrix(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval 
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SetMatrix(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SetMatrix){
 	int type;
 	float xx,xy,xz,xw,
 				yx,yy,yz,yw,
@@ -573,12 +573,12 @@ JSBool SetMatrix(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool CopyImage(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(CopyImage){
 	//sceGuCopyImage (int psm, int sx, int sy, int width, int height, int srcw, void *src, int dx, int dy, int destw, void *dest)
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-JSBool SwapBuffersCallback(JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval){
+JS_FUN(SwapBuffersCallback){
 	//guSwapBuffersCallback (GuSwapBuffersCallback callback)
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
