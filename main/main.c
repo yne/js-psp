@@ -36,6 +36,7 @@ int main(int argc, const char *argv[]){
 	gobj = JS_NewObject(cx, &global_class, NULL, NULL);// Create the global object.
 	JS_InitStandardClasses(cx, gobj); //Populate the global object with the standard globals (String,Object,Array...)
 	JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
+	JS_InitClasses(cx, gobj);//Populate the global object with the non-standard classes (Module)
 	JSScript *script;
 	if(argc>1)
 		script=JS_CompileFile(cx, gobj, argv[1]);
