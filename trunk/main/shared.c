@@ -18,8 +18,8 @@ JSObject* js_getGlobalObject(void){
 }
 /* exported functions */
 int js_test(int in){
-	printf("test called !!\n\n");
-	return in*3;
+	printf("test:%08X\n",in);
+	return in;
 }
 typedef struct JSPropertiesSpec{
     const char      *name;
@@ -53,11 +53,13 @@ jsval js_getElement(JSObject *tobj,int index){
 	return vp;
 }
 jsval js_getProperty(JSObject *tobj,const char* name){
+	if(!tobj)tobj=gobj;
 	jsval vp;
 	JS_GetProperty(cx,tobj,name,&vp);
 	return vp;
 }
 JSBool js_setProperty(JSObject *tobj,const char* name, jsval vp){
+	if(!tobj)tobj=gobj;
 	return JS_SetProperty(cx,tobj,name,&vp);
 }
 jsdouble js_valueToNumber(jsval v){
@@ -96,14 +98,32 @@ JSObject* js_valueToObject(jsval v){
 	
 	return JSVAL_TO_OBJECT(v);
 }
+jsval js_evaluateScript(char* eval){
+	jsval rval;
+	uintN lineno = 0;
+	JS_EvaluateScript(cx,gobj,eval,strlen(eval),"",lineno, &rval);
+	return rval;
+}
+JSType js_typeOfValue(jsval v){
+	return JS_TypeOfValue(cx,v);
+}
+/* C stuff (handled by SM) */
 char* js_strdup(const char* str){
 	return JS_strdup(cx,str);
 }
 void* js_malloc(size_t nbytes){
 	void* p = JS_malloc(cx,nbytes);
-	printf("malloc : %i => 0x%08X\n",nbytes,(u32)p);
+	printf("malloc %i bytes at [%08X|%08X]\n",nbytes,(int)p,(int)p+nbytes);
 	return p;
 }
+void* js_realloc(void *p,size_t nbytes){
+	return JS_realloc(cx,p,nbytes);
+}
 void js_free(void *p){
+	//printf("free at %08X\n",(int)p);
 	JS_free(cx,p);
+}
+/* real C stuff (if you don't want use libc in your prx) */
+size_t c_strlen(char *str){
+	return strlen(str);
 }

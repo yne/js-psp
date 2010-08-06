@@ -4,6 +4,7 @@
 #define J2I(j) JSVAL_TO_INT(j)
 #define J2S(j) js_getStringBytes(js_valueToString(j))
 #define J2U(j) js_valueToECMAUint32(j)
+#define J2u(j) js_valueToUint16(j)
 #define J2O(j) JSVAL_TO_OBJECT(j)//(j,op) js_valueToObject(j,op)
 #define J2L(j) js_valueToNumber(j)
 /*to JSVAL*/
@@ -53,7 +54,12 @@ EXT JSString* js_valueToString(jsval v);
 EXT u32 js_valueToECMAUint32(jsval v);
 EXT u16 js_valueToUint16(jsval v);
 EXT jsdouble js_valueToNumber(jsval v);
+EXT jsdouble js_valueToNumber(jsval v);
+EXT jsval js_evaluateScript(char* eval);
+EXT JSType js_typeOfValue(jsval v);
 
 EXT char* js_strdup(const char* str);
 EXT void* js_malloc(size_t nbytes);
+EXT void* js_realloc(void *p,size_t nbytes);
 EXT void js_free(void *p);
+EXT size_t c_strlen(const char *str);

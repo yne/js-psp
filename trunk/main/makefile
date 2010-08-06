@@ -1,5 +1,5 @@
 TARGET = ../main
-OBJS = main.o functions.o shared.o ../prx/user/modU.o ../prx/kernel/modK.o
+OBJS = main.o functions.o shared.o ../prx/kernel/modK.o
 
 CFLAGS = -G0 -Wall -O2
 ASFLAGS = $(CFLAGS)
@@ -14,7 +14,7 @@ USE_USER_LIBS = 1
 INCDIR = ../
 
 LIBDIR = ../src
-LIBS= -lspidermonkey -lm 
+LIBS= -lspidermonkey -lm
 
 BUILD_PRX = 1
 

@@ -3,3 +3,4 @@
 
 JSBool js_print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 JSBool js_include(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+JSBool JS_InitClasses(JSContext *cx, JSObject *obj);
