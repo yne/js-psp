@@ -22,6 +22,7 @@
 PSP_MODULE_INFO("sceUtility",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
 
+/* modules */
 JS_FUN(LoadModule){
 	*rval = I2J(sceUtilityLoadAvModule(J2I(argv[0])));
 	return JS_TRUE;
@@ -54,25 +55,38 @@ JS_FUN(UnloadNetModule){
 	*rval = I2J(sceUtilityUnloadNetModule(J2I(argv[0])));
 	return JS_TRUE;
 }
+/* Common */
+pspUtilityDialogCommon objectToBase(JSObject* bobj,pspUtilityDialogCommon* base,size_t size){
+	base->size=size;
+	base->language=J2I(js_getProperty(bobj,"language"));
+	base->buttonSwap=J2I(js_getProperty(bobj,"buttonSwap"));
+	base->graphicsThread=J2I(js_getProperty(bobj,"graphicsThread"));
+	base->accessThread=J2I(js_getProperty(bobj,"accessThread"));
+	base->fontThread=J2I(js_getProperty(bobj,"fontThread"));
+	base->soundThread=J2I(js_getProperty(bobj,"soundThread"));
+	base->result=J2I(js_getProperty(bobj,"result"));
+	return *base;
+}
+/* Game sharing */
+pspUtilityGameSharingParams sharing;
 JS_FUN(GameSharingInitStart){
-	char *name;
-	pspUtilityGameSharingParams params;
-	memset(&params, 0, sizeof(params));
-	params.base.size = sizeof(params);
-	if (!js_convertArguments(argc, argv, "iiiiiiilsii",
-			&params.base.language,//ENGLISH:1;FRENCH:2;SPANISH:3;GERMAN:4;ITALIAN:5;DUTCH:6;PORTUGUESE:7;RUSSIAN:8;KOREAN:9;CHINESE_T:10;CHINESE_S:11;
-			&params.base.buttonSwap,//CIRCLE:0;CROSS:1;
-			&params.base.graphicsThread,//17
-			&params.base.accessThread,//19
-			&params.base.fontThread,//18
-			&params.base.soundThread,//16
-			&params.datasize,
-			&name,
-			&params.mode,//1:FILE;2:MEMORY
-			&params.datatype))//1:SINGLE;2:MULTIPLE
-		return JS_FALSE;
-	memcpy(&params.name, name, 8);
-	*rval = I2J(sceUtilityGameSharingInitStart(&params));
+	JSObject* param = J2O(argv[0]);
+	memset(&sharing,0,sizeof(sharing));//set all unknow parameter to 0
+	pspUtilityDialogCommon base;
+	sharing.base=objectToBase(J2O(js_getProperty(param,"base")),&base,sizeof(sharing));
+	//int reserved1;
+	//int reserved2;
+	memcpy(sharing.name,J2S(js_getProperty(param,"name")),8);
+	//reserved3;
+	//optarg;
+	//uploadFunc(void*, const char**, int *);
+	//result
+	sharing.filepath=J2S(js_getProperty(param,"filepath"));
+	sharing.mode=J2I(js_getProperty(param,"mode"));
+  sharing.datatype=J2I(js_getProperty(param,"datatype"));
+  sharing.data=(void*)J2S(js_getProperty(param,"datatype"));
+	sharing.datasize=J2I(js_getProperty(param,"datasize"));
+	*rval = I2J(sceUtilityGameSharingInitStart(&sharing));
 	return JS_TRUE;
 }
 JS_FUN(GameSharingUpdate){
@@ -85,6 +99,24 @@ JS_FUN(GameSharingShutdownStart){
 }
 JS_FUN(GameSharingGetStatus){
 	*rval = I2J(sceUtilityGameSharingGetStatus());//NONE:0;INIT:1;VISIBLE:2;QUIT:3;FINISHED:4;
+	return JS_TRUE;	
+}
+/* Msg Dialog */
+pspUtilityMsgDialogParams dialog;
+JS_FUN(MsgDialogInitStart){
+	JSObject* param = J2O(argv[0]);
+	memset(&dialog,0,sizeof(dialog));
+	pspUtilityDialogCommon base;
+	dialog.base=objectToBase(J2O(js_getProperty(param,"base")),&base,sizeof(dialog));
+	dialog.mode=J2I(js_getProperty(param,"mode"));
+	dialog.options=J2I(js_getProperty(param,"options"));
+  dialog.errorValue=J2I(js_getProperty(param,"errorValue"));
+	char* msg = js_getStringBytes(JSVAL_TO_STRING(js_getProperty(param,"message")));
+	if(strlen(msg)<512)
+		strcpy(dialog.message,msg);
+	else
+		strcpy(dialog.message,"String length > 511 bytes");
+	*rval = I2J(sceUtilityMsgDialogInitStart(&dialog));
 	return JS_TRUE;	
 }
 JS_FUN(MsgDialogUpdate){
@@ -103,6 +135,7 @@ JS_FUN(MsgDialogShutdownStart){
 	sceUtilityMsgDialogShutdownStart();
 	return JS_TRUE;	
 }
+/* System param */
 JS_FUN(GetSystemParamInt){
 	int value;
 	sceUtilityGetSystemParamInt(J2I(argv[0]), &value);
@@ -123,50 +156,36 @@ JS_FUN(SetSystemParamString){
 	*rval = I2J(sceUtilitySetSystemParamString(J2I(argv[0]),J2S(argv[0])));
 	return JS_TRUE;
 }
-pspUtilityDialogCommon objectToBase(JSObject* bobj,pspUtilityDialogCommon* base,size_t size){
-	base->size=size;
-	base->language=J2I(js_getProperty(bobj,"language"));
-	base->buttonSwap=J2I(js_getProperty(bobj,"buttonSwap"));
-	base->graphicsThread=J2I(js_getProperty(bobj,"graphicsThread"));
-	base->accessThread=J2I(js_getProperty(bobj,"accessThread"));
-	base->fontThread=J2I(js_getProperty(bobj,"fontThread"));
-	base->soundThread=J2I(js_getProperty(bobj,"soundThread"));
-	base->result=J2I(js_getProperty(bobj,"result"));
-	return *base;
-}
-pspUtilityMsgDialogParams dialog;
-JS_FUN(MsgDialogInitStart){
-	JSObject* param = J2O(argv[0]);
-	memset(&dialog,0,sizeof(dialog));
-	pspUtilityDialogCommon base;
-	dialog.base=objectToBase(JSVAL_TO_OBJECT(js_getProperty(param,"base")),&base,sizeof(dialog));
-	dialog.mode=J2I(js_getProperty(param,"mode"));
-	dialog.options=J2I(js_getProperty(param,"options"));
-  dialog.errorValue=J2I(js_getProperty(param,"errorValue"));
-	char* msg = js_getStringBytes(JSVAL_TO_STRING(js_getProperty(param,"message")));
-	if(strlen(msg)<512)
-		strcpy(dialog.message,msg);
-	else
-		strcpy(dialog.message,"String length > 511 bytes");
+/* Netconf */
+typedef struct _pspUtilityNetconfAdhoc{
+	unsigned char name[8];
+	unsigned int timeout;
+} pspUtilityNetconfAdhoc;
 
-	*rval = I2J(sceUtilityMsgDialogInitStart(&dialog));
-	return JS_TRUE;	
-}
 pspUtilityNetconfData Netconf;
+struct pspUtilityNetconfAdhoc adhocparam;
 JS_FUN(NetconfInitStart){
 	JSObject* param = J2O(argv[0]);
 	memset(&Netconf,0,sizeof(Netconf));
 	pspUtilityDialogCommon base;
-	Netconf.base=objectToBase(JSVAL_TO_OBJECT(js_getProperty(param,"base")),&base,sizeof(Netconf));
+	Netconf.base=objectToBase(J2O(js_getProperty(param,"base")),&base,sizeof(Netconf));
 	Netconf.action=J2I(js_getProperty(param,"action"));
-	//Netconf.hotspot=J2I(js_getProperty(param,"hotspot"));
-	//Netconf.hotspot_connected=J2I(js_getProperty(param,"hotspot_connected"));
-  //Netconf.wifisp=J2I(js_getProperty(param,"wifisp"));
-	
-	//pspUtilityNetconfAdhoc adhocparam;
-	//memset(&adhocparam, 0, sizeof(adhocparam));
-	//Netconf.adhocparam = &adhocparam;
+	if(Netconf.action==PSP_NETCONF_ACTION_CONNECT_ADHOC){
+		memset(&adhocparam, 0, sizeof(adhocparam));
+		memcpy(&adhocparam.name, "GameShar", 8);
+		adhocparam.timeout = 60;
+		Netconf.adhocparam = &adhocparam;
 
+	/*
+		JSObject* aparam = J2O(js_getProperty(param,"adhocparam"));
+		memcpy(adhocparam.name,J2S(js_getProperty(aparam,"name")),8);
+		adhocparam.timeout=J2I(js_getProperty(aparam,"timeout"));
+		Netconf.adhocparam = (void*)&adhocparam;
+		Netconf.hotspot=J2I(js_getProperty(param,"hotspot"));
+		Netconf.hotspot_connected=J2I(js_getProperty(param,"hotspot_connected"));
+		Netconf.wifisp=J2I(js_getProperty(param,"wifisp"));
+	*/
+	}
 	*rval = I2J(sceUtilityNetconfInitStart(&Netconf));
 	return JS_TRUE;	
 }
@@ -175,11 +194,77 @@ JS_FUN(NetconfShutdownStart){
 	return JS_TRUE;	
 }
 JS_FUN(NetconfUpdate){
-	*rval = I2J(sceUtilityNetconfUpdate(J2I(argv[0])));
+	*rval = I2J(sceUtilityNetconfUpdate(J2I(argv[0])));//index of the next frame to draw
 	return JS_TRUE;	
 }
 JS_FUN(NetconfGetStatus){
 	*rval = I2J(sceUtilityNetconfGetStatus());
+	return JS_TRUE;	
+}
+/* OSK */
+SceUtilityOskParams OskParams;
+
+void packUIStr(unsigned short* int_str, char* chr_str, int string_size) { //Converts and int string to a char string. (OSK)
+	int c;
+	memset(chr_str, 0, string_size);
+	for(c = 0; int_str[c]; c++)
+		chr_str[c] = int_str[c];
+}
+
+unsigned short* expandChrStr(char* chr_str, unsigned short* int_str) { //Converts a char string to an int string. (OSK)
+  int c;
+  memset(int_str, 0, (sizeof(unsigned short)*strlen(chr_str))+1);
+	for(c = 0; chr_str[c]; c++)
+    int_str[c] = chr_str[c];
+	return int_str;
+}
+unsigned short* umsg;
+unsigned short* itxt;
+unsigned short* otxt;
+JS_FUN(OskInitStart){
+	JSObject* param = J2O(argv[0]);
+	memset(&OskParams,0,sizeof(OskParams));
+	pspUtilityDialogCommon base;
+	OskParams.base=objectToBase(J2O(js_getProperty(param,"base")),&base,sizeof(OskParams));
+	OskParams.datacount=J2I(js_getProperty(param,"datacount"));
+
+	SceUtilityOskData data;
+	memset(&data, 0, sizeof(data));
+	JSObject* odata = J2O(js_getProperty(param,"data"));
+	data.unk_00=J2I(js_getProperty(odata,"type"));
+	data.unk_04=J2I(js_getProperty(odata,"attributes"));
+	data.language=J2I(js_getProperty(odata,"language"));
+	data.unk_12=J2I(js_getProperty(odata,"hidemode"));
+	data.inputtype=J2I(js_getProperty(odata,"inputtype"));
+	data.lines=J2I(js_getProperty(odata,"lines"));
+	data.unk_24=J2I(js_getProperty(odata,"kinsoku"));//japan line feed delimiter
+	umsg=(void*)js_malloc(2*strlen(J2S(js_getProperty(odata,"message"))));
+	data.desc=expandChrStr(J2S(js_getProperty(odata,"message")),umsg);
+	itxt=(void*)js_malloc(2*strlen(J2S(js_getProperty(odata,"intext"))));
+	data.intext=expandChrStr(J2S(js_getProperty(odata,"intext")),itxt);
+	data.outtextlength=J2I(js_getProperty(odata,"outtextlength"));
+	otxt=(void*)js_malloc(2*strlen(J2S(js_getProperty(odata,"outtext"))));
+	data.outtext=expandChrStr(J2S(js_getProperty(odata,"outtext")),otxt);
+	data.result=J2I(js_getProperty(odata,"result"));
+	data.outtextlimit=J2I(js_getProperty(odata,"outtextlimit"));
+	
+	OskParams.data = (void*)&data;
+	OskParams.state=J2I(js_getProperty(param,"state"));
+	OskParams.unk_60=J2I(js_getProperty(param,"errorcode"));
+
+	*rval = I2J(sceUtilityOskInitStart(&OskParams));
+	return JS_TRUE;	
+}
+JS_FUN(OskShutdownStart){
+	*rval = I2J(sceUtilityOskShutdownStart());
+	return JS_TRUE;	
+}
+JS_FUN(OskUpdate){
+	*rval = I2J(sceUtilityOskUpdate(J2I(argv[0])));
+	return JS_TRUE;	
+}
+JS_FUN(OskGetStatus){
+	*rval = I2J(sceUtilityOskGetStatus());
 	return JS_TRUE;	
 }
 static JSPropertiesSpec var[] = {
@@ -199,6 +284,7 @@ static JSPropertiesSpec var[] = {
 	{"PSP_SYSTEMPARAM_ID_INT_DAYLIGHTSAVINGS",I2J(PSP_SYSTEMPARAM_ID_INT_DAYLIGHTSAVINGS)},
 	{"PSP_SYSTEMPARAM_ID_INT_LANGUAGE",I2J(PSP_SYSTEMPARAM_ID_INT_LANGUAGE)},
 	{"PSP_SYSTEMPARAM_ID_INT_UNKNOWN",I2J(PSP_SYSTEMPARAM_ID_INT_UNKNOWN)},
+	{"PSP_SYSTEMPARAM_ID_INT_CTRL_ASSIGN",I2J(PSP_SYSTEMPARAM_ID_INT_UNKNOWN)},// SCE_UTILITY_SYSTEM_PARAM_CTRL_ASSIGN
 	{"PSP_SYSTEMPARAM_RETVAL_OK",I2J(PSP_SYSTEMPARAM_RETVAL_OK)},
 	{"PSP_SYSTEMPARAM_RETVAL_FAIL",I2J(PSP_SYSTEMPARAM_RETVAL_FAIL)},
 	{"PSP_SYSTEMPARAM_ADHOC_CHANNEL_AUTOMATIC",I2J(PSP_SYSTEMPARAM_ADHOC_CHANNEL_AUTOMATIC)},
@@ -308,9 +394,10 @@ static JSPropertiesSpec var[] = {
 	{"PSP_UTILITY_MSGDIALOG_RESULT_YES",I2J(PSP_UTILITY_MSGDIALOG_RESULT_YES)},
 	{"PSP_UTILITY_MSGDIALOG_RESULT_NO",I2J(PSP_UTILITY_MSGDIALOG_RESULT_NO)},
 	{"PSP_UTILITY_MSGDIALOG_RESULT_BACK",I2J(PSP_UTILITY_MSGDIALOG_RESULT_BACK)},
-	{"PSP_NETCONF_ACTION_CONNECTAP",I2J(PSP_NETCONF_ACTION_CONNECTAP)},
-	{"PSP_NETCONF_ACTION_DISPLAYSTATUS",I2J(PSP_NETCONF_ACTION_DISPLAYSTATUS)},
-	{"PSP_NETCONF_ACTION_CONNECT_ADHOC",I2J(PSP_NETCONF_ACTION_CONNECT_ADHOC)},
+	{"PSP_NETCONF_ACTION_CONNECTAP",I2J(0)},
+	{"PSP_NETCONF_ACTION_DISPLAYSTATUS",I2J(1)},
+	{"PSP_NETCONF_ACTION_CONNECT_ADHOC",I2J(2)},
+	{"PSP_NETCONF_ACTION_CONNECTAP_LASTUSED",I2J(3)},
 	{"PSP_NETPARAM_NAME",I2J(PSP_NETPARAM_NAME)},
 	{"PSP_NETPARAM_SSID",I2J(PSP_NETPARAM_SSID)},
 	{"PSP_NETPARAM_SECURE",I2J(PSP_NETPARAM_SECURE)},
