@@ -9,7 +9,7 @@ LDFLAGS  = -mno-crt0 -nostartfiles
 #$(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS = -lpspnet -lpspnet_apctl -lpspnet_inet
+LIBS = -lpspnet_adhocmatching -lpspnet_adhocctl -lpspnet_adhoc -lpspwlan
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
