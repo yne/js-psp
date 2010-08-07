@@ -21,6 +21,7 @@ static JSClass global_class = {
 JSFunctionSpec my_functions[] = {
 	{"printf",js_print, 1},
 	{"include",js_include, 1},
+	{"run",js_run, 1},
 	{0}
 };
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
