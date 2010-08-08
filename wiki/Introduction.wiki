@@ -1,4 +1,3 @@
-#labels js-pspFAQ
 # js-psp FAQ.
 
 = What is js-psp ? =
