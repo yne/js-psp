@@ -10,7 +10,11 @@ JSBool js_print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 JSBool js_include(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
-/ /
+
+/
+- Make JS Function From C Function
+- @param fun_name - Function name
+- /
 
 JS_FUN(fun_name);
 
