@@ -14,18 +14,24 @@ JSBool js_include(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 JS_FUN(fun_name);
 
-/ - Convert JS Value To int - /
+/
+- Convert JS Value To int
+- @param j - JS Value 
+- /
 
 J2I(j);
 
 /
-- Convert JS Value To String 
+- Convert JS Value To String
 - @param j - JS Value 
--/
+- /
 
 J2S(j);
 
-/ - Convert JS Value To u32 (unsigned int) - /
+/
+- Convert JS Value To u32 (unsigned int)
+- @param j - JS Value 
+- /
 
 J2U(j);
 
