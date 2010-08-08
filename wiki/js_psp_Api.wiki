@@ -35,18 +35,30 @@ J2S(j);
 
 J2U(j);
 
-/ - Convert JS Value To Object (struct or other) - /
+/
+- Convert JS Value To Object (struct or other)
+- @param j - JS Value 
+- /
 
 J2O(j);
 
-/ - Convert JS Value To long (struct or other) - /
+/
+- Convert JS Value To long
+- @param j - JS Value 
+- /
 
 J2L(j);
 
-/ - Convert int To JS Value - /
+/
+- Convert int To JS Value
+- @param j - JS Value 
+- /
 
 I2J(i);
 
-/ - Convert Object (struct or other) To JS Value - /
+/
+- Convert Object (struct or other) To JS Value
+- @param j - JS Value 
+- /
 
 O2J(i);
