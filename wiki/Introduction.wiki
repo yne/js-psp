@@ -1,8 +1,6 @@
 #summary One-sentence summary of this page.
 #labels js-pspFAQ
 
-= Introduction =
-
-*What is js-psp ?*
+= What is js-psp ? =
 
 js-psp isJavaScript Engine for PSP(PlayStation Portable™)
