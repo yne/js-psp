@@ -14,31 +14,31 @@ JSBool js_include(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 JS_FUN(fun_name);
 
-/*
-*/
+/ /
 
 J2I(j);
 
-/*
-*/
+/ /
+
 J2S(j);
 
-/*
-*/
+/ /
+
 J2U(j);
 
-/*
-*/
+/ /
+
 J2O(j);
 
-/*
-*/
+/ /
+
 J2L(j);
 
 /*
 */
+
 I2J(i);
 
-/*
-*/
+/ /
+
 O2J(i);
