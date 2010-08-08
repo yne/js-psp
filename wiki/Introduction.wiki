@@ -1,4 +1,4 @@
-js-psp FAQ.
+#summary js-psp FAQ.
 
 = What is js-psp ? =
 
