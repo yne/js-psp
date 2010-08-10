@@ -36,6 +36,20 @@ void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lv
 	mod_tmp_lvar=lvar;
 	mod_tmp_gvar=gvar;
 }
+
+
+JSObject* js_addClass(JSNative proto,char*name,JSFunctionSpec* Methodes){
+	JSClass tmpClass = {
+		name,
+		JSCLASS_NEW_ENUMERATE,
+		JS_PropertyStub,    JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
+		JS_EnumerateStub,   JS_ResolveStub,    JS_ConvertStub,    JS_FinalizeStub,
+		NULL,               NULL,              NULL,              NULL,
+		NULL,               NULL,              NULL,              NULL
+	};
+	return JS_InitClass(cx, gobj, NULL, &tmpClass, proto, 0, NULL, Methodes, NULL, NULL);
+	//return JS_InitClass(cx,gobj,NULL,attr,proto,nargs,ps,fs,static_ps,static_fs);
+}
 JSBool js_convertArguments(uintN argc, jsval *argv, const char *format, ...){
 	va_list ap;
 	va_start(ap, format);
@@ -106,6 +120,9 @@ jsval js_evaluateScript(char* eval){
 }
 JSType js_typeOfValue(jsval v){
 	return JS_TypeOfValue(cx,v);
+}
+jsval js_computeThis(JSContext *cx, jsval *vp){
+	return JS_ComputeThis(cx,vp);
 }
 /* C stuff (handled by SM) */
 char* js_strdup(const char* str){

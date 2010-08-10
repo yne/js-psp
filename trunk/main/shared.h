@@ -11,8 +11,11 @@
 #define I2J(i) INT_TO_JSVAL(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
 
-#define JS_FUN(fun_name) JSBool fun_name (JSContext *cx, JSObject *gobj, uintN argc, jsval *argv, jsval *rval)
+#define THIS   js_computeThis(cx, vp)
+#define ARGV   ((vp)+2)
 
+#define JS_FUN(fun_name) JSBool fun_name (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+#define JS_METH(meth_name) static JSBool meth_name (JSContext *cx, uintN argc, jsval *vp)
 
 typedef struct JSPropertiesSpec {
     const char      *name;
@@ -37,6 +40,8 @@ JSPropertiesSpec* mod_tmp_gvar;
 /* functions hosted by the interpreter */
 
 EXT int js_test(int);
+//JSClass *clasp,uintN nargs,JSPropertySpec *ps, JSFunctionSpec *fs,JSPropertySpec *static_ps, JSFunctionSpec *static_fs
+EXT JSObject* js_addClass(JSNative proto,char*name,JSFunctionSpec* Methodes);
 EXT void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lvar,JSPropertiesSpec* gvar);
 EXT JSObject* js_addObj(const char*);
 EXT JSContext* js_getContext(void);
@@ -57,6 +62,7 @@ EXT jsdouble js_valueToNumber(jsval v);
 EXT jsdouble js_valueToNumber(jsval v);
 EXT jsval js_evaluateScript(char* eval);
 EXT JSType js_typeOfValue(jsval v);
+EXT jsval js_computeThis(JSContext *cx, jsval *vp);
 
 EXT char* js_strdup(const char* str);
 EXT void* js_malloc(size_t nbytes);
