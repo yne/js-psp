@@ -20,7 +20,6 @@ static JSClass global_class = {
 };
 JSFunctionSpec my_functions[] = {
 	{"printf",js_print, 1},
-	{"include",js_include, 1},
 	{"run",js_run, 1},
 	{0}
 };
@@ -58,9 +57,9 @@ int main(int argc, const char *argv[]){
 	}
 	JS_MaybeGC(cx);
 	JS_DestroyScript(cx, script);
-	JS_DestroyContext(cx);
-	JS_DestroyRuntime(rt);
-	JS_ShutDown();
+	//JS_DestroyContext(cx);
+	//JS_DestroyRuntime(rt);
+	//JS_ShutDown();
 	sceKernelExitGame();
 	return 0;
 }
