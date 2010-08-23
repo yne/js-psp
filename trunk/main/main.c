@@ -28,6 +28,7 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 		printf("%s:%u:%s\n",report->filename,(unsigned int) report->lineno,message);
 	else// internal error
 		printf("%s\n",message);
+	sceKernelExitGame();//exit b4 bus error 8)
 }
 int main(int argc, const char *argv[]){
 	JSRuntime *rt = JS_NewRuntime(8 * 1024 * 1024);// runtime
@@ -57,9 +58,9 @@ int main(int argc, const char *argv[]){
 	}
 	JS_MaybeGC(cx);
 	JS_DestroyScript(cx, script);
-	//JS_DestroyContext(cx);
-	//JS_DestroyRuntime(rt);
-	//JS_ShutDown();
+	JS_DestroyContext(cx);
+	JS_DestroyRuntime(rt);
+	JS_ShutDown();
 	sceKernelExitGame();
 	return 0;
 }
