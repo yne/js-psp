@@ -36,19 +36,32 @@ void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lv
 	mod_tmp_lvar=lvar;
 	mod_tmp_gvar=gvar;
 }
+JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots){
+	printf("adding class : %s\n",name);
+	JSClass* tmpClass = JS_malloc(cx,sizeof(JSClass));
+	tmpClass->name=name;
+  tmpClass->flags=flags;
 
-
-JSObject* js_addClass(JSNative proto,char*name,JSFunctionSpec* Methodes){
-	JSClass tmpClass = {
-		name,
-		JSCLASS_NEW_ENUMERATE,
-		JS_PropertyStub,    JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
-		JS_EnumerateStub,   JS_ResolveStub,    JS_ConvertStub,    JS_FinalizeStub,
-		NULL,               NULL,              NULL,              NULL,
-		NULL,               NULL,              NULL,              NULL
-	};
-	return JS_InitClass(cx, gobj, NULL, &tmpClass, proto, 0, NULL, Methodes, NULL, NULL);
-	//return JS_InitClass(cx,gobj,NULL,attr,proto,nargs,ps,fs,static_ps,static_fs);
+	if(addProperty) tmpClass->addProperty=addProperty; else tmpClass->addProperty=JS_PropertyStub;
+	if(delProperty) tmpClass->delProperty=delProperty; else tmpClass->delProperty=JS_PropertyStub;
+	if(getProperty) tmpClass->getProperty=getProperty; else tmpClass->getProperty=JS_PropertyStub;
+	if(setProperty) tmpClass->setProperty=setProperty; else tmpClass->setProperty=JS_PropertyStub;
+	
+	if(enumerate  ) tmpClass->enumerate=enumerate;     else tmpClass->enumerate=JS_EnumerateStub;
+	if(resolve    ) tmpClass->resolve=resolve;         else tmpClass->resolve=JS_ResolveStub;
+	if(convert    ) tmpClass->convert=convert;         else tmpClass->convert=JS_ConvertStub;
+	if(finalize   ) tmpClass->finalize=finalize;       else tmpClass->finalize=JS_FinalizeStub;
+	
+	tmpClass->getObjectOps=getObjectOps;
+	tmpClass->checkAccess=checkAccess;
+	tmpClass->call=call;
+	tmpClass->construct=construct;
+	tmpClass->xdrObject=xdrObject;
+	tmpClass->hasInstance=hasInstance;
+	tmpClass->mark=mark;
+	tmpClass->reserveSlots=reserveSlots;
+	
+	return JS_InitClass(cx, obj?obj:gobj, parent_proto, tmpClass, constructor, nargs, ps, fs, static_ps, static_fs);
 }
 JSBool js_convertArguments(uintN argc, jsval *argv, const char *format, ...){
 	va_list ap;

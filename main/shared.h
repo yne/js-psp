@@ -10,12 +10,14 @@
 /*to JSVAL*/
 #define I2J(i) INT_TO_JSVAL(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
-
+/* for methode prupose */
 #define THIS   js_computeThis(cx, vp)
 #define ARGV   ((vp)+2)
 
 #define JS_FUN(fun_name) JSBool fun_name (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #define JS_METH(meth_name) static JSBool meth_name (JSContext *cx, uintN argc, jsval *vp)
+
+#define JSCLASS_NO_MANDATORY_MEMBERS 0,0,0,0,0,0,0,0
 
 typedef struct JSPropertiesSpec {
     const char      *name;
@@ -40,8 +42,7 @@ JSPropertiesSpec* mod_tmp_gvar;
 /* functions hosted by the interpreter */
 
 EXT int js_test(int);
-//JSClass *clasp,uintN nargs,JSPropertySpec *ps, JSFunctionSpec *fs,JSPropertySpec *static_ps, JSFunctionSpec *static_fs
-EXT JSObject* js_addClass(JSNative proto,char*name,JSFunctionSpec* Methodes);
+EXT JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots);
 EXT void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lvar,JSPropertiesSpec* gvar);
 EXT JSObject* js_addObj(const char*);
 EXT JSContext* js_getContext(void);
@@ -58,7 +59,6 @@ EXT JSObject** js_valueToObject(jsval v,JSObject** tobj);
 EXT JSString* js_valueToString(jsval v);
 EXT u32 js_valueToECMAUint32(jsval v);
 EXT u16 js_valueToUint16(jsval v);
-EXT jsdouble js_valueToNumber(jsval v);
 EXT jsdouble js_valueToNumber(jsval v);
 EXT jsval js_evaluateScript(char* eval);
 EXT JSType js_typeOfValue(jsval v);
