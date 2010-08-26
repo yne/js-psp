@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <malloc.h>
 
 #include <../src/jsapi.h>
 
@@ -89,6 +90,10 @@ JSBool js_setProperty(JSObject *tobj,const char* name, jsval vp){
 	if(!tobj)tobj=gobj;
 	return JS_SetProperty(cx,tobj,name,&vp);
 }
+JSBool js_delProperty(JSObject *tobj,const char* name){
+	if(!tobj)tobj=gobj;
+	return JS_DeleteProperty(cx,tobj,name);
+}
 jsdouble js_valueToNumber(jsval v){
 	jsdouble dp;
 	JS_ValueToNumber(cx,v,&dp);
@@ -156,4 +161,7 @@ void js_free(void *p){
 /* real C stuff (if you don't want use libc in your prx) */
 size_t c_strlen(char *str){
 	return strlen(str);
+}
+void* c_memalign(size_t blocksize, size_t bytes){
+	return memalign(blocksize,bytes);
 }
