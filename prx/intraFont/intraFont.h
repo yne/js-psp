@@ -285,7 +285,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float width,
  *
  * @returns The x position after the last char
  */
-float intraFontPrint        (intraFont *font, float x, float y, const char *text);
+float intraFontPrint        (intraFont *font, float x, float y, const char *text, float width);
 float intraFontPrintEx      (intraFont *font, float x, float y, const char *text, int length);
 float intraFontPrintColumn  (intraFont *font, float x, float y, float width, const char *text);
 float intraFontPrintColumnEx(intraFont *font, float x, float y, float width, const char *text, int length);
