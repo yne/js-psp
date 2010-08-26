@@ -16,6 +16,7 @@ PSP_EXPORT_FUNC(js_convertArguments)
 PSP_EXPORT_FUNC(js_getElement)
 PSP_EXPORT_FUNC(js_getProperty)
 PSP_EXPORT_FUNC(js_setProperty)
+PSP_EXPORT_FUNC(js_delProperty)
 PSP_EXPORT_FUNC(js_getStringBytes)
 PSP_EXPORT_FUNC(js_newString)
 PSP_EXPORT_FUNC(js_convertValue)
@@ -32,6 +33,7 @@ PSP_EXPORT_FUNC(js_realloc)
 PSP_EXPORT_FUNC(js_malloc)
 PSP_EXPORT_FUNC(js_free)
 PSP_EXPORT_FUNC(c_strlen)
+PSP_EXPORT_FUNC(c_memalign)
 PSP_EXPORT_END
  
 PSP_END_EXPORTS 

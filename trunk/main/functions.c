@@ -12,10 +12,20 @@ JS_FUN(js_print){
 	printf(J2S(argv[0]));
 	return JS_TRUE;
 }
-extern int Kfun();
-extern JSFunctionSpec* modK_GetFun();
-extern JSPropertiesSpec* modK_GetVar();
+JS_FUN(js_exit){
+	sceKernelExitGame();
+	return JS_TRUE;
+}
+extern KmodInfo js_addKModule();
 
+JS_FUN(js_meminfo){
+	js_setProperty(obj,"data",I2J(cx->runtime->gcBytes));//used to execute
+	js_setProperty(obj,"dataMax",I2J(cx->runtime->gcMaxBytes));
+	js_setProperty(obj,"text",I2J(cx->runtime->gcMallocBytes));//used to store ressource
+	js_setProperty(obj,"textMax",I2J(cx->runtime->gcMaxMallocBytes));
+	*rval=O2J(obj);
+  return JS_TRUE;
+}
 JS_FUN(js_run){
 	JSScript *script=JS_CompileFile(cx, gobj, J2S(argv[0]));
 	jsval result;
@@ -36,15 +46,22 @@ JS_FUN(js_include){
 	int ret = 0;
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
 	if(mod != uid){
-		printf("Error 0x%08X ", mod);
-		if(mod == 0x8002012E)printf(": <%s> not found!",path);
-		if(mod == 0x8002013B)printf(": <%s> already loaded/started",path);
-		if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
-		if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
-		printf("\n");
+		printf("Error 0x%08X \n", mod);
+		//if(mod == 0x8002012E)printf(": <%s> not found!",path);
+		//if(mod == 0x8002013B)printf(": <%s> already loaded/started",path);
+		//if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
+		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
 		return JS_FALSE;
 	}
 	if(obj!=gobj){
+		if(strstr(path,"Kloader")){//kloader cant call user functions, so we have to do it manualy
+			//KmodInfo info = js_addKModule();
+			/*mod_tmp_lfun=&info.lfun;
+			mod_tmp_gfun=&info.gfun;
+			mod_tmp_lvar=&info.lvar;
+			mod_tmp_gvar=&info.gvar;*/
+			//return JS_TRUE;
+		}
 		// module_start *should* call addInfo (yep, kernel can't) //
 		if(mod_tmp_lfun)
 			JS_DefineFunctions(cx,obj,mod_tmp_lfun);
@@ -72,10 +89,23 @@ JS_FUN(js_include){
 	printf("Load/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);	/**/
   return JS_TRUE;
 }
+JS_METH(js_exclude){
+	int ret=-1;
+	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL);
+	//printf("Stop/Unload %s : %i\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret);
+	sceKernelUnloadModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")));
+	*(vp) = I2J(ret);
+	//js_delProperty(NULL,obj);
+	return JS_TRUE;
+}
+static JSFunctionSpec ModuleMethodes[] = {
+	JS_FN("unload",js_exclude,0,0,0),
+	JS_FS_END
+};
 JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 	js_addClass(
 		NULL,NULL,js_include,1,
-		NULL,NULL,NULL,NULL,
+		NULL,ModuleMethodes,NULL,NULL,
 		"Module",JSCLASS_NEW_RESOLVE,
 		JSCLASS_NO_MANDATORY_MEMBERS,
 		JSCLASS_NO_OPTIONAL_MEMBERS

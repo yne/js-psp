@@ -1,4 +1,5 @@
 #include "src/jsapi.h"
+#include "src/jscntxt.h"
 
 /*from JSVAL*/
 #define J2I(j) JSVAL_TO_INT(j)
@@ -9,6 +10,7 @@
 #define J2L(j) js_valueToNumber(j)
 /*to JSVAL*/
 #define I2J(i) INT_TO_JSVAL(i)
+#define D2J(i) DOUBLE_TO_JSVAL(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
 /* for methode prupose */
 #define THIS   js_computeThis(cx, vp)
@@ -23,6 +25,12 @@ typedef struct JSPropertiesSpec {
     const char      *name;
     jsval           vp;
 }JSPropertiesSpec;
+typedef struct KmodInfo{
+	JSFunctionSpec* lfun;
+	JSFunctionSpec* gfun;
+	JSPropertiesSpec* lvar;
+	JSPropertiesSpec* gvar;
+}KmodInfo;
 
 #ifdef MAIN
 #define EXT  
@@ -49,8 +57,9 @@ EXT JSContext* js_getContext(void);
 EXT JSObject* js_getGlobalObject(void);
 EXT JSBool js_convertArguments(uintN, jsval*, const char *, ...);
 EXT jsval js_getElement(JSObject *tobj,int index);
-EXT jsval js_getProperty(JSObject *tobj,const char*);
-EXT jsval js_setProperty(JSObject *tobj,const char*, jsval);
+EXT jsval js_getProperty(JSObject *tobj,const char* name);
+EXT JSBool js_setProperty(JSObject *tobj,const char* name, jsval);
+EXT JSBool js_delProperty(JSObject *tobj,const char* name);
 EXT jsval js_convertValue(jsval v,JSType type);
 EXT char* js_getStringBytes(JSString* str);
 EXT JSString* js_newString(char* str);
@@ -68,4 +77,6 @@ EXT char* js_strdup(const char* str);
 EXT void* js_malloc(size_t nbytes);
 EXT void* js_realloc(void *p,size_t nbytes);
 EXT void js_free(void *p);
+
 EXT size_t c_strlen(const char *str);
+EXT void* c_memalign(size_t blocksize, size_t bytes);
