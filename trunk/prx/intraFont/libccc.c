@@ -14,6 +14,7 @@
 #include <malloc.h>
 
 #include "libccc.h"
+#include "../../main/shared.h"
 
 static unsigned char cccInitialized = 0;
 static void* __table_ptr__[CCC_N_CP];
@@ -109,7 +110,7 @@ int cccLZRDecompress(void *out, unsigned int out_capacity, void *in, void *in_en
 	}
 
 	/* create and init buffer */
-	unsigned char *buf = (unsigned char*)malloc(2800);
+	unsigned char *buf = (unsigned char*)js_malloc(2800);
 	if (!buf) return CCC_ERROR_MEM_ALLOC;
 	for (i = 0; i < 2800; i++) buf[i] = 0x80;
 
@@ -191,7 +192,7 @@ int cccLZRDecompress(void *out, unsigned int out_capacity, void *in, void *in_en
 int cccSetTable(void* table, unsigned int bytesize, unsigned char cp, unsigned char dyn) {
 	if (cp < CCC_N_CP) {
 		if (__table_dyn__[cp] && __table_ptr__[cp]) 
-			free(__table_ptr__[cp]);
+			js_free(__table_ptr__[cp]);
 		__table_ptr__[cp] = table;
 		__table_end__[cp] = table+bytesize;
 		__table_dyn__[cp] = dyn;
@@ -208,14 +209,14 @@ int cccLoadTable(const char *filename, unsigned char cp) {
     if (fd < 0) return CCC_ERROR_FILE_READ;
     unsigned int filesize = sceIoLseek(fd, 0, SEEK_END);
     sceIoLseek(fd, 0, SEEK_SET);
-    void* table_data = (void*)malloc(filesize);
+    void* table_data = (void*)js_malloc(filesize);
 	if (!table_data) {
 		sceIoClose(fd);
 		return CCC_ERROR_MEM_ALLOC;
 	}
     if (sceIoRead(fd, table_data, filesize) != filesize) {
 		sceIoClose(fd);
-		free(table_data);
+		js_free(table_data);
 		return CCC_ERROR_FILE_READ;
 	}
 	sceIoClose(fd);
@@ -224,22 +225,22 @@ int cccLoadTable(const char *filename, unsigned char cp) {
 	unsigned int *header = (unsigned int*)table_data;
 	while (header[0]) {
 		if ((cp == 0) || (cp == header[0])) {
-			void* table = (void*)malloc(header[4]);
+			void* table = (void*)js_malloc(header[4]);
 			if (!table) {
-				free(table_data);
+				js_free(table_data);
 				return CCC_ERROR_MEM_ALLOC;
 			}
 			int ret = cccLZRDecompress(table, header[4], table_data+header[2], NULL);
 			if (ret < 0) {
-				free(table_data);
-				free(table);
+				js_free(table_data);
+				js_free(table);
 				return ret;
 			}
 			cccSetTable(table, header[4], header[0], 1);
 		}
 		header += 8;
 	}
-	free(table_data);
+	js_free(table_data);
 	return CCC_SUCCESS;    
 }
 

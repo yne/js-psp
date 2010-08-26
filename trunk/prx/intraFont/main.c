@@ -19,34 +19,38 @@ JS_FUN(Init){
 	*rval = intraFontInit();
 	return JS_TRUE;
 }
-
 JS_FUN(Shutdown){
 	intraFontShutdown();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-
 JS_FUN(Load){
-	*rval = I2J((u32)intraFontLoad(J2S(argv[0]), J2I(argv[1])));
+	js_setProperty(obj,"path",argv[0]);
+	js_setProperty(obj,"param",argv[1]);
+	js_setProperty(obj,"data",I2J((u32)intraFontLoad(J2S(argv[0]),J2I(argv[1]))));
 	return JS_TRUE;
 }
-
 JS_FUN(Unload){
 	intraFontUnload((void*)J2U(argv[0]));
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-
 JS_FUN(Print){
-	intraFontPrint((void*)J2U(argv[0]), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]));
+	float width = 0.0f;
+	if(argc==5)width = J2L(argv[4]);
+	if(js_typeOfValue(argv[0])==JSTYPE_OBJECT)
+		*rval = I2J(intraFontPrint((void*)J2U(js_getProperty(J2O(argv[0]),"data")), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]),width));
+	else
+		*rval = I2J(intraFontPrint((void*)J2U(argv[0]), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]),width));
 	return JS_TRUE;
 }
-
 JS_FUN(SetStyle){
-	intraFontSetStyle((void*)J2U(argv[0]), J2I(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
+	if(js_typeOfValue(argv[0])==JSTYPE_OBJECT)
+		intraFontSetStyle((void*)J2U(js_getProperty(J2O(argv[0]),"data")), J2L(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
+	else
+		intraFontSetStyle((void*)J2U(argv[0]), J2L(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
 	return JS_TRUE;
 }
-
 static JSFunctionSpec lfun[] = {
 	{"Init",Init,0},
 	{"Shutdown",Shutdown,0},
@@ -109,12 +113,12 @@ static JSPropertiesSpec gvar[] = {
 	{"BLACK", I2J(0xFF000000)},
 	{0}
 };
-
 int module_start(SceSize args, void *argp){
 	js_addModule(lfun,gfun,0,gvar);
+	js_addClass(NULL,NULL,Load,2,NULL,NULL,NULL,NULL,"Font",
+		JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS);
 	return 0;
 }
-
 int module_stop(SceSize args, void *argp){
 	return 0;
 }
