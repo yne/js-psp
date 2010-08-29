@@ -17,7 +17,6 @@ JS_FUN(js_exit){
 	return JS_TRUE;
 }
 extern KmodInfo js_addKModule();
-
 JS_FUN(js_meminfo){
 	js_setProperty(obj,"data",I2J(cx->runtime->gcBytes));//used to execute
 	js_setProperty(obj,"dataMax",I2J(cx->runtime->gcMaxBytes));
@@ -40,11 +39,31 @@ JS_FUN(js_run){
 	JS_DestroyScript(cx, script);
   return JS_TRUE;
 }
+extern int js_searchInfo(KfindProc);
+u32 fun2nid(char* fun){
+	u32 nid = 0xFFFFFFFF;
+	u8 digest[20];
+	if(sceKernelUtilsSha1Digest((u8*)fun, strlen(fun), digest) >= 0)
+		nid = digest[0] | (digest[1] << 8) | (digest[2] << 16) | (digest[3] << 24);
+	return nid;
+}
+u32 getKinfo(char* name){
+	name[strrchr(name,'.')-name]=0;//module&librairie name
+	char fun[80];
+	KfindProc chaine;
+	strncpy(chaine.mod,name,80);
+	strncpy(chaine.lib,name,80);
+	sprintf(fun,"%s_addModule",name);
+	chaine.nid=fun2nid(fun);
+	return js_searchInfo(chaine);
+}
 JS_FUN(js_include){
 	char* path = J2S(argv[0]);
 	u32 uid = sceKernelLoadModule(path, 0, NULL);
 	int ret = 0;
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
+	int (* mod_addModule)(void);
+	
 	if(mod != uid){
 		printf("Error 0x%08X \n", mod);
 		//if(mod == 0x8002012E)printf(": <%s> not found!",path);
@@ -53,31 +72,35 @@ JS_FUN(js_include){
 		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
 		return JS_FALSE;
 	}
-	if(obj!=gobj){
-		if(strstr(path,"Kloader")){//kloader cant call user functions, so we have to do it manualy
-			//KmodInfo info = js_addKModule();
-			/*mod_tmp_lfun=&info.lfun;
-			mod_tmp_gfun=&info.gfun;
-			mod_tmp_lvar=&info.lvar;
-			mod_tmp_gvar=&info.gvar;*/
-			//return JS_TRUE;
+	printf("%s\n",path);
+	mod_addModule = (void*) getKinfo(strrchr(path,'/')+1);
+
+	if(mod_addModule){//kloader cant call user functions, so we have to do it manualy
+		printf("this Kmodule host JS functions (ret:%p)\n",mod_addModule);
+		//printf(" functions (ret:%i)\n",mod_addModule());
+		
+		//KmodInfo info = js_addKModule();
+		/*mod_tmp_lfun=&info.lfun;
+		mod_tmp_gfun=&info.gfun;
+		mod_tmp_lvar=&info.lvar;
+		mod_tmp_gvar=&info.gvar;*/
+		//return JS_TRUE;
+	}
+	// module_start *should* call addInfo (yep, kernel can't) //
+	if(mod_tmp_lfun)
+		JS_DefineFunctions(cx,obj,mod_tmp_lfun);
+	if(mod_tmp_gfun)
+		JS_DefineFunctions(cx,gobj,mod_tmp_gfun);
+	if(mod_tmp_lvar){
+		while(mod_tmp_lvar->name){
+			JS_SetProperty(cx,obj,mod_tmp_lvar->name,&mod_tmp_lvar->vp);
+			mod_tmp_lvar++;
 		}
-		// module_start *should* call addInfo (yep, kernel can't) //
-		if(mod_tmp_lfun)
-			JS_DefineFunctions(cx,obj,mod_tmp_lfun);
-		if(mod_tmp_gfun)
-			JS_DefineFunctions(cx,gobj,mod_tmp_gfun);
-		if(mod_tmp_lvar){
-			while(mod_tmp_lvar->name){
-				JS_SetProperty(cx,obj,mod_tmp_lvar->name,&mod_tmp_lvar->vp);
-				mod_tmp_lvar++;
-			}
-		}
-		if(mod_tmp_gvar){
-			while(mod_tmp_gvar->name){
-				JS_SetProperty(cx,gobj,mod_tmp_gvar->name,&mod_tmp_gvar->vp);
-				mod_tmp_gvar++;
-			}
+	}
+	if(mod_tmp_gvar){
+		while(mod_tmp_gvar->name){
+			JS_SetProperty(cx,gobj,mod_tmp_gvar->name,&mod_tmp_gvar->vp);
+			mod_tmp_gvar++;
 		}
 	}
 	js_setProperty(obj,"UID",I2J(mod));

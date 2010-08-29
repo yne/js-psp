@@ -1,4 +1,5 @@
 #include <pspkernel.h>
+#include <pspsyscon.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -32,8 +33,9 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 		printf("%s\n",message);
 	sceKernelExitGame();//exit b4 bus error 8)
 }
-
 int main(int argc, const char *argv[]){
+	int ret;
+	sceKernelStartModule(sceKernelLoadModule("prx/Kloader.prx", 0, NULL), 0, NULL, &ret, NULL);
 	while(1){
 		JSRuntime *rt = JS_NewRuntime(16 * 1024 * 1024);// runtime
 		cx = JS_NewContext(rt, 8192); // Context
@@ -42,11 +44,7 @@ int main(int argc, const char *argv[]){
 		JS_InitStandardClasses(cx, gobj); //Populate the global object with the standard globals (String,Object,Array...)
 		JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
 		JS_InitClasses(cx, gobj);//Populate the global object with the non-standard classes (Module)
-		JSScript *script;
-		if(argc>1)
-			script=JS_CompileFile(cx, gobj, argv[1]);
-		else
-			script=JS_CompileFile(cx, gobj, "js/main.js");
+		JSScript *script=JS_CompileFile(cx, gobj, argc>1?argv[1]:"js/main.js");
 		jsval result;
 		if(!script){
 			printf("Compilation error\n");
