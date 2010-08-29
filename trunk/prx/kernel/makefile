@@ -1,4 +1,4 @@
-TARGET = ../template_driver
+TARGET = ../Kloader
 OBJS = main.o
 
 LDFLAGS = -mno-crt0 -nostartfiles
@@ -8,13 +8,13 @@ PRX_EXPORTS = export.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
 #work both with user/PSPsdk/kernel lib c/s
-USE_PSPSDK_LIBC = 1
-USE_PSPSDK_LIBS = 1
+#USE_PSPSDK_LIBC = 1
+#USE_PSPSDK_LIBS = 1
 #export don't work with KERNEL lib ...
-#USE_KERNEL_LIBC = 1
-#USE_KERNEL_LIBS = 1
+USE_KERNEL_LIBC = 1
+USE_KERNEL_LIBS = 1
 INCDIR = ../../
-
+LIBS =  -lpspkernel -lpspsystemctrl_kernel
 BUILD_PRX = 1
 
 PSPSDK=$(shell psp-config --pspsdk-path)
