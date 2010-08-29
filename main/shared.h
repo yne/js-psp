@@ -25,12 +25,19 @@ typedef struct JSPropertiesSpec {
     const char      *name;
     jsval           vp;
 }JSPropertiesSpec;
+
 typedef struct KmodInfo{
 	JSFunctionSpec* lfun;
 	JSFunctionSpec* gfun;
 	JSPropertiesSpec* lvar;
 	JSPropertiesSpec* gvar;
 }KmodInfo;
+
+typedef struct kfindproc {
+	char mod[80];
+	char lib[80];
+	unsigned nid;
+}KfindProc;
 
 #ifdef MAIN
 #define EXT  
