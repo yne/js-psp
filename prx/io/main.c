@@ -27,7 +27,7 @@ int sceIoChangeAsyncPriority(SceUID fd, int pri);
 int sceIoSetAsyncCallback(SceUID fd, SceUID cb, void *argp);
 */
 JS_FUN(Open){
-	*rval = I2J(sceIoOpen(J2S(argv[0]),J2I(argv[1]),J2I(argv[2])));
+	*rval = I2J(sceIoOpen(J2S(argv[0]),J2I(argv[1])?J2I(argv[1]):PSP_O_RDWR|PSP_O_CREAT,J2I(argv[2])?J2I(argv[2]):0777));
 	return JS_TRUE;
 }
 JS_FUN(OpenAsync){
@@ -176,61 +176,99 @@ JS_FUN(SetAsyncCallback){
 	return JS_TRUE;
 }
 JS_FUN(File){
-	JSObject* file = js_addObj(" ");
-	int fd = sceIoOpen(J2S(argv[0]),argv[1]?argv[1]:(PSP_O_CREAT|PSP_O_RDONLY|PSP_O_WRONLY),0777);
-	int size = sceIoLseek(fd,0,SEEK_END);
+	int fd = sceIoOpen(J2S(argv[0]),PSP_O_CREAT|PSP_O_RDONLY|PSP_O_WRONLY,0777);
+	js_setProperty(obj,"path",argv[0]);
+	js_setProperty(obj,"fd",I2J(fd));
+	js_setProperty(obj,"size",I2J(sceIoLseek32(fd,0,SEEK_END)));
+	js_setProperty(obj,"pos" ,I2J(0));//updated by callback
+	js_setProperty(obj,"date",I2J(0));//updated by callback
+	sceIoLseek32(fd,0,SEEK_SET);
+	return JS_TRUE;
+}
+JS_METH(file_write){
+	u32 length;
+	if(argc==1)
+		length = js_getStringLength(JSVAL_TO_STRING(ARGV[0]));
+	else
+		length = J2I(ARGV[1]);
+	*(vp) = I2J(sceIoWrite(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),J2S(ARGV[0]),length));
+	return JS_TRUE;
+}
+JS_METH(file_close){
+	*(vp) = I2J(sceIoClose(J2I(js_getProperty(J2O(ARGV[-1]),"fd"))));
+	return JS_TRUE;
+}
+JS_METH(file_rename){
+	*(vp) = I2J(sceIoRename(J2S(js_getProperty(J2O(ARGV[-1]),"path")),J2S(ARGV[0])));
+	js_setProperty(J2O(ARGV[-1]),"path",ARGV[0]);
+	return JS_TRUE;
+}
+JS_METH(file_remove){
+	*(vp) = I2J(sceIoRemove(J2S(js_getProperty(J2O(ARGV[-1]),"path"))));
+	return JS_TRUE;
+}
+JS_METH(file_read){
+	int fd = J2I(js_getProperty(J2O(ARGV[-1]),"fd"));
+	u32 cur = sceIoLseek32(fd,0,SEEK_CUR);//save the current position
+	u32 size = 0;
+	switch(argc){
+		case 0 :
+			size = sceIoLseek32(fd,0,SEEK_END);
+			sceIoLseek32(fd,0,SEEK_SET);
+		break;
+		case 1 :
+			size = J2I(ARGV[1]);
+		case 2 :
+			size = J2I(ARGV[2]);
+			sceIoLseek32(fd,J2I(ARGV[1]),PSP_SEEK_SET);
+		break;
+	}
 	void* p = js_malloc(size);
 	sceIoRead(fd,p,size);
-	js_setProperty(file,"_type",argv[0]);
-	js_setProperty(file,"path",argv[0]);
-	js_setProperty(file,"data",I2J((u32)p));
-	js_setProperty(file,"fd",I2J(fd));
-	js_setProperty(file,"length",I2J(size));
-	*rval = O2J(file);
+	*(vp) = STRING_TO_JSVAL(js_newString(p,size));
+	sceIoLseek32(fd,cur,SEEK_SET);
 	return JS_TRUE;
 }
 static JSFunctionSpec functions[] = {
-	{"Open",Open,3},
-	{"OpenAsync",OpenAsync,3},
-	{"Dopen",Dopen,1},
-	{"Lseek",Lseek,3},
-	{"Close",Close,1},
-	{"CloseAsync",CloseAsync,1},
-	{"Read",Read,3},
-	{"ReadAsync",ReadAsync,3},
-	{"Write",Write,3},
-	{"WriteAsync",WriteAsync,3},
-	{"LseekAsync",LseekAsync,3},
-	{"Lseek32",Lseek32,3},
-	{"Lseek32Async",Lseek32Async,3},
-	{"Remove",Remove,1},
-	{"Mkdir",Mkdir,2},
-	{"Rmdir",Rmdir,1},
-	{"Chdir",Chdir,1},
-	{"Rename",Rename,2},
-	{"Dread",Dread,2},
-	{"Dclose",Dclose,1},
-	{"Devctl",Devctl,6},
-	{"Assign",Assign,6},
-	{"Unassign",Unassign,1},
-	{"Getstat",Getstat,2},
-	{"Chstat",Chstat,3},
-	{"Ioctl",Ioctl,6},
-	{"IoctlAsync",IoctlAsync,6},
-	{"Sync",Sync,2},
-	{"WaitAsync",WaitAsync,2},
-	{"WaitAsyncCB",WaitAsyncCB,2},
-	{"PollAsync",PollAsync,2},
-	{"GetAsyncStat",GetAsyncStat,3},
-	{"Cancel",Cancel,1},
-	{"GetDevType",GetDevType,1},
-	{"ChangeAsyncPriority",ChangeAsyncPriority,2},
-	{"SetAsyncCallback",SetAsyncCallback,3},
+	{"open",Open,3},
+	{"openAsync",OpenAsync,3},
+	{"dopen",Dopen,1},
+	{"lseek",Lseek,3},
+	{"close",Close,1},
+	{"closeAsync",CloseAsync,1},
+	{"read",Read,3},
+	{"readAsync",ReadAsync,3},
+	{"write",Write,3},
+	{"writeAsync",WriteAsync,3},
+	{"lseekAsync",LseekAsync,3},
+	{"lseek32",Lseek32,3},
+	{"lseek32Async",Lseek32Async,3},
+	{"remove",Remove,1},
+	{"mkdir",Mkdir,2},
+	{"rmdir",Rmdir,1},
+	{"chdir",Chdir,1},
+	{"rename",Rename,2},
+	{"dread",Dread,2},
+	{"dclose",Dclose,1},
+	{"devctl",Devctl,6},
+	{"assign",Assign,6},
+	{"unassign",Unassign,1},
+	{"getstat",Getstat,2},
+	{"chstat",Chstat,3},
+	{"ioctl",Ioctl,6},
+	{"ioctlAsync",IoctlAsync,6},
+	{"sync",Sync,2},
+	{"waitAsync",WaitAsync,2},
+	{"waitAsyncCB",WaitAsyncCB,2},
+	{"pollAsync",PollAsync,2},
+	{"getAsyncStat",GetAsyncStat,3},
+	{"cancel",Cancel,1},
+	{"getDevType",GetDevType,1},
+	{"changeAsyncPriority",ChangeAsyncPriority,2},
+	{"setAsyncCallback",SetAsyncCallback,3},
 	{0}
 };
 static JSFunctionSpec gfunctions[] = {
-/* new */
-	{"File",File,1},
 /* global */
 	{"sceIoOpen",Open,3},
 	{"sceIoOpenAsync",OpenAsync,3},
@@ -288,7 +326,57 @@ static JSPropertiesSpec var[] = {
 	{"PSP_SEEK_END", I2J(2)},
 	{0}
 };
+static JSFunctionSpec fileMethodes[] = {
+	JS_FN("remove",file_remove,0,0,0),
+	JS_FN("rename",file_rename,2,0,0),
+	JS_FN("read",  file_read,2,0,0),
+	JS_FN("close", file_close,0,0,0),
+	JS_FN("write", file_write,2,0,0),
+	JS_FS_END
+};
+static JSBool class_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp){
+	char eval[64];
+	SceIoStat stat;
+	//printf("FILE < %s : %s\n",J2S(id),J2S(*vp));
+	if(!strcmp(J2S(id),"pos")){
+		*(vp) = I2J(sceIoLseek32(J2I(js_getProperty(obj,"fd")),0,SEEK_CUR));
+	}else	if(!strcmp(J2S(id),"size")){
+		sceIoGetstat(J2S(js_getProperty(obj,"path")),&stat);
+		*(vp) = I2J(stat.st_size);
+	}else if(!strcmp(J2S(id),"created")){
+		sceIoGetstat(J2S(js_getProperty(obj,"path")),&stat);
+		sprintf(eval,"new Date(%i,%i,%i,%i,%i,%i,%i)",stat.st_ctime.year,stat.st_ctime.month-1,stat.st_ctime.day,stat.st_ctime.hour,stat.st_ctime.minute,stat.st_ctime.second,stat.st_ctime.microsecond);
+		*(vp) = js_evaluateScript(eval);
+	}else if(!strcmp(J2S(id),"modified")){
+		sceIoGetstat(J2S(js_getProperty(obj,"path")),&stat);
+		sprintf(eval,"new Date(%i,%i,%i,%i,%i,%i,%i)",stat.st_mtime.year,stat.st_mtime.month-1,stat.st_mtime.day,stat.st_mtime.hour,stat.st_mtime.minute,stat.st_mtime.second,stat.st_mtime.microsecond);
+		*(vp) = js_evaluateScript(eval);
+	}else if(!strcmp(J2S(id),"accessed")){
+		sceIoGetstat(J2S(js_getProperty(obj,"path")),&stat);
+		sprintf(eval,"new Date(%i,%i,%i,%i,%i,%i,%i)",stat.st_atime.year,stat.st_atime.month-1,stat.st_atime.day,stat.st_atime.hour,stat.st_atime.minute,stat.st_atime.second,stat.st_atime.microsecond);
+		*(vp) = js_evaluateScript(eval);
+	}
+	return JS_TRUE;
+}
+static JSBool class_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp){
+	if(!strcmp(J2S(id),"pos")){
+		int fd = J2I(js_getProperty(obj,"fd"));
+		u32 end = sceIoLseek32(fd,0,SEEK_END);
+		if(J2I(*vp)>end)//try to go outside the file , return the end position
+			*(vp) = I2J(sceIoLseek32(fd,end,SEEK_SET));
+		else
+			*(vp) = I2J(sceIoLseek32(fd,J2I(*vp),SEEK_SET));
+	}else if(!strcmp(J2S(id),"size")){
+		int fd = J2I(js_getProperty(obj,"fd"));
+		u32 cur = sceIoLseek32(fd,0,SEEK_CUR);//get the current place
+		*(vp) = sceIoLseek32(fd,0,SEEK_END);//return the last place
+		sceIoLseek32(fd,cur,SEEK_SET);//update-back to original place
+	}
+	return JS_TRUE;
+}
 int module_start(SceSize args, void *argp){
+	js_addClass(NULL,NULL,File,2,NULL,fileMethodes,NULL,NULL,"File",
+		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS);
 	js_addModule(functions,gfunctions,0,var);
 	return 0;
 }
