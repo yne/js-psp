@@ -107,7 +107,12 @@ jsval js_convertValue(jsval v,JSType type){
 	JS_ConvertValue(cx,v,type,&dp);
 	return dp;
 }
-JSString* js_newString(char* str){
+size_t js_getStringLength(JSString *str){
+	return JS_GetStringLength(str);
+}
+JSString* js_newString(char* str,size_t size){
+	if(size)
+		return JS_NewString(cx,str,size);
 	return JS_NewString(cx,str,strlen(str));
 }
 JSString* js_valueToString(jsval str){
