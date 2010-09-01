@@ -12,10 +12,13 @@
 #define I2J(i) INT_TO_JSVAL(i)
 #define D2J(i) DOUBLE_TO_JSVAL(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
+#define S2J(i) STRING_TO_JSVAL(js_newString((i),0))
+
 /* for methode prupose */
 #define THIS   js_computeThis(cx, vp)
 #define ARGV   ((vp)+2)
 
+#define UNDEFINED 0xC0000000
 #define JS_FUN(fun_name) JSBool fun_name (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #define JS_METH(meth_name) static JSBool meth_name (JSContext *cx, uintN argc, jsval *vp)
 
@@ -69,8 +72,8 @@ EXT JSBool js_setProperty(JSObject *tobj,const char* name, jsval);
 EXT JSBool js_delProperty(JSObject *tobj,const char* name);
 EXT jsval js_convertValue(jsval v,JSType type);
 EXT char* js_getStringBytes(JSString* str);
-EXT JSString* js_newString(char* str);
-EXT JSString* js_newExternalString(char* str);
+EXT size_t js_getStringLength(JSString *str);
+EXT JSString* js_newString(char* str,size_t size);
 EXT JSObject** js_valueToObject(jsval v,JSObject** tobj);
 EXT JSString* js_valueToString(jsval v);
 EXT u32 js_valueToECMAUint32(jsval v);

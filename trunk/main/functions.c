@@ -62,7 +62,6 @@ JS_FUN(js_include){
 	u32 uid = sceKernelLoadModule(path, 0, NULL);
 	int ret = 0;
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
-	int (* mod_addModule)(void);
 	
 	if(mod != uid){
 		printf("Error 0x%08X \n", mod);
@@ -72,21 +71,12 @@ JS_FUN(js_include){
 		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
 		return JS_FALSE;
 	}
-	printf("%s\n",path);
-	mod_addModule = (void*) getKinfo(strrchr(path,'/')+1);
-
-	if(mod_addModule){//kloader cant call user functions, so we have to do it manualy
-		printf("this Kmodule host JS functions (ret:%p)\n",mod_addModule);
-		//printf(" functions (ret:%i)\n",mod_addModule());
-		
-		//KmodInfo info = js_addKModule();
-		/*mod_tmp_lfun=&info.lfun;
-		mod_tmp_gfun=&info.gfun;
-		mod_tmp_lvar=&info.lvar;
-		mod_tmp_gvar=&info.gvar;*/
-		//return JS_TRUE;
-	}
-	// module_start *should* call addInfo (yep, kernel can't) //
+/*
+	extern int tmpFunction();
+	printf("tmpFunction avan patchage (ret:%i)\n",tmpFunction());
+	if(getKinfo(strrchr(path,'/')+1))
+		printf("tmpFunction APRES patchage (ret:%i)\n",tmpFunction());
+*/
 	if(mod_tmp_lfun)
 		JS_DefineFunctions(cx,obj,mod_tmp_lfun);
 	if(mod_tmp_gfun)
