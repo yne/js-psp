@@ -111,11 +111,10 @@ JS_FUN(MsgDialogInitStart){
 	dialog.mode=J2I(js_getProperty(param,"mode"));
 	dialog.options=J2I(js_getProperty(param,"options"));
   dialog.errorValue=J2I(js_getProperty(param,"errorValue"));
-	char* msg = js_getStringBytes(JSVAL_TO_STRING(js_getProperty(param,"message")));
-	if(strlen(msg)<512)
-		strcpy(dialog.message,msg);
-	else
-		strcpy(dialog.message,"String length > 511 bytes");
+	dialog.buttonPressed=0;
+	char* msg = J2S(js_getProperty(param,"message"));
+	//printf("msg:%s\n\n",msg);
+	strncpy(dialog.message,msg,512);
 	*rval = I2J(sceUtilityMsgDialogInitStart(&dialog));
 	return JS_TRUE;	
 }
@@ -135,6 +134,10 @@ JS_FUN(MsgDialogShutdownStart){
 	sceUtilityMsgDialogShutdownStart();
 	return JS_TRUE;	
 }
+JS_FUN(MsgDialogPressed){
+	*rval = I2J(dialog.buttonPressed);
+	return JS_TRUE;	
+}
 /* System param */
 JS_FUN(GetSystemParamInt){
 	int value;
@@ -146,14 +149,14 @@ JS_FUN(SetSystemParamInt){
 	*rval = I2J(sceUtilitySetSystemParamInt(J2I(argv[0]),J2I(argv[1])));
 	return JS_TRUE;
 }
-char ParamString[255];
 JS_FUN(GetSystemParamString){
-	//sceUtilityGetSystemParamString(J2I(argv[0]), ParamString,J2I(argv[1]));
-	*rval = STRING_TO_JSVAL(js_newString("saphire"));
+	char* ParamString = js_malloc(25);
+	sceUtilityGetSystemParamString(J2I(argv[0]),ParamString,25);
+	*rval = STRING_TO_JSVAL(js_newString(ParamString,0));//0 = strlen
 	return JS_TRUE;
 }
 JS_FUN(SetSystemParamString){
-	*rval = I2J(sceUtilitySetSystemParamString(J2I(argv[0]),J2S(argv[0])));
+	*rval = I2J(sceUtilitySetSystemParamString(J2I(argv[0]),J2S(argv[0])));//0x80110103
 	return JS_TRUE;
 }
 /* Netconf */
@@ -161,7 +164,6 @@ typedef struct _pspUtilityNetconfAdhoc{
 	unsigned char name[8];
 	unsigned int timeout;
 } pspUtilityNetconfAdhoc;
-
 pspUtilityNetconfData Netconf;
 struct pspUtilityNetconfAdhoc adhocparam;
 JS_FUN(NetconfInitStart){
@@ -203,14 +205,13 @@ JS_FUN(NetconfGetStatus){
 }
 /* OSK */
 SceUtilityOskParams OskParams;
-
-void packUIStr(unsigned short* int_str, char* chr_str, int string_size) { //Converts and int string to a char string. (OSK)
+char* packUIStr(unsigned short* int_str, char* chr_str, int string_size) { //Converts and int string to a char string. (OSK)
 	int c;
 	memset(chr_str, 0, string_size);
 	for(c = 0; int_str[c]; c++)
 		chr_str[c] = int_str[c];
+	return chr_str;
 }
-
 unsigned short* expandChrStr(char* chr_str, unsigned short* int_str) { //Converts a char string to an int string. (OSK)
   int c;
   memset(int_str, 0, (sizeof(unsigned short)*strlen(chr_str))+1);
@@ -218,45 +219,54 @@ unsigned short* expandChrStr(char* chr_str, unsigned short* int_str) { //Convert
     int_str[c] = chr_str[c];
 	return int_str;
 }
-unsigned short* umsg;
-unsigned short* itxt;
-unsigned short* otxt;
+// i dunno how to dynamicaly malloc a unsigned short* and handle it ...
+unsigned short desc[128];
+unsigned short intext[512];
+unsigned short outtext[512];
+SceUtilityOskData data;
+SceUtilityOskParams params;
 JS_FUN(OskInitStart){
 	JSObject* param = J2O(argv[0]);
-	memset(&OskParams,0,sizeof(OskParams));
 	pspUtilityDialogCommon base;
-	OskParams.base=objectToBase(J2O(js_getProperty(param,"base")),&base,sizeof(OskParams));
-	OskParams.datacount=J2I(js_getProperty(param,"datacount"));
+	params.base=objectToBase(J2O(js_getProperty(param,"base")),&base,sizeof(params));
 
-	SceUtilityOskData data;
-	memset(&data, 0, sizeof(data));
+	memset(&data, 0, sizeof(SceUtilityOskData));
+	
 	JSObject* odata = J2O(js_getProperty(param,"data"));
 	data.unk_00=J2I(js_getProperty(odata,"type"));
+		if(data.unk_00==UNDEFINED)data.unk_00=0;
 	data.unk_04=J2I(js_getProperty(odata,"attributes"));
+		if(data.unk_04==UNDEFINED)data.unk_04=0;
 	data.language=J2I(js_getProperty(odata,"language"));
+		if(data.language==UNDEFINED)data.language=PSP_UTILITY_OSK_LANGUAGE_DEFAULT;
 	data.unk_12=J2I(js_getProperty(odata,"hidemode"));
+		if(data.unk_12==UNDEFINED)data.unk_12=0;// or 1 : no difference
 	data.inputtype=J2I(js_getProperty(odata,"inputtype"));
+		if(data.inputtype==UNDEFINED)data.inputtype=PSP_UTILITY_OSK_INPUTTYPE_ALL;
 	data.lines=J2I(js_getProperty(odata,"lines"));
-	data.unk_24=J2I(js_getProperty(odata,"kinsoku"));//japan line feed delimiter
-	umsg=(void*)js_malloc(2*strlen(J2S(js_getProperty(odata,"message"))));
-	data.desc=expandChrStr(J2S(js_getProperty(odata,"message")),umsg);
-	itxt=(void*)js_malloc(2*strlen(J2S(js_getProperty(odata,"intext"))));
-	data.intext=expandChrStr(J2S(js_getProperty(odata,"intext")),itxt);
-	data.outtextlength=J2I(js_getProperty(odata,"outtextlength"));
-	otxt=(void*)js_malloc(2*strlen(J2S(js_getProperty(odata,"outtext"))));
-	data.outtext=expandChrStr(J2S(js_getProperty(odata,"outtext")),otxt);
-	data.result=J2I(js_getProperty(odata,"result"));
-	data.outtextlimit=J2I(js_getProperty(odata,"outtextlimit"));
-	
-	OskParams.data = (void*)&data;
-	OskParams.state=J2I(js_getProperty(param,"state"));
-	OskParams.unk_60=J2I(js_getProperty(param,"errorcode"));
+		if(data.lines==UNDEFINED)data.lines=50;
+	data.unk_24=J2I(js_getProperty(odata,"kinsoku"));
+		if(data.unk_24==UNDEFINED)data.unk_24=0;
+	data.desc = expandChrStr(J2S(js_getProperty(odata,"desc")),desc);
+		//"undefined"
+	data.intext = expandChrStr(J2S(js_getProperty(odata,"intext")),intext);
+		//"undefined"
+	data.outtextlength = J2I(js_getProperty(odata,"outtextlength"));
+		if(data.outtextlength==UNDEFINED)data.outtextlength=js_getStringLength(JSVAL_TO_STRING(js_getProperty(odata,"intext")))+1;
+	data.outtextlimit = J2I(js_getProperty(odata,"outtextlimit"));
+		if(data.outtextlimit==UNDEFINED)data.outtextlimit=data.outtextlength;
 
-	*rval = I2J(sceUtilityOskInitStart(&OskParams));
-	return JS_TRUE;	
+	data.outtext = outtext;
+	params.datacount = J2I(js_getProperty(param,"datacount"));
+		if(params.datacount==UNDEFINED)params.datacount=1;
+	params.data = &data;
+	//errorcode & result are unusable
+	sceUtilityOskInitStart(&params);
+	return JS_TRUE;
 }
 JS_FUN(OskShutdownStart){
-	*rval = I2J(sceUtilityOskShutdownStart());
+	sceUtilityOskShutdownStart();
+	*rval = STRING_TO_JSVAL(js_newString((void*)packUIStr(outtext,js_malloc(data.outtextlength),data.outtextlength),0));
 	return JS_TRUE;	
 }
 JS_FUN(OskUpdate){
@@ -482,30 +492,35 @@ static JSPropertiesSpec var[] = {
 	{0}
 };
 static JSFunctionSpec functions[] = {
-	{"LoadAvModule",LoadAvModule,1},
-	{"UnloadAvModule",UnloadAvModule,1},
-	{"LoadNetModule",LoadNetModule,1},
-	{"UnloadNetModule",UnloadNetModule,1},
-	{"LoadUsbModule",LoadUsbModule,1},
-	{"UnloadUsbModule",UnloadUsbModule,1},
-	{"LoadModule",LoadModule,1},
-	{"UnloadModule",UnloadModule,1},
-	{"GameSharingUpdate",GameSharingUpdate,0},
-	{"GameSharingGetStatus",GameSharingGetStatus,0},
-	{"GameSharingShutdownStart",GameSharingShutdownStart,0},
-	{"MsgDialogInitStart",MsgDialogInitStart,1},
-	{"MsgDialogShutdownStart",MsgDialogShutdownStart,0},
-	{"MsgDialogGetStatus",MsgDialogGetStatus,0},
-	{"MsgDialogUpdate",MsgDialogUpdate,0},
-	{"MsgDialogAbort",MsgDialogAbort,0},
-	{"GetSystemParamInt",GetSystemParamInt,1},
-	{"SetSystemParamInt",SetSystemParamInt,2},
-	{"GetSystemParamString",GetSystemParamString,1},
-	{"SetSystemParamString",SetSystemParamString,2},
-	{"NetconfInitStart",NetconfInitStart,2},
-	{"NetconfShutdownStart",NetconfShutdownStart,0},
-	{"NetconfUpdate",NetconfUpdate,1},
-	{"NetconfGetStatus",NetconfGetStatus,0},
+	{"loadAvModule",LoadAvModule,1},
+	{"unloadAvModule",UnloadAvModule,1},
+	{"loadNetModule",LoadNetModule,1},
+	{"unloadNetModule",UnloadNetModule,1},
+	{"loadUsbModule",LoadUsbModule,1},
+	{"unloadUsbModule",UnloadUsbModule,1},
+	{"loadModule",LoadModule,1},
+	{"unloadModule",UnloadModule,1},
+	{"gameSharingUpdate",GameSharingUpdate,0},
+	{"gameSharingGetStatus",GameSharingGetStatus,0},
+	{"gameSharingShutdownStart",GameSharingShutdownStart,0},
+	{"msgDialogInitStart",MsgDialogInitStart,1},
+	{"msgDialogShutdownStart",MsgDialogShutdownStart,0},
+	{"msgDialogGetStatus",MsgDialogGetStatus,0},
+	{"msgDialogUpdate",MsgDialogUpdate,0},
+	{"msgDialogAbort",MsgDialogAbort,0},
+	{"msgDialogPressed",MsgDialogPressed,0},
+	{"getSystemParamInt",GetSystemParamInt,1},
+	{"setSystemParamInt",SetSystemParamInt,2},
+	{"getSystemParamString",GetSystemParamString,1},
+	{"setSystemParamString",SetSystemParamString,2},
+	{"netconfInitStart",NetconfInitStart,2},
+	{"netconfShutdownStart",NetconfShutdownStart,0},
+	{"netconfUpdate",NetconfUpdate,1},
+	{"netconfGetStatus",NetconfGetStatus,0},
+	{"oskInitStart",OskInitStart,1},
+	{"oskGetStatus",OskGetStatus,0},
+	{"oskUpdate",OskUpdate,1},
+	{"oskShutdownStart",OskShutdownStart,0},
 	{0}
 };
 int module_start(SceSize args, void *argp){

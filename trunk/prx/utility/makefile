@@ -5,8 +5,8 @@ CFLAGS   = -G0 -Wall -O2
 ASFLAGS  = $(CFLAGS)
 LDFLAGS  = -mno-crt0 -nostartfiles
 
-#PRX_EXPORTS = export.exp
-#$(shell psp-build-exports -s ${PRX_EXPORTS})
+PRX_EXPORTS = ../plugin.exp
+$(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
 LIBS = -lpsputility
