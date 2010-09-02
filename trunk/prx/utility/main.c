@@ -57,14 +57,31 @@ JS_FUN(UnloadNetModule){
 }
 /* Common */
 pspUtilityDialogCommon objectToBase(JSObject* bobj,pspUtilityDialogCommon* base,size_t size){
+	int value;//used to store result from get sys param;
+	
+	int doy=0;
+	if((u32)bobj==0x80000000)doy=1;//base object object not specified
+
 	base->size=size;
-	base->language=J2I(js_getProperty(bobj,"language"));
-	base->buttonSwap=J2I(js_getProperty(bobj,"buttonSwap"));
-	base->graphicsThread=J2I(js_getProperty(bobj,"graphicsThread"));
-	base->accessThread=J2I(js_getProperty(bobj,"accessThread"));
-	base->fontThread=J2I(js_getProperty(bobj,"fontThread"));
-	base->soundThread=J2I(js_getProperty(bobj,"soundThread"));
-	base->result=J2I(js_getProperty(bobj,"result"));
+	if(!doy)base->language=J2I(js_getProperty(bobj,"language"));
+	if(doy||base->language==UNDEFINED){
+		sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&value);
+		base->language = value;
+	}
+	if(!doy)base->buttonSwap=J2I(js_getProperty(bobj,"buttonSwap"));
+	if(doy||base->buttonSwap==UNDEFINED){
+		sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN,&value);
+		base->buttonSwap = value;
+	}
+	if(!doy)base->soundThread=J2I(js_getProperty(bobj,"soundThread"));
+	if(doy||base->soundThread==UNDEFINED)base->soundThread=16;
+	if(!doy)base->graphicsThread=J2I(js_getProperty(bobj,"graphicsThread"));
+	if(doy||base->graphicsThread==UNDEFINED)base->graphicsThread=17;
+	if(!doy)base->fontThread=J2I(js_getProperty(bobj,"fontThread"));
+	if(doy||base->fontThread==UNDEFINED)base->fontThread=18;
+	if(!doy)base->accessThread=J2I(js_getProperty(bobj,"accessThread"));
+	if(doy||base->accessThread==UNDEFINED)base->accessThread=19;
+	//base->result=J2I(js_getProperty(bobj,"result"));
 	return *base;
 }
 /* Game sharing */
