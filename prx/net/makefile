@@ -5,11 +5,11 @@ CFLAGS   = -G0 -Wall -O2
 ASFLAGS  = $(CFLAGS)
 LDFLAGS  = -mno-crt0 -nostartfiles
 
-#PRX_EXPORTS = export.exp
-#$(shell psp-build-exports -s ${PRX_EXPORTS})
+PRX_EXPORTS = ../plugin.exp
+$(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS = -lpspnet_adhocmatching -lpspnet_adhocctl -lpspnet_adhoc -lpspwlan
+LIBS = -lpspnet -lpspnet_adhocmatching -lpspnet_adhocctl -lpspnet_adhoc -lpspnet_resolver -lpspwlan
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1

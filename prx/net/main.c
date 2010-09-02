@@ -9,17 +9,28 @@
 #include <pspnet_adhoc.h>
 #include <pspnet_adhocmatching.h>
 #include <pspnet_adhocctl.h>
+
+#include <arpa/inet.h>
+
 #include "../../main/shared.h"
 
 PSP_MODULE_INFO("sceNet",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
 
+u32 net_uid = 0; /* Net */
+u32 ifhandle_uid = 0;//sceNetInterface_Service : avoid sceNetInit 0x8002013A error
+u32 inet_uid = 0;
 JS_FUN(NetInit){
+	ifhandle_uid = c_addModule("flash0:/kd/ifhandle.prx");
+	net_uid = c_addModule("flash0:/kd/pspnet.prx");
 	*rval = I2J(sceNetInit(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),J2I(argv[4])));
 	return JS_TRUE;
 }
 JS_FUN(NetTerm){
 	*rval = I2J(sceNetTerm());
+	c_delModule(inet_uid);
+	c_delModule(net_uid);
+	c_delModule(ifhandle_uid);
 	return JS_TRUE;
 }
 JS_FUN(FreeThreadinfo){
@@ -46,12 +57,16 @@ JS_FUN(GetLocalEtherAddr){
 JS_FUN(GetMallocStat){
 	return JS_TRUE;
 }
+ /* apctl */
+u32 apctl_uid = 0;
 JS_FUN(ApctlInit){
+	apctl_uid = c_addModule("flash0:/kd/pspnet_apctl.prx");
 	*rval = I2J(sceNetApctlInit(J2I(argv[0]),J2I(argv[1])));
 	return JS_TRUE;
 }
 JS_FUN(ApctlTerm){
 	*rval = I2J(sceNetApctlTerm());
+	c_delModule(apctl_uid);
 	return JS_TRUE;
 }
 JS_FUN(ApctlGetInfo){
@@ -77,7 +92,9 @@ JS_FUN(ApctlGetState){
 	*rval = I2J(pState);
 	return JS_TRUE;
 }
+/* Inet */
 JS_FUN(InetInit){
+	inet_uid = c_addModule("flash0:/kd/pspnet_inet.prx");
 	*rval = I2J(sceNetInetInit());
 	return JS_TRUE;
 }
@@ -86,44 +103,60 @@ JS_FUN(InetTerm){
 	return JS_TRUE;
 }
 /* Resolver */
+u32 resolver_uid = 0;
+char resolv_buf[1024];
 JS_FUN(ResolverInit){
+	resolver_uid = c_addModule("flash0:/kd/pspnet_resolver.prx");
 	*rval = I2J(sceNetResolverInit());
 	return JS_TRUE;
 }
-JS_FUN(ResolverDelete){
-	*rval = I2J(sceNetResolverDelete(J2I(argv[0])));
-	return JS_TRUE;
-}
 JS_FUN(ResolverCreate){
-	int rid = 0;
-	char buf[1024];
-  sceNetResolverCreate(&rid, buf, 1024);
+	int rid = -1;
+	sceNetResolverCreate(&rid, resolv_buf, 1024);
 	*rval = I2J(rid);
 	return JS_TRUE;
 }
-JS_FUN(ResolverTerm){
-	*rval = I2J(sceNetResolverTerm());
+JS_FUN(ResolverStartNtoA){
+	int rid = J2I(argv[0]);
+	struct in_addr addr;
+	void* ip = js_malloc(16);
+	char* RESOLVE_NAME = J2S(argv[1]);
+	if(sceNetResolverStartNtoA(rid, RESOLVE_NAME, &addr, 2, 3) < 0)
+		return JS_TRUE;
+	char* tmp = (char*)&(addr.s_addr);
+	sprintf(ip,"%u.%u.%u.%u",(unsigned char)tmp[0],(unsigned char)tmp[1],(unsigned char)tmp[2],(unsigned char)tmp[3]);
+	*rval = STRING_TO_JSVAL(js_newString(ip,0));
+	return JS_TRUE;
+}
+JS_FUN(ResolverStartAtoN){//FIXME
+	struct in_addr addr;
+	addr.s_addr =	sceNetInetInetAddr(J2S(argv[1]));
+	//char* tmp = (char*)&(addr.s_addr);
+	//printf("%u.%u.%u.%u",(unsigned char)tmp[0],(unsigned char)tmp[1],(unsigned char)tmp[2],(unsigned char)tmp[3]);
+	char name[1024];
+	sceNetResolverStartAtoN(J2I(argv[0]),&addr,name,1024,30,5);
+	void* temp = js_malloc(1024);
+	strcpy(temp,name);
+	*rval = STRING_TO_JSVAL(js_newString(temp,0));
 	return JS_TRUE;
 }
 JS_FUN(ResolverStop){
 	*rval = I2J(sceNetResolverStop(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(ResolverStartNtoA){
-	//*rval = I2J(sceNetResolverStop(J2I(argv[0])));
+JS_FUN(ResolverDelete){
+	*rval = I2J(sceNetResolverDelete(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(ResolverStartAtoN){
-	//*rval = I2J(sceNetResolverStop(J2I(argv[0])));
+JS_FUN(ResolverTerm){
+	*rval = I2J(sceNetResolverTerm());
+	c_delModule(resolver_uid);
 	return JS_TRUE;
 }
-/* Adhoc */
-JS_FUN(AdhocInit){
+u32 adhoc_uid = 0;
+JS_FUN(AdhocInit){/* Adhoc */
+	adhoc_uid = c_addModule("pspnet_adhoc.prx");
 	*rval = I2J(sceNetAdhocInit());
-	return JS_TRUE;
-}
-JS_FUN(AdhocTerm){
-	*rval = I2J(sceNetAdhocTerm());
 	return JS_TRUE;
 }
 JS_FUN(AdhocPdpCreate){
@@ -143,7 +176,12 @@ JS_FUN(AdhocPdpDelete){
 	*rval = I2J(sceNetAdhocPdpDelete(J2I(argv[0]),J2I(argv[1])));
 	return JS_TRUE;
 }
-/* ptp/pdp/gameMode
+JS_FUN(AdhocTerm){
+	*rval = I2J(sceNetAdhocTerm());
+	c_delModule(adhoc_uid);
+	return JS_TRUE;
+}
+/*
 int sceNetAdhocGameModeCreateMaster (void *data, int size)
 int sceNetAdhocGameModeCreateReplica(unsigned char *mac, void *data, int size)
 int sceNetAdhocGameModeUpdateMaster (void)
@@ -163,12 +201,19 @@ int sceNetAdhocPtpFlush             (int id, unsigned int timeout, int nonblock)
 int sceNetAdhocPtpClose             (int id, int unk1)
 int sceNetAdhocGetPtpStat           (int *size, ptpStatStruct *stat)
 */
-JS_FUN(AdhocctlInit){
+u32 adhocctl_uid = 0;
+JS_FUN(AdhocctlInit){ /* Adhocctl */
+	adhocctl_uid = c_addModule("pspnet_adhocctl.prx");
 	JSObject*Product = J2O(argv[2]);
 	struct productStruct product;
 	memcpy(product.product,J2S(js_getProperty(Product,"product")),9);
 	product.unknown = J2I(js_getProperty(Product,"type"));
 	*rval = I2J(sceNetAdhocctlInit(J2I(argv[0]),J2I(argv[1]),&product));
+	return JS_TRUE;
+}
+JS_FUN(AdhocctlTerm){
+	*rval = I2J(sceNetAdhocctlTerm());
+	c_delModule(adhocctl_uid);
 	return JS_TRUE;
 }
 JS_FUN(AdhocctlGetAdhocId){
@@ -177,10 +222,6 @@ JS_FUN(AdhocctlGetAdhocId){
 	memcpy(product.product,J2S(js_getProperty(Product,"product")),9);
 	product.unknown = J2I(js_getProperty(Product,"type"));
 	*rval = I2J(sceNetAdhocctlGetAdhocId(&product));
-	return JS_TRUE;
-}
-JS_FUN(AdhocctlTerm){
-	*rval = I2J(sceNetAdhocctlTerm());
 	return JS_TRUE;
 }
 JS_FUN(AdhocctlDisconnect){
@@ -271,8 +312,8 @@ JS_FUN(AdhocctlGetNameByAddr){
 	return JS_TRUE;
 }
 JS_FUN(AdhocctlGetAddrByName){
-	int length = 6;
-	sceNetAdhocctlGetAddrByName(J2S(argv[0]),&length, void *buf);
+	//int length = 6;
+	//sceNetAdhocctlGetAddrByName(J2S(argv[0]),&length, (void *)buf);
 //	*rval = S2J();
 	return JS_TRUE;
 }
@@ -288,12 +329,15 @@ JS_FUN(AdhocctlGetParameter){
 	*rval = O2J(Parameter);
 	return JS_TRUE;
 }
+u32 adhocMatching_uid = 0;/*AdhocMatching*/
 JS_FUN(AdhocMatchingInit){
+	adhocMatching_uid = c_addModule("pspnet_adhoc_matching.prx");
 	*rval = I2J(sceNetAdhocMatchingInit(J2I(argv[0])));
 	return JS_TRUE;
 }
 JS_FUN(AdhocMatchingTerm){
 	*rval = I2J(sceNetAdhocMatchingTerm());
+	c_delModule(adhocMatching_uid);
 	return JS_TRUE;
 }
 JS_FUN(AdhocMatchingCreate){
@@ -372,66 +416,66 @@ JS_FUN(AdhocMatchingGetPoolStat){
 }
 static JSFunctionSpec functions[] = {
 /*general*/
-	{"Init",NetInit,4},
-	{"Term",NetTerm,0},
-	{"FreeThreadinfo",FreeThreadinfo,1},
-	{"ThreadAbort",ThreadAbort,1},
-	{"EtherStrton",EtherStrton,0},
-	{"EtherNtostr",EtherNtostr,0},
-	{"GetLocalEtherAddr",GetLocalEtherAddr,0},
-	{"GetMallocStat",GetMallocStat,0},
+	{"init",NetInit,4},
+	{"term",NetTerm,0},
+	{"freeThreadinfo",FreeThreadinfo,1},
+	{"threadAbort",ThreadAbort,1},
+	{"etherStrton",EtherStrton,0},
+	{"etherNtostr",EtherNtostr,0},
+	{"getLocalEtherAddr",GetLocalEtherAddr,0},
+	{"getMallocStat",GetMallocStat,0},
 /*Resolver*/
-	{"ResolverInit",ResolverInit,0},
-	{"ResolverDelete",ResolverDelete,1},
-	{"ResolverCreate",ResolverCreate,0},
-	{"ResolverTerm",ResolverTerm,0},
-	{"ResolverStop",ResolverStop,1},
-	{"ResolverStartNtoA",ResolverStartNtoA,0},
-	{"ResolverStartAtoN",ResolverStartAtoN,0},
+	{"resolverInit",ResolverInit,0},
+	{"resolverDelete",ResolverDelete,1},
+	{"resolverCreate",ResolverCreate,0},
+	{"resolverTerm",ResolverTerm,0},
+	{"resolverStop",ResolverStop,1},
+	{"resolverStartNtoA",ResolverStartNtoA,0},
+	{"resolverStartAtoN",ResolverStartAtoN,0},
 /*Adhoc*/
-	{"AdhocInit",AdhocInit,0},
-	{"AdhocTerm",AdhocTerm,0},
-	{"AdhocPdpCreate",AdhocPdpCreate,1},
-	{"AdhocPdpDelete",AdhocPdpDelete,1},
+	{"adhocInit",AdhocInit,0},
+	{"adhocTerm",AdhocTerm,0},
+	{"adhocPdpCreate",AdhocPdpCreate,1},
+	{"adhocPdpDelete",AdhocPdpDelete,1},
 /*Adhoc/ctl*/
-	{"AdhocctlInit",AdhocctlInit,1},
-	{"AdhocctlGetAdhocId",AdhocctlGetAdhocId,1},
-	{"AdhocctlTerm",AdhocctlTerm,1},
-	{"AdhocctlDisconnect",AdhocctlDisconnect,1},
-	{"AdhocctlConnect",AdhocctlConnect,1},
-	{"AdhocctlCreate",AdhocctlCreate,1},
-	{"AdhocctlScan",AdhocctlScan,1},
-	{"AdhocctlDelHandler",AdhocctlDelHandler,1},
-	{"AdhocctlGetState",AdhocctlGetState,1},
+	{"adhocctlInit",AdhocctlInit,1},
+	{"adhocctlGetAdhocId",AdhocctlGetAdhocId,1},
+	{"adhocctlTerm",AdhocctlTerm,1},
+	{"adhocctlDisconnect",AdhocctlDisconnect,1},
+	{"adhocctlConnect",AdhocctlConnect,1},
+	{"adhocctlCreate",AdhocctlCreate,1},
+	{"adhocctlScan",AdhocctlScan,1},
+	{"adhocctlDelHandler",AdhocctlDelHandler,1},
+	{"adhocctlGetState",AdhocctlGetState,1},
 /*Adhoc/Matching*/
-	{"AdhocMatchingInit",AdhocMatchingInit,1},
-	{"AdhocMatchingTerm",AdhocMatchingTerm,1},
-	{"AdhocMatchingCreate",AdhocMatchingCreate,1},
-	{"AdhocMatchingDelete",AdhocMatchingDelete,1},
-	{"AdhocMatchingStart",AdhocMatchingStart,1},
-	{"AdhocMatchingStop",AdhocMatchingStop,1},
-	{"AdhocMatchingSelectTarget",AdhocMatchingSelectTarget,1},
-	{"AdhocMatchingCancelTarget",AdhocMatchingCancelTarget,1},
-	{"AdhocMatchingCancelTargetWithOpt",AdhocMatchingCancelTargetWithOpt,1},
-	{"AdhocMatchingSendData",AdhocMatchingSendData,1},
-	{"AdhocMatchingAbortSendData",AdhocMatchingAbortSendData,1},
-	{"AdhocMatchingSetHelloOpt",AdhocMatchingSetHelloOpt,1},
-	{"AdhocMatchingGetHelloOpt",AdhocMatchingGetHelloOpt,1},
-	{"AdhocMatchingGetMembers",AdhocMatchingGetMembers,1},
-	{"AdhocMatchingGetPoolMaxAlloc",AdhocMatchingGetPoolMaxAlloc,1},
-	{"AdhocMatchingGetPoolStat",AdhocMatchingGetPoolStat,1},
+	{"adhocMatchingInit",AdhocMatchingInit,1},
+	{"adhocMatchingTerm",AdhocMatchingTerm,1},
+	{"adhocMatchingCreate",AdhocMatchingCreate,1},
+	{"adhocMatchingDelete",AdhocMatchingDelete,1},
+	{"adhocMatchingStart",AdhocMatchingStart,1},
+	{"adhocMatchingStop",AdhocMatchingStop,1},
+	{"adhocMatchingSelectTarget",AdhocMatchingSelectTarget,1},
+	{"adhocMatchingCancelTarget",AdhocMatchingCancelTarget,1},
+	{"adhocMatchingCancelTargetWithOpt",AdhocMatchingCancelTargetWithOpt,1},
+	{"adhocMatchingSendData",AdhocMatchingSendData,1},
+	{"adhocMatchingAbortSendData",AdhocMatchingAbortSendData,1},
+	{"adhocMatchingSetHelloOpt",AdhocMatchingSetHelloOpt,1},
+	{"adhocMatchingGetHelloOpt",AdhocMatchingGetHelloOpt,1},
+	{"adhocMatchingGetMembers",AdhocMatchingGetMembers,1},
+	{"adhocMatchingGetPoolMaxAlloc",AdhocMatchingGetPoolMaxAlloc,1},
+	{"adhocMatchingGetPoolStat",AdhocMatchingGetPoolStat,1},
 /*apctl*/
-	{"ApctlInit",ApctlInit,2},
-	{"ApctlTerm",ApctlTerm,0},
-	{"ApctlGetInfo",ApctlGetInfo,2},
-	{"ApctlAddHandler",ApctlAddHandler,2},
-	{"ApctlDelHandler",ApctlDelHandler,1},
-	{"ApctlConnect",ApctlConnect,1},
-	{"ApctlDisconnect",ApctlDisconnect,0},
-	{"ApctlGetState",ApctlGetState,0},
+	{"apctlInit",ApctlInit,2},
+	{"apctlTerm",ApctlTerm,0},
+	{"apctlGetInfo",ApctlGetInfo,2},
+	{"apctlAddHandler",ApctlAddHandler,2},
+	{"apctlDelHandler",ApctlDelHandler,1},
+	{"apctlConnect",ApctlConnect,1},
+	{"apctlDisconnect",ApctlDisconnect,0},
+	{"apctlGetState",ApctlGetState,0},
 /*Inet*/
-	{"InetInit",InetInit,0},
-	{"InetTerm",InetTerm,0},
+	{"inetInit",InetInit,0},
+	{"inetTerm",InetTerm,0},
 	{0}
 };
 static JSPropertiesSpec var[] = {
