@@ -88,5 +88,7 @@ EXT void* js_malloc(size_t nbytes);
 EXT void* js_realloc(void *p,size_t nbytes);
 EXT void js_free(void *p);
 
+EXT u32 c_addModule(const char *mod);
+EXT int c_delModule(u32 uid);
 EXT size_t c_strlen(const char *str);
 EXT void* c_memalign(size_t blocksize, size_t bytes);

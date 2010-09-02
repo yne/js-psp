@@ -164,6 +164,18 @@ void js_free(void *p){
 	JS_free(cx,p);
 }
 /* real C stuff (if you don't want use libc in your prx) */
+u32 c_addModule(const char *mod){
+	int ret=0;
+	u32 uid = sceKernelLoadModule(mod,0,NULL);
+	sceKernelStartModule(uid,0,NULL,&ret,NULL);
+	return uid;
+}
+int c_delModule(u32 uid){
+	int ret=0;
+	sceKernelStopModule(uid,0,NULL,&ret,NULL);
+	sceKernelUnloadModule(uid);
+	return ret?uid:ret;
+}
 size_t c_strlen(char *str){
 	return strlen(str);
 }
