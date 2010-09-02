@@ -33,6 +33,8 @@ PSP_EXPORT_FUNC(js_strdup)
 PSP_EXPORT_FUNC(js_realloc)
 PSP_EXPORT_FUNC(js_malloc)
 PSP_EXPORT_FUNC(js_free)
+PSP_EXPORT_FUNC(c_addModule)
+PSP_EXPORT_FUNC(c_delModule)
 PSP_EXPORT_FUNC(c_strlen)
 PSP_EXPORT_FUNC(c_memalign)
 PSP_EXPORT_END
