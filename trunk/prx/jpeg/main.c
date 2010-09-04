@@ -76,4 +76,6 @@ int module_start(SceSize args, void *argp){
 	js_addModule(functions,0,0,0);
 	return 0;
 }
-void module_stop(){}
+int module_stop(){
+	return 0;
+}

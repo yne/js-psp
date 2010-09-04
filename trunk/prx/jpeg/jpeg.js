@@ -5,6 +5,7 @@ var ctrl = new Module("prx/sceCtrl.prx");
 
 var jpeg = new Module("prx/sceJpeg.prx");
 var pic = jpeg.loadJpeg(new File("res/sample2.jpg").read());
+jpeg.unload();
 
 gu.setup();
 
@@ -29,7 +30,7 @@ while(1){
 }
 //
 
-jpeg.unload();
+
 ctrl.unload();
 io.unload();
 gu.unload();
