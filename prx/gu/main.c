@@ -13,27 +13,23 @@ typedef struct ScePspCVector3 {
 	signed char x, y, z;
 } ScePspCVector3;
 
-unsigned* list;
+void* list=NULL;
 PspGeContext __attribute__((aligned(16))) geContext;
 
 JS_FUN(DepthBuffer){
 	sceGuDepthBuffer((void*)J2U(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DispBuffer){
 	sceGuDispBuffer(J2I(argv[0]),J2I(argv[1]),(void*)J2U(argv[2]),J2I(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DrawBuffer){
 	sceGuDrawBuffer(J2I(argv[0]),(void*)J2U(argv[1]),J2I(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DrawBufferList){
 	sceGuDrawBufferList(J2I(argv[0]),(void*)J2U(argv[1]),J2I(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Display){
@@ -42,22 +38,18 @@ JS_FUN(Display){
 }
 JS_FUN(DepthFunc){
 	sceGuDepthFunc(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DepthMask){
 	sceGuDepthMask(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DepthOffset){
 	sceGuDepthOffset(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DepthRange){
 	sceGuDepthRange(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Fog){
@@ -65,34 +57,29 @@ JS_FUN(Fog){
 	if (!js_convertArguments(argc, argv, "dd", &near,&far))
 		return JS_FALSE;
 	sceGuFog(near,far,J2U(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Init){
-	list=js_malloc(0x40000);
+	if(!list)list=js_malloc(argc?J2I(argv[0]):0x40000);
 	sceGuInit();
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Term){
 	sceGuTerm();
 	js_free(list);
-	*rval = JSVAL_VOID;
+	list=NULL;
 	return JS_TRUE;
 }
 JS_FUN(Break){
 	sceGuBreak(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Continue){
 	sceGuContinue();
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Signal){
 	sceGuSignal(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SendCommandf){
@@ -101,21 +88,18 @@ JS_FUN(SendCommandf){
 	if (!js_convertArguments(argc, argv, "id", &cmd,&argument))
 		return JS_FALSE;
 	sceGuSendCommandf(cmd,argument);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SendCommandi){
 	sceGuSendCommandi(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(GetMemory){
-	*rval = I2J(sceGuGetMemory(J2I(argv[0])));
+	*rval = I2J(sceGuGetMemory(J2U(argv[0])));
 	return JS_TRUE;
 }
 JS_FUN(Start){
 	sceGuStart(J2I(argv[0]),list);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Finish){
@@ -128,12 +112,10 @@ JS_FUN(FinishId){
 }
 JS_FUN(CallList){
 	sceGuCallList(list);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(CallMode){
 	sceGuCallMode(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(CheckList){
@@ -142,7 +124,6 @@ JS_FUN(CheckList){
 }
 JS_FUN(SendList){
 	sceGuSendList(J2I(argv[0]),list,&geContext);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SwapBuffers){
@@ -155,12 +136,10 @@ JS_FUN(Sync){
 }
 JS_FUN(EndObject){
 	sceGuEndObject();
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SetStatus){
 	sceGuSetStatus(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(GetStatus){
@@ -169,7 +148,6 @@ JS_FUN(GetStatus){
 }
 JS_FUN(SetAllStatus){
 	sceGuSetAllStatus(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(GetAllStatus){
@@ -178,55 +156,56 @@ JS_FUN(GetAllStatus){
 }
 JS_FUN(Enable){
 	sceGuEnable(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Disable){
 	sceGuDisable(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DrawArray){
-	JSObject *matrix=J2O(argv[4]);
-	int n;
-	void* vert=NULL;
-	switch((J2I(argv[1])&GU_VERTEX_32BITF)){
-		case GU_VERTEX_32BITF : {
-			ScePspFVector3* vertices = (ScePspFVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspFVector3));
-			for(n=0;n<J2I(argv[2]);n++){
-				jsval vector=js_getElement(matrix,n);
-				vertices[n].x = J2L(js_getProperty(J2O(vector), "x"));
-				vertices[n].y = J2L(js_getProperty(J2O(vector), "y"));
-				vertices[n].z = J2L(js_getProperty(J2O(vector), "z"));
+	if(js_typeOfValue(argv[4])==JSTYPE_OBJECT){
+		JSObject *matrix=J2O(argv[4]);
+		int n;
+		void* vert=NULL;
+		switch((J2I(argv[1])&GU_VERTEX_32BITF)){
+			case GU_VERTEX_32BITF : {
+				ScePspFVector3* vertices = (ScePspFVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspFVector3));
+				for(n=0;n<J2I(argv[2]);n++){
+					jsval vector=js_getElement(matrix,n);
+					vertices[n].x = J2L(js_getProperty(J2O(vector), "x"));
+					vertices[n].y = J2L(js_getProperty(J2O(vector), "y"));
+					vertices[n].z = J2L(js_getProperty(J2O(vector), "z"));
+				}
+			vert = vertices;
 			}
-		vert = vertices;
-		}
-		break;
-		case GU_VERTEX_16BIT:{
-			ScePspSVector3* vertices = (ScePspSVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspSVector3));
-			for(n=0;n<J2I(argv[2]);n++){
-				jsval vector=js_getElement(matrix,n);
-				vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
-				vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
-				vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
+			break;
+			case GU_VERTEX_16BIT:{
+				ScePspSVector3* vertices = (ScePspSVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspSVector3));
+				for(n=0;n<J2I(argv[2]);n++){
+					jsval vector=js_getElement(matrix,n);
+					vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
+					vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
+					vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
+				}
+			vert = vertices;
 			}
-		vert = vertices;
-		}
-		break;
-		case GU_VERTEX_8BIT:{
-			ScePspCVector3* __attribute__((aligned(16))) vertices = (ScePspCVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspCVector3));
-			for(n=0;n<J2I(argv[2]);n++){
-				jsval vector=js_getElement(matrix,n);
-				vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
-				vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
-				vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
+			break;
+			case GU_VERTEX_8BIT:{
+				ScePspCVector3* __attribute__((aligned(16))) vertices = (ScePspCVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspCVector3));
+				for(n=0;n<J2I(argv[2]);n++){
+					jsval vector=js_getElement(matrix,n);
+					vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
+					vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
+					vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
+				}
+			vert = vertices;
 			}
-		vert = vertices;
+			break;
 		}
-		break;
+		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),vert);
+	}else{
+		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)J2I(argv[4]));
 	}
-	sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),vert);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DrawArrayN){
@@ -240,17 +219,14 @@ JS_FUN(DrawArrayN){
 		vertices[n].z = J2L(js_getProperty(J2O(vector), "z"));
 	}
 	sceGuDrawArrayN(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]),vertices);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(BeginObject){
 	sceGuBeginObject(J2I(argv[0]),J2I(argv[1]),(void*)J2U(argv[2]),(void*)J2U(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SetCallback){
 	sceGuSetCallback(J2I(argv[0]),(void*)J2U(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Light){
@@ -261,22 +237,18 @@ JS_FUN(Light){
 	vertices[0].y = J2L(js_getProperty(J2O(vector), "y"));
 	vertices[0].z = J2L(js_getProperty(J2O(vector), "z"));
 	sceGuLight(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),vertices);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(LightAtt){
 	sceGuLightAtt(J2I(argv[0]),J2L(argv[1]),J2L(argv[2]),J2L(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(LightColor){
 	sceGuLightColor(J2I(argv[0]),J2I(argv[1]),J2U(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(LightMode){
 	sceGuLightMode(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(LightSpot){
@@ -287,132 +259,106 @@ JS_FUN(LightSpot){
 	vertices[0].y = J2L(js_getProperty(J2O(vector), "y"));
 	vertices[0].z = J2L(js_getProperty(J2O(vector), "z"));
 	sceGuLightSpot(J2I(argv[0]),vertices,J2L(argv[4]),J2L(argv[5]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Clear){
-	sceGuClear(J2I(argv[0]));
-	*rval = JSVAL_VOID;
+	argc?sceGuClear(J2I(argv[0])):sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
 	return JS_TRUE;
 }
 JS_FUN(ClearColor){
 	sceGuClearColor(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ClearDepth){
 	sceGuClearDepth(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ClearStencil){
 	sceGuClearStencil(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(PixelMask){
 	sceGuPixelMask(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Color){
 	sceGuColor(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Ambient){
 	sceGuAmbient(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(AmbientColor){
 	sceGuAmbientColor(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ColorFunc){
 	sceGuColorFunc(J2I(argv[0]),J2I(argv[1]),J2U(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ColorMaterial){
 	sceGuColorMaterial(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(AlphaFunc){
 	sceGuAlphaFunc(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(BlendFunc){
 	sceGuBlendFunc(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2U(argv[3]),J2U(argv[4]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Material){
 	sceGuMaterial(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ModelColor){
 	sceGuModelColor(J2U(argv[0]),J2U(argv[1]),J2U(argv[2]),J2U(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(StencilFunc){
 	sceGuStencilFunc(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(StencilOp){
 	sceGuStencilOp(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Specular){
 	sceGuSpecular(J2L(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(FrontFace){
 	sceGuFrontFace(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(LogicalOp){
 	sceGuLogicalOp(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ShadeModel){
 	sceGuShadeModel(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexEnvColor){
 	sceGuTexEnvColor(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexFilter){
 	sceGuTexFilter(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexFlush){
 	sceGuTexFlush();
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexFunc){
 	sceGuTexFunc(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexMapMode){
 	sceGuTexMapMode(J2I(argv[0]),J2U(argv[1]),J2U(argv[2]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SetDither){
@@ -429,112 +375,90 @@ JS_FUN(SetDither){
   {wx,wy,wz,ww}
 	};
 	sceGuSetDither(&matrix);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexImage){
 	sceGuTexImage(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexLevelMode){
 	sceGuTexLevelMode(J2U(argv[0]),J2L(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexMode){
 	sceGuTexMode(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexOffset){
 	sceGuTexOffset(J2L(argv[0]),J2L(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexProjMapMode){
 	sceGuTexProjMapMode(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexScale){
 	sceGuTexScale(J2L(argv[0]),J2L(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexSlope){
 	sceGuTexSlope(J2L(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexSync){
 	sceGuTexSync();
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(TexWrap){
 	sceGuTexWrap(J2I(argv[0]),J2I(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ClutLoad){
 	sceGuClutLoad(J2I(argv[0]),(void*)J2U(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(ClutMode){
 	sceGuClutMode(J2U(argv[0]),J2U(argv[1]),J2U(argv[2]),J2U(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Offset){
 	sceGuOffset(J2U(argv[0]),J2U(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Scissor){
 	sceGuScissor(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(Viewport){
 	sceGuViewport(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(PatchDivide){
 	sceGuPatchDivide(J2U(argv[0]),J2U(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(PatchFrontFace){
 	sceGuPatchFrontFace(J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(PatchPrim){
 	sceGuPatchPrim(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(MorphWeight){
 	sceGuMorphWeight(J2I(argv[0]),J2L(argv[1]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DrawBezier){
 	sceGuDrawBezier(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)J2U(argv[4]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(DrawSpline){
 	sceGuDrawSpline(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),J2I(argv[4]),(void*)J2U(argv[5]),(void*)J2U(argv[6]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SwapBuffersBehaviour){
 	guSwapBuffersBehaviour(J2I(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(BoneMatrix){
@@ -552,7 +476,6 @@ JS_FUN(BoneMatrix){
   {wx,wy,wz,ww}
 	};
 	sceGuBoneMatrix(index,&matrix);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SetMatrix){
@@ -570,119 +493,334 @@ JS_FUN(SetMatrix){
   {wx,wy,wz,ww}
 	};
 	sceGuSetMatrix(type,&matrix);
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(CopyImage){
 	//sceGuCopyImage (int psm, int sx, int sy, int width, int height, int srcw, void *src, int dx, int dy, int destw, void *dest)
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
 JS_FUN(SwapBuffersCallback){
 	//guSwapBuffersCallback (GuSwapBuffersCallback callback)
-	*rval = JSVAL_VOID;
+	return JS_TRUE;
+}
+JS_FUN(Setup){
+	#define BUF_WIDTH (512)
+	#define SCR_WIDTH (480)
+	#define SCR_HEIGHT (272)
+	#define PIXEL_SIZE (4)
+	#define FRAMEBUFFER_SIZE (PSP_LINE_SIZE*SCR_H*PIXEL_SIZE)
+
+  sceGuInit();
+	if(!list)list=js_malloc(0x40000);
+  sceGuStart(GU_DIRECT, list);
+	sceGuDrawBuffer(GU_PSM_8888, (void*)0, BUF_WIDTH);
+	sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, (void*)0x88000, BUF_WIDTH);
+	sceGuDepthBuffer((void*)0x110000, BUF_WIDTH);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
+  sceGuOffset(2048 - (SCR_WIDTH / 2), 2048 - (SCR_HEIGHT / 2));
+  sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
+  sceGuDepthRange(0xc350, 0x2710);
+  sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+  sceGuEnable(GU_SCISSOR_TEST);
+  sceGuAlphaFunc(GU_GREATER, 0, 0xff);
+  sceGuEnable(GU_ALPHA_TEST);
+  sceGuDepthFunc(GU_GEQUAL);
+  sceGuDisable(GU_DEPTH_TEST);
+  sceGuFrontFace(GU_CW);
+  sceGuShadeModel(GU_SMOOTH);
+  sceGuEnable(GU_CULL_FACE);
+  sceGuEnable(GU_TEXTURE_2D);
+  sceGuEnable(GU_CLIP_PLANES);
+  sceGuTexMode(GU_PSM_8888, 0, 0, 0);
+  sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
+  sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+  sceGuAmbientColor(0xffffffff);
+  sceGuEnable(GU_BLEND);
+  sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+  sceGuFinish();
+  sceGuSync(0, 0);
+  sceGuDisplay(GU_TRUE);
+ 
+	return JS_TRUE;
+}
+typedef struct{
+	unsigned short u, v;
+	short x, y, z;
+} Vertex;
+JS_FUN(BlitImage){
+//(int sx, int sy, int width, int height, Image* source, int dx, int dy)
+//	sceKernelDcacheWritebackInvalidateAll();
+	int dx=0,dy=0,sx=0,sy=0,imgW,imgH,texW,texH;
+	if(!argc)return JS_TRUE;
+	if(argc>2){//at least 3 param (image+screenX+screenY)
+		dx=J2I(argv[1]);
+		dy=J2I(argv[2]);
+	}
+	imgW=J2I(js_getProperty(J2O(argv[0]),"imgW"));
+	imgH=J2I(js_getProperty(J2O(argv[0]),"imgH"));
+	texW=J2I(js_getProperty(J2O(argv[0]),"texW"));
+	texH=J2I(js_getProperty(J2O(argv[0]),"texH"));
+
+	sceGuTexImage(0, texW, texH, texW, (void*) J2S(js_getProperty(J2O(argv[0]),"data")));
+	//float u = 1.0f / ((float)texW);
+	//float v = 1.0f / ((float)texH);
+	//sceGuTexScale(u, v);
+	int j = 0;
+	while (j < imgW) {
+		Vertex* v = (Vertex*) sceGuGetMemory(2 * sizeof(Vertex));
+		int sliceWidth = 64;
+		if (j + sliceWidth > imgW) sliceWidth = imgW - j;
+		v[0].u = sx + j;
+		v[0].v = sy;
+		v[0].x = dx + j;
+		v[0].y = dy;
+		v[0].z = 0;
+		//------  v[0]  +
+		v[1].u = v[0].u + sliceWidth;
+		v[1].v = v[0].v + imgH;
+		v[1].x = v[0].x + sliceWidth;
+		v[1].y = v[0].y + imgH;
+		v[1].z = v[0].z;
+		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, v);
+		j += sliceWidth;
+	}
+
+	return JS_TRUE;
+}
+JS_FUN(BlitImage_ori){
+	int x=0,y=0,imgW,imgH,texW,texH;
+	if(!argc)return JS_TRUE;
+	if(argc>2){//at least 3 param (image+screenX+screenY)
+		x=J2I(argv[1]);
+		y=J2I(argv[2]);
+	}
+	imgW=J2I(js_getProperty(J2O(argv[0]),"imgW"));
+	imgH=J2I(js_getProperty(J2O(argv[0]),"imgH"));
+	texW=J2I(js_getProperty(J2O(argv[0]),"texW"));
+	texH=J2I(js_getProperty(J2O(argv[0]),"texH"));
+
+  sceGuTexMode(GU_PSM_8888,0,0,0);
+  sceGuTexImage(0,texW,texH,texW,J2S(js_getProperty(J2O(argv[0]),"data")));
+	typedef struct{
+		unsigned short u, v;
+		short x, y, z;
+	}tVertex;
+
+  tVertex* v = sceGuGetMemory(2 * sizeof(tVertex));
+  v[0].u = 0;v[1].u = 0+imgW;
+  v[0].v = 0;v[1].v = 0+imgH;
+  v[0].x = x;v[1].x = x+imgW;
+  v[0].y = y;v[1].y = y+imgH;
+  v[0].z = 0;v[1].z = 0;
+	
+  sceGuEnable(GU_TEXTURE_2D);
+  sceGuDisable(GU_DEPTH_TEST);
+  sceGuEnable(GU_BLEND);
+	if(argc>3)
+		sceGuColor(GU_RGBA(255,255,255,255));
+  sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, v);
+
 	return JS_TRUE;
 }
 
-
 static JSFunctionSpec functions[]={
-	{"DepthBuffer",DepthBuffer,2},
-	{"DispBuffer",DispBuffer,4},
-	{"DrawBuffer",DrawBuffer,3},
-	{"DrawBufferList",DrawBufferList,3},
-	{"Display",Display,1},
-	{"DepthFunc",DepthFunc,1},
-	{"DepthMask",DepthMask,1},
-  {"DepthOffset",DepthOffset,1},
-	{"DepthRange",DepthRange,2},
-	{"Fog",Fog,3},
-	{"Init",Init,0},
-	{"Term",Term,0},
-	{"Break",Break,1},
-	{"Continue",Continue,0},
-	{"SetCallback",SetCallback,2},//
-	{"Signal",Signal,2},
-	{"SendCommandf",SendCommandf,2},
-	{"SendCommandi",SendCommandi,2},
-	{"GetMemory",GetMemory,1},
-	{"Start",Start,1},
-	{"Finish",Finish,0},
-	{"FinishId",FinishId,1},
-	{"CallList",CallList,1},
-	{"CallMode",CallMode,1},
-	{"CheckList",CheckList,0},
-	{"SendList",SendList,1},
-	{"SwapBuffers",SwapBuffers,0},
-	{"Sync",Sync,2},
-	{"DrawArray",DrawArray,5},
-	{"BeginObject",BeginObject,4},
-	{"EndObject",EndObject,0},
-	{"SetStatus",SetStatus,2},
-	{"GetStatus",GetStatus,1},
-	{"SetAllStatus",SetAllStatus,1},
-	{"GetAllStatus",GetAllStatus,0},
-	{"Enable",Enable,1},
-	{"Disable",Disable,1},
-	{"Light",Light,4},
-	{"LightAtt",LightAtt,4},
-	{"LightColor",LightColor,3},
-	{"LightMode",LightMode,1},
-	{"LightSpot",LightSpot,4},
-	{"Clear",Clear,1},
-	{"ClearColor",ClearColor,1},
-	{"ClearDepth",ClearDepth,1},
-	{"ClearStencil",ClearStencil,1},
-	{"PixelMask",PixelMask,1},
-	{"Color",Color,1},
-	{"ColorFunc",ColorFunc,3},
-	{"ColorMaterial",ColorMaterial,1},
-	{"AlphaFunc",AlphaFunc,3},
-	{"Ambient",Ambient,1},
-	{"AmbientColor",AmbientColor,1},
-	{"BlendFunc",BlendFunc,5},
-	{"Material",Material,2},
-	{"ModelColor",ModelColor,4},
-	{"StencilFunc",StencilFunc,3},
-	{"StencilOp",StencilOp,3},
-	{"Specular",Specular,1},
-	{"FrontFace",FrontFace,1},
-	{"LogicalOp",LogicalOp,1},
-	{"SetDither",SetDither,1},
-	{"ShadeModel",ShadeModel,1},
-	{"CopyImage",CopyImage,11},
-	{"TexEnvColor",TexEnvColor,1},
-	{"TexFilter",TexFilter,2},
-	{"TexFlush",TexFlush,0},
-	{"TexFunc",TexFunc,2},
-	{"TexImage",TexImage,5},
-	{"TexLevelMode",TexLevelMode,2},
-	{"TexMapMode",TexMapMode,3},
-	{"TexMode",TexMode,4},
-	{"TexOffset",TexOffset,2},
-	{"TexProjMapMode",TexProjMapMode,1},
-	{"TexScale",TexScale,2},
-	{"TexSlope",TexSlope,1},
-	{"TexSync",TexSync,0},
-	{"TexWrap",TexWrap,2},
-	{"ClutLoad",ClutLoad,2},
-	{"ClutMode",ClutMode,4},
-	{"Offset",Offset,2},
-	{"Scissor",Scissor,4},
-	{"Viewport",Viewport,4},
-	{"DrawBezier",DrawBezier,5},
-	{"PatchDivide",PatchDivide,2},
-	{"PatchFrontFace",PatchFrontFace,1},
-	{"PatchPrim",PatchPrim,1},
-	{"DrawSpline",DrawSpline,7},
-	{"SetMatrix",SetMatrix,2},
-	{"BoneMatrix",BoneMatrix,2},
-	{"MorphWeight",MorphWeight,2},
-	{"DrawArrayN",DrawArrayN,6},
-	{"SwapBuffersBehaviour",SwapBuffersBehaviour,1},
-	{"SwapBuffersCallback",SwapBuffersCallback,1},
+	//custom macro from graphics.c
+	{"setup",Setup,0},
+	{"blitImage",BlitImage,3},
+	//standard sce* functions
+	{"depthBuffer",DepthBuffer,2},
+	{"dispBuffer",DispBuffer,4},
+	{"drawBuffer",DrawBuffer,3},
+	{"drawBufferList",DrawBufferList,3},
+	{"display",Display,1},
+	{"depthFunc",DepthFunc,1},
+	{"depthMask",DepthMask,1},
+  {"depthOffset",DepthOffset,1},
+	{"depthRange",DepthRange,2},
+	{"fog",Fog,3},
+	{"init",Init,0},
+	{"term",Term,0},
+	{"break",Break,1},
+	{"continue",Continue,0},
+	{"setCallback",SetCallback,2},//
+	{"signal",Signal,2},
+	{"sendCommandf",SendCommandf,2},
+	{"sendCommandi",SendCommandi,2},
+	{"getMemory",GetMemory,1},
+	{"start",Start,1},
+	{"finish",Finish,0},
+	{"finishId",FinishId,1},
+	{"callList",CallList,1},
+	{"callMode",CallMode,1},
+	{"checkList",CheckList,0},
+	{"sendList",SendList,1},
+	{"swapBuffers",SwapBuffers,0},
+	{"sync",Sync,2},
+	{"drawArray",DrawArray,5},
+	{"beginObject",BeginObject,4},
+	{"endObject",EndObject,0},
+	{"setStatus",SetStatus,2},
+	{"getStatus",GetStatus,1},
+	{"setAllStatus",SetAllStatus,1},
+	{"getAllStatus",GetAllStatus,0},
+	{"enable",Enable,1},
+	{"disable",Disable,1},
+	{"light",Light,4},
+	{"lightAtt",LightAtt,4},
+	{"lightColor",LightColor,3},
+	{"lightMode",LightMode,1},
+	{"lightSpot",LightSpot,4},
+	{"clear",Clear,1},
+	{"clearColor",ClearColor,1},
+	{"clearDepth",ClearDepth,1},
+	{"clearStencil",ClearStencil,1},
+	{"pixelMask",PixelMask,1},
+	{"color",Color,1},
+	{"colorFunc",ColorFunc,3},
+	{"colorMaterial",ColorMaterial,1},
+	{"alphaFunc",AlphaFunc,3},
+	{"ambient",Ambient,1},
+	{"ambientColor",AmbientColor,1},
+	{"blendFunc",BlendFunc,5},
+	{"material",Material,2},
+	{"modelColor",ModelColor,4},
+	{"stencilFunc",StencilFunc,3},
+	{"stencilOp",StencilOp,3},
+	{"specular",Specular,1},
+	{"frontFace",FrontFace,1},
+	{"logicalOp",LogicalOp,1},
+	{"setDither",SetDither,1},
+	{"shadeModel",ShadeModel,1},
+	{"copyImage",CopyImage,11},
+	{"texEnvColor",TexEnvColor,1},
+	{"texFilter",TexFilter,2},
+	{"texFlush",TexFlush,0},
+	{"texFunc",TexFunc,2},
+	{"texImage",TexImage,5},
+	{"texLevelMode",TexLevelMode,2},
+	{"texMapMode",TexMapMode,3},
+	{"texMode",TexMode,4},
+	{"texOffset",TexOffset,2},
+	{"texProjMapMode",TexProjMapMode,1},
+	{"texScale",TexScale,2},
+	{"texSlope",TexSlope,1},
+	{"texSync",TexSync,0},
+	{"texWrap",TexWrap,2},
+	{"clutLoad",ClutLoad,2},
+	{"clutMode",ClutMode,4},
+	{"offset",Offset,2},
+	{"scissor",Scissor,4},
+	{"viewport",Viewport,4},
+	{"drawBezier",DrawBezier,5},
+	{"patchDivide",PatchDivide,2},
+	{"patchFrontFace",PatchFrontFace,1},
+	{"patchPrim",PatchPrim,1},
+	{"drawSpline",DrawSpline,7},
+	{"setMatrix",SetMatrix,2},
+	{"boneMatrix",BoneMatrix,2},
+	{"morphWeight",MorphWeight,2},
+	{"drawArrayN",DrawArrayN,6},
+	{"swapBuffersBehaviour",SwapBuffersBehaviour,1},
+	{"swapBuffersCallback",SwapBuffersCallback,1},
 	{0}
 };
-
+static JSFunctionSpec gfunctions[]={
+	{"sceGuDepthBuffer",DepthBuffer,2},
+	{"sceGuDispBuffer",DispBuffer,4},
+	{"sceGuDrawBuffer",DrawBuffer,3},
+	{"sceGuDrawBufferList",DrawBufferList,3},
+	{"sceGuDisplay",Display,1},
+	{"sceGuDepthFunc",DepthFunc,1},
+	{"sceGuDepthMask",DepthMask,1},
+  {"sceGuDepthOffset",DepthOffset,1},
+	{"sceGuDepthRange",DepthRange,2},
+	{"sceGuFog",Fog,3},
+	{"sceGuInit",Init,0},
+	{"sceGuTerm",Term,0},
+	{"sceGuBreak",Break,1},
+	{"sceGuContinue",Continue,0},
+	{"sceGuSetCallback",SetCallback,2},//
+	{"sceGuSignal",Signal,2},
+	{"sceGuSendCommandf",SendCommandf,2},
+	{"sceGuSendCommandi",SendCommandi,2},
+	{"sceGuGetMemory",GetMemory,1},
+	{"sceGuStart",Start,1},
+	{"sceGuFinish",Finish,0},
+	{"sceGuFinishId",FinishId,1},
+	{"sceGuCallList",CallList,1},
+	{"sceGuCallMode",CallMode,1},
+	{"sceGuCheckList",CheckList,0},
+	{"sceGuSendList",SendList,1},
+	{"sceGuSwapBuffers",SwapBuffers,0},
+	{"sceGuSync",Sync,2},
+	{"sceGuDrawArray",DrawArray,5},
+	{"sceGuBeginObject",BeginObject,4},
+	{"sceGuEndObject",EndObject,0},
+	{"sceGuSetStatus",SetStatus,2},
+	{"sceGuGetStatus",GetStatus,1},
+	{"sceGuSetAllStatus",SetAllStatus,1},
+	{"sceGuGetAllStatus",GetAllStatus,0},
+	{"sceGuEnable",Enable,1},
+	{"sceGuDisable",Disable,1},
+	{"sceGuLight",Light,4},
+	{"sceGuLightAtt",LightAtt,4},
+	{"sceGuLightColor",LightColor,3},
+	{"sceGuLightMode",LightMode,1},
+	{"sceGuLightSpot",LightSpot,4},
+	{"sceGuClear",Clear,1},
+	{"sceGuClearColor",ClearColor,1},
+	{"sceGuClearDepth",ClearDepth,1},
+	{"sceGuClearStencil",ClearStencil,1},
+	{"sceGuPixelMask",PixelMask,1},
+	{"sceGuColor",Color,1},
+	{"sceGuColorFunc",ColorFunc,3},
+	{"sceGuColorMaterial",ColorMaterial,1},
+	{"sceGuAlphaFunc",AlphaFunc,3},
+	{"sceGuAmbient",Ambient,1},
+	{"sceGuAmbientColor",AmbientColor,1},
+	{"sceGuBlendFunc",BlendFunc,5},
+	{"sceGuMaterial",Material,2},
+	{"sceGuModelColor",ModelColor,4},
+	{"sceGuStencilFunc",StencilFunc,3},
+	{"sceGuStencilOp",StencilOp,3},
+	{"sceGuSpecular",Specular,1},
+	{"sceGuFrontFace",FrontFace,1},
+	{"sceGuLogicalOp",LogicalOp,1},
+	{"sceGuSetDither",SetDither,1},
+	{"sceGuShadeModel",ShadeModel,1},
+	{"sceGuCopyImage",CopyImage,11},
+	{"sceGuTexEnvColor",TexEnvColor,1},
+	{"sceGuTexFilter",TexFilter,2},
+	{"sceGuTexFlush",TexFlush,0},
+	{"sceGuTexFunc",TexFunc,2},
+	{"sceGuTexImage",TexImage,5},
+	{"sceGuTexLevelMode",TexLevelMode,2},
+	{"sceGuTexMapMode",TexMapMode,3},
+	{"sceGuTexMode",TexMode,4},
+	{"sceGuTexOffset",TexOffset,2},
+	{"sceGuTexProjMapMode",TexProjMapMode,1},
+	{"sceGuTexScale",TexScale,2},
+	{"sceGuTexSlope",TexSlope,1},
+	{"sceGuTexSync",TexSync,0},
+	{"sceGuTexWrap",TexWrap,2},
+	{"sceGuClutLoad",ClutLoad,2},
+	{"sceGuClutMode",ClutMode,4},
+	{"sceGuOffset",Offset,2},
+	{"sceGuScissor",Scissor,4},
+	{"sceGuViewport",Viewport,4},
+	{"sceGuDrawBezier",DrawBezier,5},
+	{"sceGuPatchDivide",PatchDivide,2},
+	{"sceGuPatchFrontFace",PatchFrontFace,1},
+	{"sceGuPatchPrim",PatchPrim,1},
+	{"sceGuDrawSpline",DrawSpline,7},
+	{"sceGuSetMatrix",SetMatrix,2},
+	{"sceGuBoneMatrix",BoneMatrix,2},
+	{"sceGuMorphWeight",MorphWeight,2},
+	{"sceGuDrawArrayN",DrawArrayN,6},
+	{"sceGuSwapBuffersBehaviour",SwapBuffersBehaviour,1},
+	{"sceGuSwapBuffersCallback",SwapBuffersCallback,1},
+	{0}
+};
 static JSPropertiesSpec var[] = {
 	{"GU_FALSE",I2J(0)},
 	{"GU_TRUE",I2J(1)},
@@ -749,17 +887,17 @@ static JSPropertiesSpec var[] = {
 	{"GU_TRANSFORM_3D",I2J(GU_TRANSFORM_SHIFT(0))},
 	{"GU_TRANSFORM_2D",I2J(GU_TRANSFORM_SHIFT(1))},
 	{"GU_TRANSFORM_BITS",I2J(GU_TRANSFORM_SHIFT(1))},
-	{"GU_PSM_5650",I2J(0)}, /* Display, Texture, Palette */
-	{"GU_PSM_5551",I2J(1)}, /* Display, Texture, Palette */
-	{"GU_PSM_4444",I2J(2)}, /* Display, Texture, Palette */
-	{"GU_PSM_8888",I2J(3)}, /* Display, Texture, Palette */
-	{"GU_PSM_T4",I2J(4)}, /* Texture */
-	{"GU_PSM_T8",I2J(5)}, /* Texture */
-	{"GU_PSM_T16",I2J(6)}, /* Texture */
-	{"GU_PSM_T32",I2J(7)}, /* Texture */
-	{"GU_PSM_DXT1",I2J(8)}, /* Texture */
-	{"GU_PSM_DXT3",I2J(9)}, /* Texture */
-	{"GU_PSM_DXT5",I2J(10)}, /* Texture */
+	{"GU_PSM_5650",I2J(0)}, // Display, Texture, Palette
+	{"GU_PSM_5551",I2J(1)}, // Display, Texture, Palette
+	{"GU_PSM_4444",I2J(2)}, // Display, Texture, Palette
+	{"GU_PSM_8888",I2J(3)}, // Display, Texture, Palette
+	{"GU_PSM_T4",I2J(4)}, // Texture
+	{"GU_PSM_T8",I2J(5)}, // Texture
+	{"GU_PSM_T16",I2J(6)}, // Texture
+	{"GU_PSM_T32",I2J(7)}, // Texture
+	{"GU_PSM_DXT1",I2J(8)}, // Texture
+	{"GU_PSM_DXT3",I2J(9)}, // Texture
+	{"GU_PSM_DXT5",I2J(10)}, // Texture
 	{"GU_FILL_FILL",I2J(0)},
 	{"GU_OPEN_FILL",I2J(1)},
 	{"GU_FILL_OPEN",I2J(2)},
@@ -877,9 +1015,11 @@ static JSPropertiesSpec var[] = {
 	{0}
 };
 int module_start(SceSize args, void *argp){
-	js_addModule(functions,0,0,var);
+	js_addModule(functions,gfunctions,0,var);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
+	if(list)
+		js_free(list);
 	return 0;
 }

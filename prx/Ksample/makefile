@@ -9,10 +9,10 @@ PRX_EXPORTS = Kplugin.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS = 
+LIBS = -lpspsdk
 
-USE_KERNEL_LIBC = 1
-USE_KERNEL_LIBS = 1
+USE_PSPSDK_LIBC = 1
+USE_PSPSDK_LIBS = 1
 
 BUILD_PRX = 1
 

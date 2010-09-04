@@ -30,12 +30,9 @@ JS_FUN(GetSamplingMode){
 }
 JS_FUN(ReadBufferPositive){
 	JSObject*opad;
-	if(argv[0])
-		opad=J2O(argv[0]);
-	else
-		opad=js_addObj(" ");
+	argc?(opad=J2O(argv[0])):(opad=obj);
 	SceCtrlData pad;
-	sceCtrlReadBufferPositive(&pad,J2I(argv[1]));
+	sceCtrlReadBufferPositive(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
 	js_setProperty(opad,"Lx",I2J(pad.Lx));
 	js_setProperty(opad,"Ly",I2J(pad.Ly));
@@ -44,12 +41,9 @@ JS_FUN(ReadBufferPositive){
 }
 JS_FUN(ReadBufferNegative){
 	JSObject*opad;
-	if(argv[0])
-		opad=J2O(argv[0]);
-	else
-		opad=js_addObj(" ");
+	argc?(opad=J2O(argv[0])):(opad=obj);
 	SceCtrlData pad;
-	sceCtrlReadBufferNegative(&pad,J2I(argv[1]));
+	sceCtrlReadBufferNegative(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
 	js_setProperty(opad,"Lx",I2J(pad.Lx));
 	js_setProperty(opad,"Ly",I2J(pad.Ly));
@@ -58,10 +52,7 @@ JS_FUN(ReadBufferNegative){
 }
 JS_FUN(PeekBufferPositive){
 	JSObject*opad;
-	if(argv[0])
-		opad=J2O(argv[0]);
-	else
-		opad=js_addObj(" ");
+	argc?(opad=J2O(argv[0])):(opad=obj);
 	SceCtrlData pad;
 	sceCtrlPeekBufferPositive(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
@@ -157,7 +148,7 @@ static JSPropertiesSpec var[] = {
 	{"PSP_CTRL_DISC",I2J(PSP_CTRL_DISC)},
 	{"PSP_CTRL_MS",I2J(PSP_CTRL_MS)}
 };
-static JSFunctionSpec functions[] = {
+static JSFunctionSpec lfun[] = {
 	{"PeekLatch",PeekLatch, 0},
 	{"ReadLatch",ReadLatch, 0},
 	{"SetSamplingMode",SetSamplingMode, 1},
@@ -172,8 +163,23 @@ static JSFunctionSpec functions[] = {
 	{"GetIdleCancelThreshold",GetIdleCancelThreshold, 0},
 	{0}
 };
+static JSFunctionSpec gfun[] = {
+	{"sceCtrlPeekLatch",PeekLatch, 0},
+	{"sceCtrlReadLatch",ReadLatch, 0},
+	{"sceCtrlSetSamplingMode",SetSamplingMode, 1},
+	{"sceCtrlGetSamplingMode",GetSamplingMode, 0},
+	{"sceCtrlSetSamplingCycle",SetSamplingCycle, 1},
+	{"sceCtrlGetSamplingCycle",GetSamplingCycle, 0},
+	{"sceCtrlPeekBufferPositive",PeekBufferPositive, 0},
+	{"sceCtrlPeekBufferNegative",PeekBufferNegative, 0},
+	{"sceCtrlReadBufferPositive",ReadBufferPositive, 0},
+	{"sceCtrlReadBufferNegative",ReadBufferNegative, 0},
+	{"sceCtrlSetIdleCancelThreshold",SetIdleCancelThreshold, 2},
+	{"sceCtrlGetIdleCancelThreshold",GetIdleCancelThreshold, 0},
+	{0}
+};
 int module_start(SceSize args, void *argp){
-	js_addModule(functions,0,0,var);
+	js_addModule(lfun,gfun,0,var);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){

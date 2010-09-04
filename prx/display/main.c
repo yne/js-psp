@@ -65,7 +65,7 @@ JS_FUN(WaitVblankCB){
 	*rval = INT_TO_JSVAL(sceDisplayWaitVblankCB());
 	return JS_TRUE;
 }
-static JSFunctionSpec functions[] = {
+static JSFunctionSpec lfun[] = {
 	{"SetMode",SetMode,3},
 	{"GetMode",GetMode,3},
 	{"SetFrameBuf",SetFrameBuf,4},
@@ -75,6 +75,18 @@ static JSFunctionSpec functions[] = {
 	{"WaitVblankStartCB",WaitVblankStartCB,0},
 	{"WaitVblank",WaitVblank,0},
 	{"WaitVblankCB",WaitVblankCB,0},
+	{0}
+};
+static JSFunctionSpec gfun[] = {
+	{"sceDisplaySetMode",SetMode,3},
+	{"sceDisplayGetMode",GetMode,3},
+	{"sceDisplaySetFrameBuf",SetFrameBuf,4},
+	{"sceDisplayGetFrameBuf",GetFrameBuf,4},
+	{"sceDisplayGetVcount",GetVcount,0},
+	{"sceDisplayWaitVblankStart",WaitVblankStart,0},
+	{"sceDisplayWaitVblankStartCB",WaitVblankStartCB,0},
+	{"sceDisplayWaitVblank",WaitVblank,0},
+	{"sceDisplayWaitVblankCB",WaitVblankCB,0},
 	{0}
 };
 static JSPropertiesSpec var[] = {
@@ -91,7 +103,7 @@ static JSPropertiesSpec var[] = {
 };
 
 int module_start(SceSize args, void *argp){
-	js_addModule(functions,0,0,var);
+	js_addModule(lfun,gfun,0,var);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
