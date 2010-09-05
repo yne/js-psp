@@ -31,10 +31,6 @@ extern "C" {
 //typedef void* flv1info_t;
 
 flv1info_t* flv1info_open(const char* filename, int parse_index);
-void flv1info_close(flv1info_t* info);
-
-void flv1info_dump(flv1info_t* info, const char* dumpfile);
-
 
 #ifdef __cplusplus
 }
