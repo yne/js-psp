@@ -49,14 +49,9 @@ JS_FUN(Flv1info_close){
 	//flv1info_close(flv1info_t* info);
 	return JS_TRUE;
 }
-JS_FUN(Flv1info_dump){
-	//flv1info_dump(flv1info_t* info, const char* dumpfile);
-	return JS_TRUE;
-}
 static JSFunctionSpec lfun[] = {
 	{"open",Flv1info_open, 0},
 	{"close",Flv1info_close, 0},
-	{"dump",Flv1info_dump, 0},
 	{0}
 };
 int module_start(SceSize args, void *argp){
