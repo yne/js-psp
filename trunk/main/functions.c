@@ -99,7 +99,7 @@ JS_FUN(js_include){
 	mod_tmp_gfun=NULL;
 	mod_tmp_lvar=NULL;
 	mod_tmp_gvar=NULL;
-	printf("Load/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);	/**/
+	//printf("Load/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);	/**/
   return JS_TRUE;
 }
 JS_METH(js_exclude){

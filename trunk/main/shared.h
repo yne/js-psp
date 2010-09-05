@@ -10,7 +10,7 @@
 #define J2L(j) js_valueToNumber(j)
 /*to JSVAL*/
 #define I2J(i) INT_TO_JSVAL(i)
-#define D2J(i) DOUBLE_TO_JSVAL(i)
+#define D2J(i) js_numberToValue(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
 #define S2J(i) STRING_TO_JSVAL(js_newString((i),0))
 
@@ -79,6 +79,7 @@ EXT JSString* js_valueToString(jsval v);
 EXT u32 js_valueToECMAUint32(jsval v);
 EXT u16 js_valueToUint16(jsval v);
 EXT jsdouble js_valueToNumber(jsval v);
+EXT jsval js_numberToValue(jsdouble d);
 EXT jsval js_evaluateScript(char* eval);
 EXT JSType js_typeOfValue(jsval v);
 EXT jsval js_computeThis(JSContext *cx, jsval *vp);
