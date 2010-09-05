@@ -1,0 +1,12 @@
+PSPSDK=$(shell psp-config --pspsdk-path)
+PSPDIR=$(shell psp-config --psp-prefix)
+TARGET_LIB = ../libmkvinfo.a
+OBJS = 	mkvinfo.o ebml.o
+INCDIR = ../libbufferedio.psp
+CFLAGS = -O2 -G0 -fomit-frame-pointer -fPIC
+CXXFLAGS = $(CFLAGS) -fno-rtti
+ASFLAGS = $(CFLAGS)
+
+include $(PSPSDK)/lib/build.mak
+
+
