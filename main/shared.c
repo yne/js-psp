@@ -99,6 +99,11 @@ jsdouble js_valueToNumber(jsval v){
 	JS_ValueToNumber(cx,v,&dp);
 	return dp;
 }
+jsval js_numberToValue(jsdouble d){
+	jsval val;
+	JS_NewNumberValue(cx,d, &val);
+	return val;
+}
 char* js_getStringBytes(JSString* str){
 	return JS_GetStringBytes(str);
 }
@@ -153,7 +158,7 @@ char* js_strdup(const char* str){
 }
 void* js_malloc(size_t nbytes){
 	void* p = JS_malloc(cx,nbytes);
-	printf("malloc %i bytes at [%08X|%08X]\n",nbytes,(int)p,(int)p+nbytes);
+	//printf("malloc %i bytes at [%08X|%08X]\n",nbytes,(int)p,(int)p+nbytes);
 	return p;
 }
 void* js_realloc(void *p,size_t nbytes){
