@@ -13,14 +13,14 @@ JS_FUN(PeekCurrentKey){
 	return JS_TRUE;
 }
 JS_FUN(PeekLatch){
-	u32 key;
-	sceHprmPeekLatch(&key);
+	u32 key=0;
+	//sceHprmPeekLatch(&key);
 	*rval = I2J(key);
 	return JS_TRUE;
 }
 JS_FUN(ReadLatch){
-	u32 key;
-	sceHprmReadLatch(&key);
+	u32 key=0;
+	//sceHprmReadLatch(&key);
 	*rval = I2J(key);
 	return JS_TRUE;
 }
