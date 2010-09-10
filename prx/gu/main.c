@@ -127,7 +127,9 @@ JS_FUN(SendList){
 	return JS_TRUE;
 }
 JS_FUN(SwapBuffers){
-	*rval = I2J(sceGuSwapBuffers());
+	void* currentBuffer=sceGuSwapBuffers();
+	js_setProperty(NULL,"GU_DRAW_BUFFER", I2J(currentBuffer));
+	*rval = I2J(currentBuffer);
 	return JS_TRUE;
 }
 JS_FUN(Sync){
@@ -622,7 +624,6 @@ JS_FUN(BlitImage_ori){
 
 	return JS_TRUE;
 }
-
 static JSFunctionSpec functions[]={
 	//custom macro from graphics.c
 	{"setup",Setup,0},
@@ -725,6 +726,8 @@ static JSFunctionSpec functions[]={
 	{0}
 };
 static JSFunctionSpec gfunctions[]={
+//custom functions
+//standard sce* functions
 	{"sceGuDepthBuffer",DepthBuffer,2},
 	{"sceGuDispBuffer",DispBuffer,4},
 	{"sceGuDrawBuffer",DrawBuffer,3},
@@ -822,6 +825,13 @@ static JSFunctionSpec gfunctions[]={
 	{0}
 };
 static JSPropertiesSpec var[] = {
+//custom define
+	{"GU_DRAW_BUFFER",I2J(0)},
+	{"BUF_WIDTH",I2J(512)},
+	{"SCR_WIDTH",I2J(480)},
+	{"SCR_HEIGHT",I2J(272)},
+//gu* define
+	{"GU_TRUE",I2J(1)},
 	{"GU_FALSE",I2J(0)},
 	{"GU_TRUE",I2J(1)},
 	{"GU_POINTS",I2J(0)},
