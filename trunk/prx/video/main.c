@@ -29,13 +29,11 @@
 #include <psprtc.h>
 #include <pspsdk.h>
 #include <string.h>
-#include <malloc.h>
 #include <pspgu.h>
 #include "cooleyesBridge.h"
 #include "mem64.h"
 #include "pspmpeg.h"
 #include "mp4_read.h"
-#include "../../main/shared.h"
 
 PSP_MODULE_INFO("AVCDecoder", 0, 1, 1);
 PSP_NO_CREATE_MAIN_THREAD();
@@ -225,7 +223,7 @@ JS_FUN(Load){
 		avc->mpeg_mode = 4;
 	}
 	if(sceMpegInit())EXIT;
-	avc->mpeg_ddrtop =  memalign(0x400000, 0x400000);
+	avc->mpeg_ddrtop =  c_memalign(0x400000, 0x400000);
 	avc->mpeg_au_buffer = avc->mpeg_ddrtop + 0x10000;
 	int result = sceMpegQueryMemSize(avc->mpeg_mode);
 	if(result<0)EXIT;
