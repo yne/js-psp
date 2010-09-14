@@ -541,8 +541,8 @@ JS_FUN(Setup){
   sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
   sceGuFinish();
   sceGuSync(0, 0);
+	sceDisplayWaitVblankStart();
   sceGuDisplay(GU_TRUE);
- 
 	return JS_TRUE;
 }
 typedef struct{
@@ -833,7 +833,6 @@ static JSPropertiesSpec var[] = {
 //gu* define
 	{"GU_TRUE",I2J(1)},
 	{"GU_FALSE",I2J(0)},
-	{"GU_TRUE",I2J(1)},
 	{"GU_POINTS",I2J(0)},
 	{"GU_LINES",I2J(1)},
 	{"GU_LINE_STRIP",I2J(2)},
