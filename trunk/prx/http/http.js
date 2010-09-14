@@ -32,17 +32,22 @@ utility.unload();
 
 var http = new Module("prx/sceHttp.prx");
 http.init();
-var tpl = http.createTemplate("simple browser 2000");
-var cnx = http.createConnection(tpl,"google.com");
-var req = http.createRequestWithURL(cnx,PSP_HTTP_METHOD_GET,"http://google.com/ig");
+var tpl = http.createTemplate("PSP");
+var cnx = http.createConnection(tpl,"download.fedoraproject.org");
+var req = http.createRequestWithURL(cnx,PSP_HTTP_METHOD_GET,"http://download.fedoraproject.org/pub/fedora/linux/releases/13/Live/i686/Fedora-13-i686-Live.iso");
 http.sendRequest(req);
 var length = http.getContentLength(req);
-printf(length+"\n")
 
-//do{
-printf(http.readData(req,100)+"\n");
-
-//}
+var io = new Module("prx/sceIo.prx");
+var txt = new File("fedo.iso");
+var tmp="";var i=0;//409600
+do{//23h02.75 
+	txt.write(http.readData(req,1024),1024);
+	i++;
+	printf(i+"/1728\n");
+}while(i<1728);
+txt.close();
+io.unload();
 
 http.deleteRequest(req);
 http.deleteConnection(cnx);
@@ -54,10 +59,11 @@ net.resolverTerm();
 net.apctlTerm();
 net.inetTerm();
 net.term();
-
-// unload js stuf
 net.unload();
+
+gu.term();
 gu.unload();
+
 display.unload();
 
 exit();

@@ -294,6 +294,102 @@ JS_FUN(OskGetStatus){
 	*rval = I2J(sceUtilityOskGetStatus());
 	return JS_TRUE;	
 }
+char* cleanStuff = "sceGuStart(GU_DIRECT);sceGuClear(5);sceGuFinish();";
+JS_FUN(Alert){
+	if(!argc)return JS_TRUE;
+	memset(&dialog, 0, sizeof(dialog));
+	dialog.base.size = sizeof(dialog);
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&dialog.base.language); // Prompt language
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN,&dialog.base.buttonSwap); // X/O button swap
+	dialog.base.graphicsThread = 0x11;
+	dialog.base.accessThread = 0x13;
+	dialog.base.fontThread = 0x12;
+	dialog.base.soundThread = 0x10;
+	dialog.mode = PSP_UTILITY_MSGDIALOG_MODE_TEXT;
+	dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
+	strcpy(dialog.message, J2S(argv[0]));
+	sceUtilityMsgDialogInitStart(&dialog);
+	int done=0;
+	while(!done){
+		if(argc==1)js_evaluateScript(cleanStuff);
+		else js_evaluateScript(J2S(argv[2]));
+		switch(sceUtilityMsgDialogGetStatus()) {
+			case 2:sceUtilityMsgDialogUpdate(1);break;
+			case 3:sceUtilityMsgDialogShutdownStart();break;
+			case 0:done=1;break;
+		}
+		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
+	}
+	return JS_TRUE;
+}
+JS_FUN(Confirm){
+	if(!argc)return JS_TRUE;
+	memset(&dialog, 0, sizeof(dialog));
+	dialog.base.size = sizeof(dialog);
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&dialog.base.language); // Prompt language
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN,&dialog.base.buttonSwap); // X/O button swap
+	dialog.base.graphicsThread = 0x11;
+	dialog.base.accessThread = 0x13;
+	dialog.base.fontThread = 0x12;
+	dialog.base.soundThread = 0x10;
+	dialog.mode = PSP_UTILITY_MSGDIALOG_MODE_TEXT;
+	dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
+	dialog.options |= PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS|PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;		
+	strcpy(dialog.message, J2S(argv[0]));
+	sceUtilityMsgDialogInitStart(&dialog);
+	int done=0;
+	while(!done){
+		if(argc==1)js_evaluateScript(cleanStuff);
+		else js_evaluateScript(J2S(argv[2]));
+		switch(sceUtilityMsgDialogGetStatus()) {
+			case 2:sceUtilityMsgDialogUpdate(1);break;
+			case 3:sceUtilityMsgDialogShutdownStart();break;
+			case 0:done=1;break;
+		}
+		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
+	}
+	*rval = I2J(dialog.buttonPressed);
+	return JS_TRUE;
+}
+JS_FUN(Prompt){
+	if(argc<2)return JS_TRUE;
+	memset(&data, 0, sizeof(SceUtilityOskData));
+	data.language = PSP_UTILITY_OSK_LANGUAGE_DEFAULT; // Use system default for text input
+	data.lines = 1;
+	data.unk_24 = 1;
+	data.inputtype = PSP_UTILITY_OSK_INPUTTYPE_ALL; // Allow all input types
+	data.desc = expandChrStr(J2S(argv[0]),desc);
+	data.intext = expandChrStr(J2S(argv[1]),intext);
+	data.outtextlength = 128;
+	data.outtextlimit = 32; // Limit input to 32 characters
+	data.outtext = outtext;
+	
+	memset(&params, 0, sizeof(params));
+	params.base.size = sizeof(params);
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &params.base.language);
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN, &params.base.buttonSwap);
+	params.base.graphicsThread = 17;
+	params.base.accessThread = 19;
+	params.base.fontThread = 18;
+	params.base.soundThread = 16;
+	params.datacount = 1;
+	params.data = &data;
+	sceUtilityOskInitStart(&params);
+	int done=0;
+	while(!done){
+		if(argc==2)js_evaluateScript(cleanStuff);
+		else js_evaluateScript(J2S(argv[2]));
+		switch(sceUtilityOskGetStatus()){
+			case PSP_UTILITY_DIALOG_VISIBLE:sceUtilityOskUpdate(1);break;
+			case PSP_UTILITY_DIALOG_QUIT:sceUtilityOskShutdownStart();break;
+			case PSP_UTILITY_DIALOG_NONE:done = 1;
+			default:break;
+		}
+		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
+	}
+	*rval = STRING_TO_JSVAL(js_newString((void*)packUIStr(outtext,js_malloc(data.outtextlength),data.outtextlength),0));
+	return JS_TRUE;
+}
 static JSPropertiesSpec var[] = {
 	{"PSP_UTILITY_ACCEPT_CIRCLE",I2J(PSP_UTILITY_ACCEPT_CIRCLE)},
 	{"PSP_UTILITY_ACCEPT_CROSS",I2J(PSP_UTILITY_ACCEPT_CROSS)},
@@ -508,7 +604,7 @@ static JSPropertiesSpec var[] = {
 	{"PSP_MODULE_IRDA",I2J(PSP_MODULE_IRDA)},
 	{0}
 };
-static JSFunctionSpec functions[] = {
+static JSFunctionSpec lfun[] = {
 	{"loadAvModule",LoadAvModule,1},
 	{"unloadAvModule",UnloadAvModule,1},
 	{"loadNetModule",LoadNetModule,1},
@@ -540,8 +636,14 @@ static JSFunctionSpec functions[] = {
 	{"oskShutdownStart",OskShutdownStart,0},
 	{0}
 };
+static JSFunctionSpec gfun[] = {
+	{"prompt",Prompt,3},
+	{"alert",Alert,2},
+	{"confirm",Confirm,2},
+	{0}
+};
 int module_start(SceSize args, void *argp){
-	js_addModule(functions,0,0,var);
+	js_addModule(lfun,gfun,0,var);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){

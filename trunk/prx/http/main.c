@@ -38,18 +38,8 @@ JS_FUN(CreateTemplate){//user_agent[,http_ver[,netcnf]]
 	*rval = I2J(sceHttpCreateTemplate(argc?J2S(argv[0]):"Mozilla/5.0 (Windows; Windows NT 5.1; rv:2.0b2) Gecko/20100720 Firefox/4.1",(argc<1)?J2I(argv[1]):1,(argc<2)?J2I(argv[2]):0));
 	return JS_TRUE;
 }
-JS_FUN(DeleteTemplate){
+JS_FUN(DeleteTemplate){//tmpl
 	*rval = I2J(sceHttpDeleteTemplate(J2I(argv[1])));
-	return JS_TRUE;
-}
-JS_FUN(EnableCookie){
-	if(argc)
-		*rval = I2J(sceHttpEnableCookie(J2I(argv[0])));
-	return JS_TRUE;
-}
-JS_FUN(DisableCookie){
-	if(argc)
-		*rval = I2J(sceHttpDisableCookie(J2I(argv[0])));
 	return JS_TRUE;
 }
 JS_FUN(CreateConnection){//tmpl,server_name,[scheme,[port,[keepalive]]]
@@ -66,17 +56,17 @@ JS_FUN(CreateConnectionWithURL){//tmpl,server_name[,keepalive]
 	else{js_test(__LINE__);js_test(cnx);}
 	return JS_TRUE;
 }
-JS_FUN(DeleteConnection){
+JS_FUN(DeleteConnection){//cnx
 	if(argc)
 		*rval = I2J(sceHttpDeleteConnection(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(AddExtraHeader){
+JS_FUN(AddExtraHeader){//id,name,value[,mode]  (mode:0:overwrite;1=add)
 	if(argc>2)
-		*rval = I2J(sceHttpAddExtraHeader(J2I(argv[0]),J2S(argv[1]),J2S(argv[2]),0));
+		*rval = I2J(sceHttpAddExtraHeader(J2I(argv[0]),J2S(argv[1]),J2S(argv[2]),(argc>2)?J2S(argv[3]):0));
 	return JS_TRUE;
 }
-JS_FUN(DeleteHeader){
+JS_FUN(DeleteHeader){//id
 	if(argc==2)
 		*rval = I2J(sceHttpDeleteHeader(J2I(argv[0]),J2S(argv[1])));
 	return JS_TRUE;
@@ -97,88 +87,100 @@ JS_FUN(CreateRequestWithURL){//cnx,methode,uri[,length]
 		*rval = I2J(sceHttpCreateRequestWithURL(J2I(argv[0]),J2I(argv[1]),J2S(argv[2]),J2L(argv[3])));
 	return JS_TRUE;
 }
-JS_FUN(AbortRequest){
+JS_FUN(AbortRequest){//req
 	if(argc)
 		*rval = I2J(sceHttpAbortRequest(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(DeleteRequest){
+JS_FUN(DeleteRequest){//req
 	if(argc)
 		*rval = I2J(sceHttpDeleteRequest(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(EnableKeepAlive){
+JS_FUN(EnableKeepAlive){//cnx
 	if(argc)
 		*rval = I2J(sceHttpEnableKeepAlive(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(DisableKeepAlive){
+JS_FUN(DisableKeepAlive){//cnx
 	if(argc)
 		*rval = I2J(sceHttpDisableKeepAlive(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(EnableRedirect){
+JS_FUN(EnableRedirect){//tmpl
 	if(argc)
 		*rval = I2J(sceHttpEnableRedirect(J2I(argv[0])));
 	return JS_TRUE;
 }
-JS_FUN(SendRequest){
+JS_FUN(SendRequest){//req[,postData]
 	if(!argc)return JS_TRUE;
 	*rval = I2J(sceHttpSendRequest(J2I(argv[0]),(argc>1)?J2S(argv[1]):NULL,(argc>1)?js_getStringLength(JSVAL_TO_STRING(argv[1])):0));
 	return JS_TRUE;
 }
-JS_FUN(ReadData){//80431100=bad id
+JS_FUN(ReadData){//req,size
 	unsigned length=J2U(argv[1]);
 	char* data=js_malloc((int)length);
-	int res = sceHttpReadData(J2I(argv[0]),data,length);
+	int res = sceHttpReadData(J2I(argv[0]),data,length);//80431100=bad id
 	if(res>0)
 		*rval = STRING_TO_JSVAL(js_newString(data,res));
 	return JS_TRUE;
 }
-JS_FUN(GetContentLength){
+JS_FUN(GetContentLength){//143436176
 	if(!argc)return JS_TRUE;
 	unsigned long long contentlength;
 	u32 result = sceHttpGetContentLength(J2I(argv[0]),&contentlength);
+	printf("%llu\n",contentlength);
+	if(contentlength==0x088CA990)return JS_TRUE;//unknow error :s
 	if(result>0)
 		*rval = I2J(contentlength);
 	return JS_TRUE;
 }
-JS_FUN(GetStatusCode){
+JS_FUN(GetStatusCode){//req
 	if(!argc)return JS_TRUE;
 	int statuscode;
 	sceHttpGetStatusCode(J2I(argv[0]),&statuscode);
 	*rval = I2J(statuscode);
 	return JS_TRUE;
 }
-JS_FUN(SaveSystemCookie){
+JS_FUN(SaveSystemCookie){//
 	*rval = I2J(sceHttpSaveSystemCookie());
 	return JS_TRUE;
 }
-JS_FUN(LoadSystemCookie){
+JS_FUN(LoadSystemCookie){//
 	*rval = I2J(sceHttpLoadSystemCookie());
 	return JS_TRUE;
 }
-JS_FUN(SetConnectTimeOut){
+JS_FUN(EnableCookie){//tmpl
+	if(argc)
+		*rval = I2J(sceHttpEnableCookie(J2I(argv[0])));
+	return JS_TRUE;
+}
+JS_FUN(DisableCookie){//tmpl
+	if(argc)
+		*rval = I2J(sceHttpDisableCookie(J2I(argv[0])));
+	return JS_TRUE;
+}
+JS_FUN(SetConnectTimeOut){//cnx,value
 	if(argc<2)return JS_TRUE;
 	*rval = I2J(sceHttpSetConnectTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;
 }
-JS_FUN(SetRecvTimeOut){
+JS_FUN(SetRecvTimeOut){//cnx,value
 	if(argc<2)return JS_TRUE;
 	*rval = I2J(sceHttpSetRecvTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;
 }
-JS_FUN(SetResolveRetry){
+JS_FUN(SetResolveRetry){//cnx,value
 	if(argc<2)return JS_TRUE;
 	*rval = I2J(sceHttpSetResolveRetry(J2I(argv[0]),J2I(argv[1])));
 	return JS_TRUE;
 }
-JS_FUN(SetResolveTimeOut){
+JS_FUN(SetResolveTimeOut){//cnx,value
 	if(argc<2)return JS_TRUE;
 	*rval = I2J(sceHttpSetResolveTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;
 }
-JS_FUN(SetSendTimeOut){
+JS_FUN(SetSendTimeOut){//cnx
 	if(argc<2)return JS_TRUE;
 	*rval = I2J(sceHttpSetSendTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;

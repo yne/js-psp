@@ -20,5 +20,5 @@ PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
 
 all :
-	psp-packer.exe $(TARGET).prx
+#	psp-packer.exe $(TARGET).prx
 	rm *.o $(TARGET).elf
