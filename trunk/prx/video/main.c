@@ -203,11 +203,13 @@ JS_FUN(Play){
 }
 JS_FUN(Load){
 	int devkitVersion = sceKernelDevkitVersion();
+	if(devkitVersion<0x03070110)//FW must be at least 3.71
+		return JS_TRUE;
 	mp4_read_safe_constructor(&reader);
 	memset(avc, 0, sizeof(Mp4AvcDecoderStruct));
 
 	if(sceUtilityLoadAvModule(0))EXIT;
-	if(modload("mpeg_vsh370.prx"))EXIT;
+	if(modload("flash0:/kd/mpeg_vsh.prx"))EXIT;
 	if(modload("cooleyesBridge.prx"))EXIT;
 	if(mp4_read_open(&reader, J2S(argv[0])))EXIT;
 	printf("video width %d, height %d\n",reader.file.video_width,reader.file.video_height);
