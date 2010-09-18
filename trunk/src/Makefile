@@ -1,5 +1,6 @@
 TARGET_LIB = ./libspidermonkey.a
 OBJS = \
+		vfpu.o \
 		jsapi.o \
 		jsarena.o \
 		jsarray.o \
@@ -37,7 +38,7 @@ OBJS = \
 		jsxml.o \
 		prmjtime.o
 
-CFLAGS = -G0 -Wall -O2 -Wno-format
+CFLAGS = -G0 -Wall -O2 -DUSE_VFPU -DRND_PRODQUOT
 ASFLAGS = $(CFLAGS)
 
 PSPSDK=$(shell psp-config --pspsdk-path)

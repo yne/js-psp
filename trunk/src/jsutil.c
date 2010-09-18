@@ -65,7 +65,11 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 
 #ifdef JS_BASIC_STATS
 
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include <string.h>
 #include "jscompat.h"
 #include "jsbit.h"

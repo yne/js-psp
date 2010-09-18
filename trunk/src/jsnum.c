@@ -47,7 +47,11 @@
 #endif
 #include <locale.h>
 #include <limits.h>
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"

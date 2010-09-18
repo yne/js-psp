@@ -45,7 +45,11 @@
 #include <stdio.h>      /* first to avoid trouble on some systems */
 #include <errno.h>
 #include <limits.h>
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif

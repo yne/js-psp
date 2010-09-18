@@ -44,7 +44,11 @@
 #include "jsstddef.h"
 #include <stdio.h>
 #include <string.h>
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */

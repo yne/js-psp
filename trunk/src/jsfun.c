@@ -580,7 +580,11 @@ JSClass js_ArgumentsClass = {
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
+#if JS_VERSION == JS_VERSION_ECMA_3
+		NULL, NULL
+#else		
     JS_CLASS_TRACE(args_or_call_trace), NULL
+#endif
 };
 
 JSObject *
@@ -914,7 +918,11 @@ JS_FRIEND_DATA(JSClass) js_CallClass = {
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
-    JS_CLASS_TRACE(args_or_call_trace), NULL,
+#if JS_VERSION == JS_VERSION_ECMA_3
+		NULL, NULL
+#else		
+    JS_CLASS_TRACE(args_or_call_trace), NULL
+#endif
 };
 
 /*

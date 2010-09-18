@@ -61,7 +61,11 @@
 #ifdef XP_WIN
 #include <windef.h>
 #include <winbase.h>
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>     /* for fabs */
+#endif
 #include <mmsystem.h> /* for timeBegin/EndPeriod */
 /* VC++ 8.0 or later, and not WINCE */
 #if _MSC_VER >= 1400 && !defined(WINCE)

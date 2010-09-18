@@ -42,7 +42,11 @@
 
 #if JS_HAS_XML_SUPPORT
 
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
