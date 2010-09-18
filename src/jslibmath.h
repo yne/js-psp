@@ -46,7 +46,11 @@
 #ifndef _LIBMATH_H
 #define _LIBMATH_H
 
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include "jsconfig.h"
 
 /*
@@ -251,7 +255,7 @@ extern double fd_sqrt __P((double));
 
 extern double fd_ceil __P((double));
 extern double fd_fabs __P((double));
-extern double fd_floor __P((double));
+extern double fd_flor __P((double));
 extern double fd_fmod __P((double, double));
 
 extern double fd_atan2 __P((double, double));

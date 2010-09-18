@@ -54,7 +54,11 @@
 #include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
@@ -1752,6 +1756,23 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     return JS_TRUE;
 }
 
+static JSBool
+MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
+{
+    JSParseNode *pn2;
+
+    JS_ASSERT(pn->pn_arity == PN_LIST);
+    JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL);
+    pn2 = pn->pn_head;
+    if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_flags & TCF_GENEXP_LAMBDA)) {
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn,
+                                    JSREPORT_ERROR, msg);
+        return JS_FALSE;
+    }
+    pn->pn_op = JSOP_SETCALL;
+    return JS_TRUE;
+}
+
 #if JS_HAS_DESTRUCTURING
 
 static JSBool
@@ -1791,22 +1812,6 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
     return JS_TRUE;
 }
 
-static JSBool
-MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
-{
-    JSParseNode *pn2;
-
-    JS_ASSERT(pn->pn_arity == PN_LIST);
-    JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL);
-    pn2 = pn->pn_head;
-    if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_flags & TCF_GENEXP_LAMBDA)) {
-        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn,
-                                    JSREPORT_ERROR, msg);
-        return JS_FALSE;
-    }
-    pn->pn_op = JSOP_SETCALL;
-    return JS_TRUE;
-}
 
 /*
  * Here, we are destructuring {... P: Q, ...} = R, where P is any id, Q is any

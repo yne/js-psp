@@ -108,7 +108,18 @@ math_abs(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vabs.s			s000, s000\n"			// s000 = abs(s000)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		#else
     z = fd_fabs(x);
+		#endif
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -126,7 +137,32 @@ math_acos(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vcst.s			s001, VFPU_SQRT1_2\n"	// s001 = VFPU_SQRT1_2 = 1 / sqrt(2)
+			"vcst.s			s002, VFPU_PI_2\n"		// s002 = VFPU_PI_2    = PI / 2
+			"vcmp.s			LT, s000[|x|], s001\n"	// CC[0] = |s000| < s001
+			"vmul.s			s003, s000, s000\n"		// s003 = s000 * s000
+			"vsgn.s			s001, s000\n"			// s001 = sign(s000)
+			"bvtl			0, 0f\n"				// if (CC[0]!=0) goto 0f
+			"vasin.s		s000, s000\n"			// s000 = asin(s000)
+			"vocp.s			s003, s003\n"			// s003 = 1.0 - s003
+			"vsqrt.s		s003, s003\n"			// s003 = sqrt(s003)
+			"vasin.s		s003, s003\n"			// s003 = asin(s003)
+			"vocp.s			s000, s003\n"			// s000 = 1.0 - s003
+			"vmul.s			s000, s000, s001\n"		// s000 = s000 * s001
+		"0:\n"
+			"vocp.s			s000, s000\n"			// s000 = 1.0 - s000
+			"vmul.s			s000, s000, s002\n"		// s000 = s000 * s002
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		#else
     z = fd_acos(x);
+		#endif
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -144,10 +180,57 @@ math_asin(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
-    z = fd_asin(x);
+    #ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vcst.s			s001, VFPU_SQRT1_2\n"	// s001 = VFPU_SQRT1_2 = 1 / sqrt(2)
+			"vcst.s			s002, VFPU_PI_2\n"		// s002 = VFPU_PI_2    = PI / 2
+			"vcmp.s			LT, s000[|x|], s001\n"	// CC[0] = |s000| < s001
+			"vmul.s			s003, s000, s000\n"		// s003 = s000 * s000
+			"vsgn.s			s001, s000\n"			// s001 = sign(s000)
+			"bvtl			0, 0f\n"				// if (CC[0]!=0) goto 0f
+			"vasin.s		s000, s000\n"			// s000 = asin(s000)
+			"vocp.s			s003, s003\n"			// s003 = 1.0 - s003
+			"vsqrt.s		s003, s003\n"			// s003 = sqrt(s003)
+			"vmul.s			s002, s002, s001\n"		// s002 = s002 * s001
+			"vasin.s		s003, s003\n"			// s003 = asin(s003)
+			"vocp.s			s000, s003\n"			// s000 = 1.0 - s003
+		"0:\n"
+			"vmul.s			s000, s000, s002\n"		// s000 = s000 * s002
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+    return JS_NewNumberValue(cx, z, vp);
+		#else
+		z = fd_asin(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
+}
+#ifdef USE_VFPU
+float vfpu_atanf(float x) {
+	float result;
+	__asm__ (
+		"mtv      %1, S000\n"
+		"vmul.s   S001, S000, S000\n"
+		"vadd.s   S001, S001, S001[1]\n"
+		"vrsq.s   S001, S001\n"
+		"vmul.s   S000, S000, S001\n"
+		"vasin.s  S000, S000\n"
+		"vcst.s   S001, VFPU_PI_2\n"
+		"vmul.s   S000, S000, S001\n"
+		"mfv      %0, S000\n"
+	: "=r"(result) : "r"(x));
+	return result;//asinf(x/sqrt(x*x+1))
 }
 
+float fabsf(float x) {
+	float r;
+	__asm__ ( "abs.s %0, %1" : "=f"(r) :"f"(x):"memory");
+	return r;
+}
+#endif
 static JSBool
 math_atan(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -156,13 +239,19 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float s=x;
+		z=vfpu_atanf(s);
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_atan(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
 math_atan2(JSContext *cx, uintN argc, jsval *vp)
-{
+{//need VFPU equivalent
     jsdouble x, y, z;
 
     x = js_ValueToNumber(cx, &vp[2]);
@@ -199,8 +288,24 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 #endif
+		#ifdef USE_VFPU
+		#define PI   3.14159265358979f
+		#define PI_2 1.57079632679489f
+		
+		float d,s=x,t=y;
+		if (fabsf(x) >= fabsf(t)) {
+			d = vfpu_atanf(t/s);
+			if   (s < 0.0f) d += (t>=0.0f ? PI : -PI);
+		} else {
+			d = -vfpu_atanf(s/t);
+			d += (t < 0.0f ? -PI_2 : PI_2);
+		}
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_atan2(x, y);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -211,8 +316,21 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vf2iu.s		s000, s000, 0\n"		// s000 = (int)ceil(s000)
+			"vi2f.s			s000, s000, 0\n"		// s000 = (float)s000
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_ceil(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -223,8 +341,22 @@ math_cos(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vcst.s			s001, VFPU_2_PI\n"		// s001 = VFPU_2_PI = 2 / PI
+			"vmul.s			s000, s000, s001\n"		// s000 = s000 * s001
+			"vcos.s			s000, s000\n"			// s000 = cos(s000)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_cos(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -247,8 +379,22 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 #endif
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vcst.s			s001, VFPU_LOG2E\n"		// s001 = VFPU_LOG2E
+			"vmul.s			s000, s000, s001\n"		// s000 = s000 * s001 = s * log2(e)
+			"vexp2.s		s000, s000\n"			// s000 = pow(2.0f, s000)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_exp(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -259,8 +405,21 @@ math_floor(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vf2id.s		s000, s000, 0\n"		// s000 = (int)floor(s000)
+			"vi2f.s			s000, s000, 0\n"		// s000 = (float)s000
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_floor(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -277,8 +436,22 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vlog2.s		s000, s000\n"			// s000 = log2(s000)
+			"vcst.s			s001, VFPU_LOG2E\n"		// s001 = VFPU_LOG2E
+			"vdiv.s			s000, s000, s001\n"		// s000 = s000 / s001 = log2(s000) / log2(e)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_log(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -363,8 +536,23 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
+		#ifdef USE_VFPU
+		float d,s=x,t=y;
+	__asm__ (
+		"lv.s			s000, %1\n"				// s000 = x
+		"lv.s			s001, %2\n"				// s001 = y
+		"vlog2.s		s000, s000\n"			// s000 = log2(x)
+		"vmul.s			s000, s000, s001\n"		// s000 = s000 * s001 = log2(x) * y
+		"vexp2.s		s000, s000\n"			// s000 = pow(2.0f, s000)
+		"sv.s			s000, %0\n"				// d    = s000
+		: "=m"(d) : "m"(s), "m"(t)
+	);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_pow(x, y);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 /*
@@ -477,8 +665,21 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+ 		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vf2iz.s		s000, s000, 0\n"		// s000 = (int)truncf(s000)
+			"vi2f.s			s000, s000, 0\n"		// s000 = (float)s000
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_copysign(fd_floor(x + 0.5), x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -489,8 +690,22 @@ math_sin(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vcst.s			s001, VFPU_2_PI\n"		// s001 = VFPU_2_PI = 2 / PI
+			"vmul.s			s000, s000, s001\n"		// s000 = s000 * s001
+			"vsin.s			s000, s000\n"			// s000 = sin(s000)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_sin(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -501,8 +716,20 @@ math_sqrt(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vsqrt.s		s000, s000\n"			// s000 = sqrt(s000)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
     z = fd_sqrt(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 static JSBool
@@ -513,8 +740,23 @@ math_tan(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_tan(x);
+ 		#ifdef USE_VFPU
+		float d,s=x;
+		__asm__ (
+			"lv.s			s000, %1\n"				// s000 = s
+			"vcst.s			s001, VFPU_2_PI\n"		// s001 = VFPU_2_PI = 2 / PI
+			"vmul.s			s000, s000, s001\n"		// s000 = s000 * s001
+			"vrot.p			c002, s000, [c, s]\n"	// s002 = cos(s) , s003 = sin(s)
+			"vdiv.s			s000, s003, s002\n"		// s000 = s003 / s002 = tan(s)
+			"sv.s			s000, %0\n"				// d    = s000
+			: "=m"(d) : "m"(s)
+		);
+		z=d;
+		return JS_NewNumberValue(cx, z, vp);
+		#else
+		z = fd_tan(x);
     return js_NewNumberInRootedValue(cx, z, vp);
+		#endif
 }
 
 #if JS_HAS_TOSOURCE

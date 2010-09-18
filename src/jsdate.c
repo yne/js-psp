@@ -54,7 +54,11 @@
 #include "jsstddef.h"
 #include <ctype.h>
 #include <locale.h>
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"

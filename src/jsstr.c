@@ -2527,7 +2527,11 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 }
 
 #ifdef DEBUG
+#ifdef USE_VFPU
+#include <vfpu.h>
+#else
 #include <math.h>
+#endif
 
 void printJSStringStats(JSRuntime *rt)
 {
