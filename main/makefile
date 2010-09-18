@@ -2,6 +2,7 @@ TARGET = ../main
 OBJS = main.o functions.o shared.o ../prx/kernel/modK.o
 
 CFLAGS = -G0 -Wall -O2
+#-DUSE_KERNEL
 ASFLAGS = $(CFLAGS)
 #LDFLAGS = -nodefaultlibs -mno-explicit-relocs
 
@@ -14,7 +15,8 @@ USE_USER_LIBS = 1
 INCDIR = ../
 
 LIBDIR = ../src
-LIBS= -lspidermonkey -lm
+LIBS= -lspidermonkey
+#add -lm if you builded spidermonkey without VFPU optimisation
 
 PSP_LARGE_MEMORY = 1
 BUILD_PRX = 1

@@ -10,9 +10,12 @@
 #include "functions.h"
 
 PSP_MODULE_INFO("JSE", 0, 1, 1);
-//PSP_HEAP_SIZE_KB(-1);//left 253kB free (not enought)
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU);
+#ifdef KERNEL
+PSP_HEAP_SIZE_KB(-128);
+#else
 PSP_HEAP_SIZE_KB(-1024);//left 1.25MB free
-
+#endif
 static JSClass global_class = {
 	"global", JSCLASS_GLOBAL_FLAGS,
 	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
@@ -34,8 +37,11 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 	sceKernelExitGame();//exit b4 bus error 8)
 }
 int main(int argc, const char *argv[]){
+#ifdef USE_KERNEL
 	int ret;
-	sceKernelStartModule(sceKernelLoadModule("prx/Kloader.prx", 0, NULL), 0, NULL, &ret, NULL);
+	if(sceKernelStartModule(sceKernelLoadModule("prx/Kloader.prx", 0, NULL), 0, NULL, &ret, NULL)>0)
+		printf("Kernel is available\n");
+#endif
 	while(1){
 		JSRuntime *rt = JS_NewRuntime(16 * 1024 * 1024);// runtime
 		cx = JS_NewContext(rt, 8192); // Context
