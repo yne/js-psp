@@ -71,12 +71,12 @@ JS_FUN(js_include){
 		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
 		return JS_FALSE;
 	}
-/*
+#ifdef USE_KERNEL
 	extern int tmpFunction();
 	printf("tmpFunction avan patchage (ret:%i)\n",tmpFunction());
 	if(getKinfo(strrchr(path,'/')+1))
 		printf("tmpFunction APRES patchage (ret:%i)\n",tmpFunction());
-*/
+#endif
 	if(mod_tmp_lfun)
 		JS_DefineFunctions(cx,obj,mod_tmp_lfun);
 	if(mod_tmp_gfun)

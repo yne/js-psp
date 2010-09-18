@@ -8,6 +8,7 @@
 #define J2u(j) js_valueToUint16(j)
 #define J2O(j) JSVAL_TO_OBJECT(j)//(j,op) js_valueToObject(j,op)
 #define J2L(j) js_valueToNumber(j)
+#define J2D(j) js_valueToNumber(j)
 /*to JSVAL*/
 #define I2J(i) INT_TO_JSVAL(i)
 #define D2J(i) js_numberToValue(i)
@@ -23,6 +24,9 @@
 #define JS_METH(meth_name) static JSBool meth_name (JSContext *cx, uintN argc, jsval *vp)
 
 #define JSCLASS_NO_MANDATORY_MEMBERS 0,0,0,0,0,0,0,0
+
+#ifndef __JS_SHARED_H__
+#define __JS_SHARED_H__
 
 typedef struct JSPropertiesSpec {
     const char      *name;
@@ -93,3 +97,5 @@ EXT u32 c_addModule(const char *mod);
 EXT int c_delModule(u32 uid);
 EXT size_t c_strlen(const char *str);
 EXT void* c_memalign(size_t blocksize, size_t bytes);
+
+#endif
