@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <pspgu.h>
 #include <pspdisplay.h>
+#include <psprtc.h>
 
 #include "../../main/shared.h"
 
@@ -12,7 +13,7 @@ PSP_NO_CREATE_MAIN_THREAD();
 typedef struct ScePspCVector3 {
 	signed char x, y, z;
 } ScePspCVector3;
-
+#define GU_LIST_VRAM (void*)(0x04000000+0x00200000)
 void* list=NULL;
 PspGeContext __attribute__((aligned(16))) geContext;
 
@@ -53,20 +54,27 @@ JS_FUN(DepthRange){
 	return JS_TRUE;
 }
 JS_FUN(Fog){
-	float near,far;
-	if (!js_convertArguments(argc, argv, "dd", &near,&far))
-		return JS_FALSE;
-	sceGuFog(near,far,J2U(argv[2]));
+	sceGuFog(J2L(argv[0]),J2L(argv[1]),J2U(argv[2]));
 	return JS_TRUE;
 }
 JS_FUN(Init){
-	if(!list)list=js_malloc(argc?J2I(argv[0]):0x40000);
 	sceGuInit();
+	if(list)//list is already inited
+		return JS_TRUE;
+	if(!argc)//no size specified
+		list=js_malloc(0x40000);//malloc 262144 in RAM
+	else{//size specified
+		if(J2I(argv[0])>0)//positive size :
+			list=js_malloc(J2I(argv[0]));//malloc in RAM
+		else//negative size :
+			list=(void*)((0x04000000+(3*4*512*272)-J2I(argv[0])));//store in VRAM (juste after DepthBuffer)
+	}      //0x198000             
 	return JS_TRUE;
 }
 JS_FUN(Term){
 	sceGuTerm();
-	js_free(list);
+	if(list>(void*)0x08800000)//list stored in RAM so free is needed
+		js_free(list);
 	list=NULL;
 	return JS_TRUE;
 }
@@ -111,14 +119,14 @@ JS_FUN(FinishId){
 	return JS_TRUE;
 }
 JS_FUN(CallList){
-	sceGuCallList(list);
+	sceGuCallList(argc?(void*)J2U(argv[0]):list);
 	return JS_TRUE;
 }
 JS_FUN(CallMode){
 	sceGuCallMode(J2I(argv[0]));
 	return JS_TRUE;
 }
-JS_FUN(CheckList){
+JS_FUN(CheckList){//need hook ?
 	*rval = I2J(sceGuCheckList());
 	return JS_TRUE;
 }
@@ -134,6 +142,54 @@ JS_FUN(SwapBuffers){
 }
 JS_FUN(Sync){
 	*rval = I2J(sceGuSync(J2I(argv[0]),J2I(argv[1])));
+	return JS_TRUE;
+}
+void* objectToVertex(int type,JSObject*matrix,int count){
+	int n;
+	switch(type&GU_VERTEX_32BITF){
+		case GU_VERTEX_32BITF : {
+			ScePspFVector3* vertices = (ScePspFVector3*)sceGuGetMemory(count*sizeof(ScePspFVector3));
+			for(n=0;n<count;n++){
+				jsval vector=js_getElement(matrix,n);
+				vertices[n].x = J2L(js_getProperty(J2O(vector), "x"));
+				vertices[n].y = J2L(js_getProperty(J2O(vector), "y"));
+				vertices[n].z = J2L(js_getProperty(J2O(vector), "z"));
+			}
+			return vertices;
+		}break;
+		case GU_VERTEX_16BIT:{
+			ScePspSVector3* vertices = (ScePspSVector3*)sceGuGetMemory(count*sizeof(ScePspSVector3));
+			for(n=0;n<count;n++){
+				jsval vector=js_getElement(matrix,n);
+				vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
+				vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
+				vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
+			}
+			return vertices;
+		}break;
+		case GU_VERTEX_8BIT:{
+			ScePspCVector3* __attribute__((aligned(16))) vertices = (ScePspCVector3*)sceGuGetMemory(count*sizeof(ScePspCVector3));
+			for(n=0;n<count;n++){
+				jsval vector=js_getElement(matrix,n);
+				vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
+				vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
+				vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
+			}
+			return vertices;
+		}break;
+	}
+	return NULL;
+}
+JS_FUN(DrawArray){
+	if(js_typeOfValue(argv[4])==JSTYPE_OBJECT){
+		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),objectToVertex(J2I(argv[1]),J2O(argv[4]),J2I(argv[2])));
+	}else{
+		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)J2I(argv[4]));
+	}
+	return JS_TRUE;
+}
+JS_FUN(BeginObject){
+	sceGuBeginObject(J2I(argv[0]),J2I(argv[1]),(void*)J2U(argv[2]),objectToVertex(J2I(argv[0]),J2O(argv[3]),J2I(argv[1])));
 	return JS_TRUE;
 }
 JS_FUN(EndObject){
@@ -164,67 +220,12 @@ JS_FUN(Disable){
 	sceGuDisable(J2I(argv[0]));
 	return JS_TRUE;
 }
-JS_FUN(DrawArray){
-	if(js_typeOfValue(argv[4])==JSTYPE_OBJECT){
-		JSObject *matrix=J2O(argv[4]);
-		int n;
-		void* vert=NULL;
-		switch((J2I(argv[1])&GU_VERTEX_32BITF)){
-			case GU_VERTEX_32BITF : {
-				ScePspFVector3* vertices = (ScePspFVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspFVector3));
-				for(n=0;n<J2I(argv[2]);n++){
-					jsval vector=js_getElement(matrix,n);
-					vertices[n].x = J2L(js_getProperty(J2O(vector), "x"));
-					vertices[n].y = J2L(js_getProperty(J2O(vector), "y"));
-					vertices[n].z = J2L(js_getProperty(J2O(vector), "z"));
-				}
-			vert = vertices;
-			}
-			break;
-			case GU_VERTEX_16BIT:{
-				ScePspSVector3* vertices = (ScePspSVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspSVector3));
-				for(n=0;n<J2I(argv[2]);n++){
-					jsval vector=js_getElement(matrix,n);
-					vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
-					vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
-					vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
-				}
-			vert = vertices;
-			}
-			break;
-			case GU_VERTEX_8BIT:{
-				ScePspCVector3* __attribute__((aligned(16))) vertices = (ScePspCVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspCVector3));
-				for(n=0;n<J2I(argv[2]);n++){
-					jsval vector=js_getElement(matrix,n);
-					vertices[n].x = J2I(js_getProperty(J2O(vector), "x"));
-					vertices[n].y = J2I(js_getProperty(J2O(vector), "y"));
-					vertices[n].z = J2I(js_getProperty(J2O(vector), "z"));
-				}
-			vert = vertices;
-			}
-			break;
-		}
-		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),vert);
-	}else{
-		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)J2I(argv[4]));
-	}
-	return JS_TRUE;
-}
 JS_FUN(DrawArrayN){
-	JSObject *matrix=J2O(argv[5]);
-	ScePspFVector3* vertices=(ScePspFVector3*)sceGuGetMemory(J2I(argv[2])*sizeof(ScePspFVector3));
-	int n;
-	for(n=0;n<J2I(argv[2]);n++){
-		jsval vector=js_getElement(matrix,n);
-		vertices[n].x = J2L(js_getProperty(J2O(vector), "x"));
-		vertices[n].y = J2L(js_getProperty(J2O(vector), "y"));
-		vertices[n].z = J2L(js_getProperty(J2O(vector), "z"));
+	if(js_typeOfValue(argv[4])==JSTYPE_OBJECT){
+		sceGuDrawArrayN(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]),objectToVertex(J2I(argv[1]),J2O(argv[5]),J2I(argv[2])));
+	}else{
+		sceGuDrawArrayN(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]),(void*)J2I(argv[5]));
 	}
-	sceGuDrawArrayN(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]),vertices);
-	return JS_TRUE;
-}
-JS_FUN(BeginObject){
-	sceGuBeginObject(J2I(argv[0]),J2I(argv[1]),(void*)J2U(argv[2]),(void*)J2U(argv[3]));
 	return JS_TRUE;
 }
 JS_FUN(SetCallback){
@@ -505,6 +506,7 @@ JS_FUN(SwapBuffersCallback){
 	//guSwapBuffersCallback (GuSwapBuffersCallback callback)
 	return JS_TRUE;
 }
+//custom
 JS_FUN(Setup){
 	#define BUF_WIDTH (512)
 	#define SCR_WIDTH (480)
@@ -521,12 +523,15 @@ JS_FUN(Setup){
 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
   sceGuOffset(2048 - (SCR_WIDTH / 2), 2048 - (SCR_HEIGHT / 2));
   sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
-  sceGuDepthRange(0xc350, 0x2710);
-  sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+  
+	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
   sceGuEnable(GU_SCISSOR_TEST);
-  sceGuAlphaFunc(GU_GREATER, 0, 0xff);
+  
+	sceGuAlphaFunc(GU_GREATER, 0, 0xff);
   sceGuEnable(GU_ALPHA_TEST);
-  sceGuDepthFunc(GU_GEQUAL);
+  
+  sceGuDepthRange(0xc350, 0x2710);
+	sceGuDepthFunc(GU_GEQUAL);
   sceGuDisable(GU_DEPTH_TEST);
   sceGuFrontFace(GU_CW);
   sceGuShadeModel(GU_SMOOTH);
@@ -543,6 +548,16 @@ JS_FUN(Setup){
   sceGuSync(0, 0);
 	sceDisplayWaitVblankStart();
   sceGuDisplay(GU_TRUE);
+	return JS_TRUE;
+}
+u64 last_tick;
+JS_FUN(getFPS){
+	#ifdef USE_FPS_METER
+	u64 curr_tick;
+	sceRtcGetCurrentTick(&curr_tick);
+	*rval = I2J(1000000/(curr_tick-last_tick));
+	sceRtcGetCurrentTick(&last_tick);
+	#endif
 	return JS_TRUE;
 }
 typedef struct{
@@ -626,6 +641,7 @@ JS_FUN(BlitImage_ori){
 }
 static JSFunctionSpec functions[]={
 	//custom macro from graphics.c
+	{"getFPS",getFPS,0},
 	{"setup",Setup,0},
 	{"blitImage",BlitImage,3},
 	//standard sce* functions

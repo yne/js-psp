@@ -1,7 +1,7 @@
 TARGET = ../sceGu
 OBJS = main.o ../../main/JSE.o
 
-CFLAGS   = -G0 -Wall -O2
+CFLAGS   = -G0 -Wall -O2 -DUSE_FPS_METER
 ASFLAGS  = $(CFLAGS)
 LDFLAGS  = -mno-crt0 -nostartfiles
 
@@ -9,7 +9,7 @@ PRX_EXPORTS = ../plugin.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS = -lpspgu
+LIBS = -lpspgu -lpsprtc
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
@@ -20,5 +20,5 @@ PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
 
 all :
-#	psp-packer.exe $(TARGET).prx
+	psp-packer.exe $(TARGET).prx
 	rm *.o $(TARGET).elf
