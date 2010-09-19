@@ -61,15 +61,15 @@ JS_FUN(WaitVblankCB){
 	return JS_TRUE;
 }
 static JSFunctionSpec lfun[] = {
-	{"SetMode",SetMode,3},
-	{"GetMode",GetMode,3},
-	{"SetFrameBuf",SetFrameBuf,4},
-	{"GetFrameBuf",GetFrameBuf,4},
-	{"GetVcount",GetVcount,0},
-	{"WaitVblankStart",WaitVblankStart,0},
-	{"WaitVblankStartCB",WaitVblankStartCB,0},
-	{"WaitVblank",WaitVblank,0},
-	{"WaitVblankCB",WaitVblankCB,0},
+	{"setMode",SetMode,3},
+	{"getMode",GetMode,3},
+	{"setFrameBuf",SetFrameBuf,4},
+	{"getFrameBuf",GetFrameBuf,4},
+	{"getVcount",GetVcount,0},
+	{"waitVblankStart",WaitVblankStart,0},
+	{"waitVblankStartCB",WaitVblankStartCB,0},
+	{"waitVblank",WaitVblank,0},
+	{"waitVblankCB",WaitVblankCB,0},
 	{0}
 };
 static JSFunctionSpec gfun[] = {
