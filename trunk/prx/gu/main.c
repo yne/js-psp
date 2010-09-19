@@ -184,7 +184,7 @@ JS_FUN(DrawArray){
 	if(js_typeOfValue(argv[4])==JSTYPE_OBJECT){
 		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),objectToVertex(J2I(argv[1]),J2O(argv[4]),J2I(argv[2])));
 	}else{
-		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)J2I(argv[4]));
+		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)(J2U(argv[4])));
 	}
 	return JS_TRUE;
 }
@@ -381,7 +381,12 @@ JS_FUN(SetDither){
 	return JS_TRUE;
 }
 JS_FUN(TexImage){
-	sceGuTexImage(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]));
+	if(JSVAL_IS_OBJECT(argv[4]))
+		sceGuTexImage(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2S(js_getProperty(J2O(argv[4]),"data")));
+	else if(JSVAL_IS_STRING(argv[4]))
+		sceGuTexImage(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2S(argv[4]));
+	else
+		sceGuTexImage(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),J2I(argv[3]),(void*)J2U(argv[4]));
 	return JS_TRUE;
 }
 JS_FUN(TexLevelMode){
@@ -417,7 +422,12 @@ JS_FUN(TexWrap){
 	return JS_TRUE;
 }
 JS_FUN(ClutLoad){
-	sceGuClutLoad(J2I(argv[0]),(void*)J2U(argv[1]));
+	if(JSVAL_IS_OBJECT(argv[1]))
+		sceGuClutLoad(J2I(argv[0]),(void*)J2S(js_getProperty(J2O(argv[1]),"data")));
+	else if(JSVAL_IS_STRING(argv[1]))
+		sceGuClutLoad(J2I(argv[0]),(void*)J2S(argv[1]));
+	else
+			sceGuClutLoad(J2I(argv[0]),(void*)J2U(argv[1]));
 	return JS_TRUE;
 }
 JS_FUN(ClutMode){
@@ -601,41 +611,6 @@ JS_FUN(BlitImage){
 		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, v);
 		j += sliceWidth;
 	}
-
-	return JS_TRUE;
-}
-JS_FUN(BlitImage_ori){
-	int x=0,y=0,imgW,imgH,texW,texH;
-	if(!argc)return JS_TRUE;
-	if(argc>2){//at least 3 param (image+screenX+screenY)
-		x=J2I(argv[1]);
-		y=J2I(argv[2]);
-	}
-	imgW=J2I(js_getProperty(J2O(argv[0]),"imgW"));
-	imgH=J2I(js_getProperty(J2O(argv[0]),"imgH"));
-	texW=J2I(js_getProperty(J2O(argv[0]),"texW"));
-	texH=J2I(js_getProperty(J2O(argv[0]),"texH"));
-
-  sceGuTexMode(GU_PSM_8888,0,0,0);
-  sceGuTexImage(0,texW,texH,texW,J2S(js_getProperty(J2O(argv[0]),"data")));
-	typedef struct{
-		unsigned short u, v;
-		short x, y, z;
-	}tVertex;
-
-  tVertex* v = sceGuGetMemory(2 * sizeof(tVertex));
-  v[0].u = 0;v[1].u = 0+imgW;
-  v[0].v = 0;v[1].v = 0+imgH;
-  v[0].x = x;v[1].x = x+imgW;
-  v[0].y = y;v[1].y = y+imgH;
-  v[0].z = 0;v[1].z = 0;
-	
-  sceGuEnable(GU_TEXTURE_2D);
-  sceGuDisable(GU_DEPTH_TEST);
-  sceGuEnable(GU_BLEND);
-	if(argc>3)
-		sceGuColor(GU_RGBA(255,255,255,255));
-  sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, v);
 
 	return JS_TRUE;
 }
