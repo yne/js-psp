@@ -23,7 +23,7 @@ INCDIR = ../../
 
 BUILD_PRX = 1
 
-LIBS = -lpsputility -lpspaudio -lpspmp3 -lpsppower -lpspatrac3 -lvorbisidec -lm
+LIBS = -lpspaudio -lpspmp3 -lpsppower -lpspatrac3 -lvorbisidec -lm
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak

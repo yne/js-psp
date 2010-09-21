@@ -15,13 +15,13 @@ gu.setup();
 var choice = 0;//1=yes,2=no,3=cancel
 gu.clearColor(0xFFFFFF);//BBGGRR
 while(choice!=1){
-	var color = prompt("enter a color [hex]","0xBBGGRR");
-	if(isNaN(color))
-		alert("not a color !");
-	else{
-		gu.clearColor(color);
-		choice = confirm("it is okay ?");
-	}
+        var color = prompt("enter a color [hex]","0xBBGGRR");
+        if(isNaN(color))
+                alert("not a color !");
+        else{
+                gu.clearColor(color);
+                choice = confirm("it is okay ?");
+        }
 }
 
 gu.term();

@@ -5,10 +5,6 @@
 
 PSP_MODULE_INFO("aalib",PSP_MODULE_USER,0,0);
 
-/*you cant printf in user module (did i missed something ?)*/
-int Ufun(void){
-	return 0;
-}
 JS_FUN(js_AalibSetAmplification){
 	*rval = I2J(AalibSetAmplification(J2I(argv[0]),0.01f*J2I(argv[1])));
 	return JS_TRUE;
@@ -69,20 +65,20 @@ JS_FUN(js_AalibTest){
 	return JS_TRUE;
 }
 static JSFunctionSpec functions[] = {
-	{"SetAmplification",js_AalibSetAmplification, 1},
-	{"SetVolume",js_AalibSetVolume, 1},
-	{"SetPlaySpeed",js_AalibSetPlaySpeed, 1},
-	{"Init",js_AalibInit, 1},
-	{"Load",js_AalibLoad, 1},
-	{"Unload",js_AalibUnload, 1},
-	{"Play",js_AalibPlay, 1},
-	{"Stop",js_AalibStop, 1},
-	{"Pause",js_AalibPause, 1},
-	{"Rewind",js_AalibRewind, 1},
-	{"SetAutoloop",js_AalibSetAutoloop, 1},
-	{"GetStopReason",js_AalibGetStopReason, 1},
-	{"GetStatus",js_AalibGetStatus, 1},
-	{"Test",js_AalibTest, 1},
+	{"setAmplification",js_AalibSetAmplification, 1},
+	{"setVolume",js_AalibSetVolume, 1},
+	{"setPlaySpeed",js_AalibSetPlaySpeed, 1},
+	{"init",js_AalibInit, 1},
+	{"load",js_AalibLoad, 1},
+	{"unload",js_AalibUnload, 1},
+	{"play",js_AalibPlay, 1},
+	{"stop",js_AalibStop, 1},
+	{"pause",js_AalibPause, 1},
+	{"rewind",js_AalibRewind, 1},
+	{"setAutoloop",js_AalibSetAutoloop, 1},
+	{"getStopReason",js_AalibGetStopReason, 1},
+	{"getStatus",js_AalibGetStatus, 1},
+	{"test",js_AalibTest, 1},
 	{0}
 };
 static JSPropertiesSpec var[] = {

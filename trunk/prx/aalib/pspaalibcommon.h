@@ -12,7 +12,6 @@
 
 #include "id3.h"
 #include <pspkernel.h>
-#include <psputility.h>
 #include <pspaudio.h>
 #include <string.h>
 #include <malloc.h>
@@ -20,6 +19,7 @@
 #include <math.h>
 #include <pspmp3.h>
 #include <pspatrac3.h>
+#include "../../main/shared.h"
 //#include <mad.h>
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
