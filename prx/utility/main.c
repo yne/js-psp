@@ -301,10 +301,10 @@ JS_FUN(Alert){
 	dialog.base.size = sizeof(dialog);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&dialog.base.language); // Prompt language
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN,&dialog.base.buttonSwap); // X/O button swap
-	dialog.base.graphicsThread = 0x11;
-	dialog.base.accessThread = 0x13;
-	dialog.base.fontThread = 0x12;
-	dialog.base.soundThread = 0x10;
+	dialog.base.graphicsThread = 0x61;
+	dialog.base.accessThread = 0x63;
+	dialog.base.fontThread = 0x62;
+	dialog.base.soundThread = 0x60;
 	dialog.mode = PSP_UTILITY_MSGDIALOG_MODE_TEXT;
 	dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
 	strcpy(dialog.message, J2S(argv[0]));
@@ -328,10 +328,10 @@ JS_FUN(Confirm){
 	dialog.base.size = sizeof(dialog);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&dialog.base.language); // Prompt language
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN,&dialog.base.buttonSwap); // X/O button swap
-	dialog.base.graphicsThread = 0x11;
-	dialog.base.accessThread = 0x13;
-	dialog.base.fontThread = 0x12;
-	dialog.base.soundThread = 0x10;
+	dialog.base.graphicsThread = 0x61;
+	dialog.base.accessThread = 0x63;
+	dialog.base.fontThread = 0x62;
+	dialog.base.soundThread = 0x60;
 	dialog.mode = PSP_UTILITY_MSGDIALOG_MODE_TEXT;
 	dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
 	dialog.options |= PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS|PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;		
@@ -368,10 +368,10 @@ JS_FUN(Prompt){
 	params.base.size = sizeof(params);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &params.base.language);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN, &params.base.buttonSwap);
-	params.base.graphicsThread = 17;
-	params.base.accessThread = 19;
-	params.base.fontThread = 18;
-	params.base.soundThread = 16;
+	params.base.graphicsThread = 0x61;
+	params.base.accessThread = 0x63;
+	params.base.fontThread = 0x62;
+	params.base.soundThread = 0x60;
 	params.datacount = 1;
 	params.data = &data;
 	sceUtilityOskInitStart(&params);

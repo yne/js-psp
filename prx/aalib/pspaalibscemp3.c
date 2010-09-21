@@ -285,8 +285,10 @@ int UnloadSceMp3(int channel)
 
 int InitSceMp3()
 {
-	sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
-	sceUtilityLoadModule(PSP_MODULE_AV_MP3);
+	//sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
+	//sceUtilityLoadModule(PSP_MODULE_AV_MP3);
+	c_addModule("flash0:/kd/avcodec.prx");
+	c_addModule("flash0:/kd/libmp3.prx");
 	if (sceMp3InitResource() < 0)
 	{
 		return PSPAALIB_ERROR_SCEMP3_INIT_RESOURCE;

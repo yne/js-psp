@@ -228,8 +228,10 @@ int UnloadAt3(int channel)
 
 int InitAt3()
 {
-	sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
-	sceUtilityLoadModule(PSP_MODULE_AV_ATRAC3PLUS);
+	//sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
+	//sceUtilityLoadModule(PSP_MODULE_AV_ATRAC3PLUS);
+	c_addModule("flash0:/kd/avcodec.prx");
+	c_addModule("flash0:/kd/libatrac3plus.prx");
 	return PSPAALIB_SUCCESS;
 }
 
