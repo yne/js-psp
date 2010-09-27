@@ -28,9 +28,9 @@ JS_FUN(NetInit){
 }
 JS_FUN(NetTerm){
 	*rval = I2J(sceNetTerm());
-	c_delModule(inet_uid);
-	c_delModule(net_uid);
-	c_delModule(ifhandle_uid);
+	if(inet_uid)inet_uid=c_delModule(inet_uid);
+	if(net_uid)net_uid=c_delModule(net_uid);
+	if(ifhandle_uid)ifhandle_uid=c_delModule(ifhandle_uid);
 	return JS_TRUE;
 }
 JS_FUN(FreeThreadinfo){
@@ -60,13 +60,13 @@ JS_FUN(GetMallocStat){
  /* apctl */
 u32 apctl_uid = 0;
 JS_FUN(ApctlInit){
-	apctl_uid = c_addModule("flash0:/kd/pspnet_apctl.prx");
+	if(!apctl_uid)apctl_uid=c_addModule("flash0:/kd/pspnet_apctl.prx");
 	*rval = I2J(sceNetApctlInit(J2I(argv[0]),J2I(argv[1])));
 	return JS_TRUE;
 }
 JS_FUN(ApctlTerm){
 	*rval = I2J(sceNetApctlTerm());
-	c_delModule(apctl_uid);
+	if(apctl_uid)apctl_uid=c_delModule(apctl_uid);
 	return JS_TRUE;
 }
 JS_FUN(ApctlGetInfo){
@@ -94,7 +94,7 @@ JS_FUN(ApctlGetState){
 }
 /* Inet */
 JS_FUN(InetInit){
-	inet_uid = c_addModule("flash0:/kd/pspnet_inet.prx");
+	if(!inet_uid)inet_uid=c_addModule("flash0:/kd/pspnet_inet.prx");
 	*rval = I2J(sceNetInetInit());
 	return JS_TRUE;
 }
@@ -106,7 +106,7 @@ JS_FUN(InetTerm){
 u32 resolver_uid = 0;
 char resolv_buf[1024];
 JS_FUN(ResolverInit){
-	resolver_uid = c_addModule("flash0:/kd/pspnet_resolver.prx");
+	if(!resolver_uid)resolver_uid=c_addModule("flash0:/kd/pspnet_resolver.prx");
 	*rval = I2J(sceNetResolverInit());
 	return JS_TRUE;
 }
@@ -150,7 +150,7 @@ JS_FUN(ResolverDelete){
 }
 JS_FUN(ResolverTerm){
 	*rval = I2J(sceNetResolverTerm());
-	c_delModule(resolver_uid);
+	if(resolver_uid)resolver_uid=c_delModule(resolver_uid);
 	return JS_TRUE;
 }
 u32 adhoc_uid = 0;
@@ -414,7 +414,30 @@ JS_FUN(AdhocMatchingGetPoolStat){
 	*rval = O2J(opt);
 	return JS_TRUE;
 }
+int stun(args,argp){
+	sceKernelSelfStopUnloadModule(0,0,NULL);
+	return 0;
+}
+JS_FUN(Unload){
+	//resolverTerm
+	sceNetResolverTerm();
+	if(resolver_uid)c_delModule(resolver_uid);
+	//apctlTerm
+	sceNetApctlTerm();
+	if(apctl_uid)c_delModule(apctl_uid);
+	//inetTerm
+	sceNetInetTerm();
+	//term
+	sceNetTerm();
+	if(inet_uid)c_delModule(inet_uid);
+	if(net_uid)c_delModule(net_uid);
+	if(ifhandle_uid)c_delModule(ifhandle_uid);
+	
+	sceKernelStartThread(sceKernelCreateThread("unload",stun,0x18,PSP_THREAD_ATTR_USER,0,NULL),0,NULL);
+	return JS_TRUE;
+}
 static JSFunctionSpec functions[] = {
+	{"unload",Unload,0},
 /*general*/
 	{"init",NetInit,4},
 	{"term",NetTerm,0},
