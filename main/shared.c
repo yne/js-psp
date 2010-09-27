@@ -19,7 +19,7 @@ JSObject* js_getGlobalObject(void){
 }
 /* exported functions */
 int js_test(int in){
-	printf("test:%08X\n",in);
+	printf("\x1B[32;47m%08X\x1B[49m\n",in);
 	return in;
 }
 typedef struct JSPropertiesSpec{
@@ -38,7 +38,9 @@ void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lv
 	mod_tmp_gvar=gvar;
 }
 JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots){
-	printf("adding class : %s\n",name);
+#ifdef DEBUG_MODE
+	printf("\x1B[33;40madding class : %s\n",name);
+#endif
 	JSClass* tmpClass = JS_malloc(cx,sizeof(JSClass));
 	tmpClass->name=name;
   tmpClass->flags=flags;
@@ -73,7 +75,6 @@ JSBool js_convertArguments(uintN argc, jsval *argv, const char *format, ...){
 }
 JSObject* js_addObj(const char* name){
 	return JS_DefineObject(cx,gobj,name,0,NULL,JSPROP_ENUMERATE);
-	//printf("js_addObj:%i\n",JS_DefineProperty(cx, obj, "param", INT_TO_JSVAL((int)111), NULL, NULL, JSPROP_ENUMERATE));
 }
 jsval js_getElement(JSObject *tobj,int index){
 	jsval vp;
@@ -158,14 +159,21 @@ char* js_strdup(const char* str){
 }
 void* js_malloc(size_t nbytes){
 	void* p = JS_malloc(cx,nbytes);
-	//printf("malloc %i bytes at [%08X|%08X]\n",nbytes,(int)p,(int)p+nbytes);
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mmalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
+#endif
 	return p;
 }
 void* js_realloc(void *p,size_t nbytes){
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mfrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
+#endif
 	return JS_realloc(cx,p,nbytes);
 }
 void js_free(void *p){
-	//printf("free at %08X\n",(int)p);
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mfree   0x%08X\n",(int)p);
+#endif
 	JS_free(cx,p);
 }
 /* real C stuff (if you don't want use libc in your prx) */
@@ -173,12 +181,18 @@ u32 c_addModule(const char *mod){
 	int ret=0;
 	u32 uid = sceKernelLoadModule(mod,0,NULL);
 	sceKernelStartModule(uid,0,NULL,&ret,NULL);
+#ifdef DEBUG_MODE
+	printf("\x1B[33;40mLoad/Start host0:/%s UID: 0x%08X\n",mod,uid);
+#endif
 	return uid;
 }
 int c_delModule(u32 uid){
 	int ret=0;
 	sceKernelStopModule(uid,0,NULL,&ret,NULL);
 	sceKernelUnloadModule(uid);
+#ifdef DEBUG_MODE
+	printf("\x1B[33;40mStop/Unload 0x%08X : %i\n",uid,ret);
+#endif
 	return ret?uid:ret;
 }
 size_t c_strlen(char *str){

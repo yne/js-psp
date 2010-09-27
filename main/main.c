@@ -31,19 +31,22 @@ JSFunctionSpec my_functions[] = {
 };
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 	if(report->filename)// error in file
-		printf("%s:%u:%s\n",report->filename,(unsigned int) report->lineno,message);
+		printf("\x1B[1;37;41m%s:%u:%s\x1B[0;39;109m\n",report->filename,(unsigned int) report->lineno,message);
 	else// internal error
-		printf("%s\n",message);
+		printf("\x1B[1;37;41m%s\x1B[0;39;109m\n",message);
 	sceKernelExitGame();//exit b4 bus error 8)
 }
 int main(int argc, const char *argv[]){
+#ifdef DEBUG_MODE
+	printf("\x1B[39;49mSpiderMonkey 1.8 ["__DATE__" "__TIME__"]\n");
+#endif
 #ifdef USE_KERNEL
 	int ret;
 	if(sceKernelStartModule(sceKernelLoadModule("prx/Kloader.prx", 0, NULL), 0, NULL, &ret, NULL)>0)
-		printf("Kernel is available\n");
+		printf("\x1B[31;40mKernel is available\n");
 #endif
 	while(1){
-		JSRuntime *rt = JS_NewRuntime(16 * 1024 * 1024);// runtime
+		JSRuntime *rt = JS_NewRuntime(14 * 1024 * 1024);// runtime
 		cx = JS_NewContext(rt, 8192); // Context
 		JS_SetErrorReporter(cx, reportError);//the error callback
 		gobj = JS_NewObject(cx, &global_class, NULL, NULL);// Create the global object.
@@ -53,11 +56,11 @@ int main(int argc, const char *argv[]){
 		JSScript *script=JS_CompileFile(cx, gobj, argc>1?argv[1]:"js/main.js");
 		jsval result;
 		if(!script){
-			printf("Compilation error\n");
+			printf("\x1B[1;37;41mCompilation error\n");
 			break;
 		}
 		if (!JS_ExecuteScript(cx, gobj, script, &result)){
-			printf("Execution error\n");
+			printf("\x1B[1;37;41mExecution error\n");
 			break;
 		}
 		//printf("returned : %08X\n",JSVAL_TO_INT(result));
