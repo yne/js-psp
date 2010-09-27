@@ -9,10 +9,13 @@
 /* my custom functions */
 
 JS_FUN(js_print){
-	printf(J2S(argv[0]));
+	printf("\x1B[1;37;40m%s\x1B[0;39;49m",J2S(argv[0]));
 	return JS_TRUE;
 }
 JS_FUN(js_exit){
+#ifdef DEBUG_MODE
+	printf("\x1B[0;39;49mexiting ...\n");
+#endif
 	sceKernelExitGame();
 	return JS_TRUE;
 }
@@ -64,7 +67,7 @@ JS_FUN(js_include){
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
 	
 	if(mod != uid){
-		printf("Error 0x%08X \n", mod);
+		printf("\x1B[1;37;41mModule error 0x%08X \n", mod);
 		//if(mod == 0x8002012E)printf(": <%s> not found!",path);
 		//if(mod == 0x8002013B)printf(": <%s> already loaded/started",path);
 		//if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
@@ -99,16 +102,19 @@ JS_FUN(js_include){
 	mod_tmp_gfun=NULL;
 	mod_tmp_lvar=NULL;
 	mod_tmp_gvar=NULL;
-	//printf("Load/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);	/**/
+#ifdef DEBUG_MODE
+	printf("\x1B[33;40mLoad/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);
+#endif
   return JS_TRUE;
 }
 JS_METH(js_exclude){
 	int ret=-1;
 	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL);
-	//printf("Stop/Unload %s : %i\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret);
+#ifdef DEBUG_MODE
+	printf("\x1B[33;40mStop/Unload %s : %i\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret);
+#endif
 	sceKernelUnloadModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")));
 	*(vp) = I2J(ret);
-	//js_delProperty(NULL,obj);
 	return JS_TRUE;
 }
 static JSFunctionSpec ModuleMethodes[] = {

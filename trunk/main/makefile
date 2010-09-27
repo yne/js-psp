@@ -1,7 +1,7 @@
 TARGET = ../main
 OBJS = main.o functions.o shared.o ../prx/kernel/modK.o
 
-CFLAGS = -G0 -Wall -O2
+CFLAGS = -G0 -Wall -O2 -DDEBUG_MODE
 #-DUSE_KERNEL
 ASFLAGS = $(CFLAGS)
 #LDFLAGS = -nodefaultlibs -mno-explicit-relocs
