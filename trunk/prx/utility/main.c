@@ -390,6 +390,33 @@ JS_FUN(Prompt){
 	*rval = STRING_TO_JSVAL(js_newString((void*)packUIStr(outtext,js_malloc(data.outtextlength),data.outtextlength),0));
 	return JS_TRUE;
 }
+JS_FUN(Connect){
+  pspUtilityNetconfData data; //Struct for dialog settings
+  memset(&data, 0, sizeof(data)); //Clear it
+  data.base.size = sizeof(data);
+  data.base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
+  data.base.buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
+	data.base.graphicsThread = 0x61;
+	data.base.accessThread = 0x63;
+	data.base.fontThread = 0x62;
+	data.base.soundThread = 0x60;
+  data.action = 3;//PSP_NETCONF_ACTION_CONNECTAP_LASTUSED
+
+  sceUtilityNetconfInitStart(&data); //Start the dialog
+  int done = 0; //Reset loop-break trigger
+  while(!done) { //Loop until trigger
+		if(!argc)js_evaluateScript(cleanStuff);
+		else js_evaluateScript(J2S(argv[2]));
+    switch(sceUtilityNetconfGetStatus()) { //Operate according to reported dialog status
+			case PSP_UTILITY_DIALOG_VISIBLE:sceUtilityNetconfUpdate(1);break;
+			case PSP_UTILITY_DIALOG_QUIT:sceUtilityNetconfShutdownStart();break;
+			case PSP_UTILITY_DIALOG_FINISHED:done = 1;break;
+			default:break;
+		}
+		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
+  }
+	return JS_TRUE;
+}
 static JSPropertiesSpec var[] = {
 	{"PSP_UTILITY_ACCEPT_CIRCLE",I2J(PSP_UTILITY_ACCEPT_CIRCLE)},
 	{"PSP_UTILITY_ACCEPT_CROSS",I2J(PSP_UTILITY_ACCEPT_CROSS)},
@@ -605,6 +632,8 @@ static JSPropertiesSpec var[] = {
 	{0}
 };
 static JSFunctionSpec lfun[] = {
+	{"connectAP",Connect,1},
+
 	{"loadAvModule",LoadAvModule,1},
 	{"unloadAvModule",UnloadAvModule,1},
 	{"loadNetModule",LoadNetModule,1},

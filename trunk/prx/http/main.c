@@ -19,18 +19,29 @@
 PSP_MODULE_INFO("sceHttp",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
 
+/* unlisted libHTTP prototype */
+typedef void *(*SceHttpMallocFunction)(SceSize size);
+typedef void *(*SceHttpReallocFunction)(void *p, SceSize size);
+typedef void (*SceHttpFreeFunction)(void *p);
+
+int sceHttpSetMallocFunction(SceHttpMallocFunction malloc_func,
+							 SceHttpFreeFunction free_func,
+							 SceHttpReallocFunction realloc_func);
+/* -------------------------- */
 u32 puri=0,phttp=0,lhttp=0;
 JS_FUN(Init){//[poolSize]
 	puri=c_addModule("flash0:/kd/libparse_uri.prx");
 	phttp=c_addModule("flash0:/kd/libparse_http.prx");
 	lhttp=c_addModule("flash0:/kd/libhttp.prx");
 	*rval = I2J(sceHttpInit(argc?J2I(argv[0]):20000));
+	if(!J2I(argv[0]))
+		sceHttpSetMallocFunction(js_malloc,js_free,js_realloc);
 	return JS_TRUE;
 }
 JS_FUN(End){
-	c_delModule(lhttp);
-	c_delModule(phttp);
-	c_delModule(puri);
+	if(lhttp)lhttp=c_delModule(lhttp);
+	if(phttp)phttp=c_delModule(phttp);
+	if(puri)puri=c_delModule(puri);
 	*rval = I2J(sceHttpEnd());
 	return JS_TRUE;
 }
@@ -63,7 +74,7 @@ JS_FUN(DeleteConnection){//cnx
 }
 JS_FUN(AddExtraHeader){//id,name,value[,mode]  (mode:0:overwrite;1=add)
 	if(argc>2)
-		*rval = I2J(sceHttpAddExtraHeader(J2I(argv[0]),J2S(argv[1]),J2S(argv[2]),(argc>2)?J2S(argv[3]):0));
+		*rval = I2J(sceHttpAddExtraHeader(J2I(argv[0]),J2S(argv[1]),J2S(argv[2]),(argc>2)?J2I(argv[3]):0));
 	return JS_TRUE;
 }
 JS_FUN(DeleteHeader){//id
@@ -117,8 +128,9 @@ JS_FUN(SendRequest){//req[,postData]
 	*rval = I2J(sceHttpSendRequest(J2I(argv[0]),(argc>1)?J2S(argv[1]):NULL,(argc>1)?js_getStringLength(JSVAL_TO_STRING(argv[1])):0));
 	return JS_TRUE;
 }
-JS_FUN(ReadData){//req,size
-	unsigned length=J2U(argv[1]);
+JS_FUN(ReadData){//req[,size]
+	unsigned length=1024;
+	if(argc>1)length=J2U(argv[1]);
 	char* data=js_malloc((int)length);
 	int res = sceHttpReadData(J2I(argv[0]),data,length);//80431100=bad id
 	if(res>0)
@@ -129,8 +141,8 @@ JS_FUN(GetContentLength){//143436176
 	if(!argc)return JS_TRUE;
 	unsigned long long contentlength;
 	u32 result = sceHttpGetContentLength(J2I(argv[0]),&contentlength);
-	printf("%llu\n",contentlength);
-	if(contentlength==0x088CA990)return JS_TRUE;//unknow error :s
+	//printf("%llu\n",contentlength);
+	if(contentlength==0x088CA990)return JS_TRUE;//unknow error :s (double ?)
 	if(result>0)
 		*rval = I2J(contentlength);
 	return JS_TRUE;
@@ -185,7 +197,21 @@ JS_FUN(SetSendTimeOut){//cnx
 	*rval = I2J(sceHttpSetSendTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;
 }
+int stun(args,argp){
+	sceKernelDelayThread(1000*1000);
+	sceKernelSelfStopUnloadModule(0,0,NULL);
+	return 0;
+}
+JS_FUN(Unload){
+	if(lhttp)c_delModule(lhttp);
+	if(phttp)c_delModule(phttp);
+	if(puri)c_delModule(puri);
+	sceHttpEnd();
+	sceKernelStartThread(sceKernelCreateThread("unload",stun,0x18,PSP_THREAD_ATTR_USER,0,NULL),0,NULL);
+	return JS_TRUE;
+}
 static JSFunctionSpec functions[] = {
+	{"unload",Unload,0},
 	{"init",Init,1},
 	{"end",End,0},
 	{"createTemplate",CreateTemplate,3},
