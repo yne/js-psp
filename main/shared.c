@@ -147,6 +147,12 @@ jsval js_evaluateScript(char* eval){
 	JS_EvaluateScript(cx,gobj,eval,strlen(eval),"",lineno, &rval);
 	return rval;
 }
+jsval js_callFunctionName(JSObject *obj,const char* name,uintN argc,jsval *argv){
+	if(!obj)obj=gobj;
+	jsval rval;
+	JS_CallFunctionName(cx,obj,name,argc,argv,&rval);
+	return rval;
+}
 JSType js_typeOfValue(jsval v){
 	return JS_TypeOfValue(cx,v);
 }
@@ -166,7 +172,7 @@ void* js_malloc(size_t nbytes){
 }
 void* js_realloc(void *p,size_t nbytes){
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mfrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
+	printf("\x1B[35;40mrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
 #endif
 	return JS_realloc(cx,p,nbytes);
 }
@@ -188,10 +194,12 @@ u32 c_addModule(const char *mod){
 }
 int c_delModule(u32 uid){
 	int ret=0;
-	sceKernelStopModule(uid,0,NULL,&ret,NULL);
-	sceKernelUnloadModule(uid);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mStop/Unload 0x%08X : %i\n",uid,ret);
+	printf("\x1B[33;40mStop/Unload UID:%08X 0x%08X ",uid,sceKernelStopModule(uid,0,NULL,&ret,NULL));
+	printf("0x%08X, %i\n",sceKernelUnloadModule(uid),ret);
+#else
+	sceKernelStopModule(uid,0,NULL,&ret,NULL),ret);
+	sceKernelUnloadModule(uid);
 #endif
 	return ret?uid:ret;
 }

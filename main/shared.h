@@ -85,6 +85,7 @@ EXT u16 js_valueToUint16(jsval v);
 EXT jsdouble js_valueToNumber(jsval v);
 EXT jsval js_numberToValue(jsdouble d);
 EXT jsval js_evaluateScript(char* eval);
+EXT jsval js_callFunctionName(JSObject *obj,const char* name,uintN argc,jsval *argv);
 EXT JSType js_typeOfValue(jsval v);
 EXT jsval js_computeThis(JSContext *cx, jsval *vp);
 
