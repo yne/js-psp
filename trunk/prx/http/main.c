@@ -1,6 +1,7 @@
 #include <pspkernel.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <malloc.h>
 #include <string.h>
 #include <pspnet.h>
 #include <pspnet_apctl.h>
@@ -28,14 +29,17 @@ int sceHttpSetMallocFunction(SceHttpMallocFunction malloc_func,
 							 SceHttpFreeFunction free_func,
 							 SceHttpReallocFunction realloc_func);
 /* -------------------------- */
-u32 puri=0,phttp=0,lhttp=0;
+u32 puri=0,phttp=0,lhttp=0,ihttp=0;
 JS_FUN(Init){//[poolSize]
+	if(ihttp)
+		return JS_TRUE;
 	puri=c_addModule("flash0:/kd/libparse_uri.prx");
 	phttp=c_addModule("flash0:/kd/libparse_http.prx");
 	lhttp=c_addModule("flash0:/kd/libhttp.prx");
 	*rval = I2J(sceHttpInit(argc?J2I(argv[0]):20000));
 	if(!J2I(argv[0]))
 		sceHttpSetMallocFunction(js_malloc,js_free,js_realloc);
+	ihttp=1;
 	return JS_TRUE;
 }
 JS_FUN(End){
@@ -43,6 +47,7 @@ JS_FUN(End){
 	if(phttp)phttp=c_delModule(phttp);
 	if(puri)puri=c_delModule(puri);
 	*rval = I2J(sceHttpEnd());
+	ihttp=0;
 	return JS_TRUE;
 }
 JS_FUN(CreateTemplate){//user_agent[,http_ver[,netcnf]]
@@ -197,21 +202,18 @@ JS_FUN(SetSendTimeOut){//cnx
 	*rval = I2J(sceHttpSetSendTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;
 }
-int stun(args,argp){
-	sceKernelDelayThread(1000*1000);
-	sceKernelSelfStopUnloadModule(0,0,NULL);
-	return 0;
-}
-JS_FUN(Unload){
-	if(lhttp)c_delModule(lhttp);
-	if(phttp)c_delModule(phttp);
-	if(puri)c_delModule(puri);
-	sceHttpEnd();
-	sceKernelStartThread(sceKernelCreateThread("unload",stun,0x18,PSP_THREAD_ATTR_USER,0,NULL),0,NULL);
+/* XMLHttpRequest stuff */
+JS_FUN(XMLHttpRequest){
+	js_setProperty(obj,"userAgent",argv[0]);
+	js_setProperty(obj,"readyState",I2J(0));
+	js_setProperty(obj,"status",I2J(0));
+	js_setProperty(obj,"responseText",I2J(UNDEFINED));
+	js_setProperty(obj,"responseXml",I2J(UNDEFINED));
+	js_setProperty(obj,"onreadystatechange",I2J(0));
 	return JS_TRUE;
 }
 static JSFunctionSpec functions[] = {
-	{"unload",Unload,0},
+	{"_unload",End,0},//unload callback
 	{"init",Init,1},
 	{"end",End,0},
 	{"createTemplate",CreateTemplate,3},
@@ -253,10 +255,104 @@ static JSPropertiesSpec var[] = {
 	{"PSP_HTTP_METHOD_CONNECT", I2J(7)},
 	{0}
 };
+
+#define MTU 768
+JSObject* tmpObj;//i can't pass it using argv :s
+int xhr_get(SceSize argc,void *argv){
+	JSObject* obj = tmpObj;
+	int request = J2I(js_getProperty(obj,"request"));
+	int ret,size=0;
+	void* rbuffer=NULL;
+	js_setProperty(obj,"readyState",I2J(3));
+	js_callFunctionName(obj,"onreadystatechange",0,NULL);//2 to 3
+	do{
+		rbuffer = js_realloc(rbuffer,size+MTU);
+		ret = sceHttpReadData(request, rbuffer+size, MTU);
+		if(ret>0)size+=ret;
+		else js_test(ret);
+	}while(ret==MTU);
+	js_setProperty(obj,"readyState",I2J(4));
+	js_setProperty(obj,"responseText",STRING_TO_JSVAL(js_newString((rbuffer),size)));
+	js_callFunctionName(obj,"onreadystatechange",0,NULL);//3 to 4
+	return 0;
+}
+JS_METH(xhr_open){
+	if(!ihttp){
+		puri=c_addModule("flash0:/kd/libparse_uri.prx");
+		phttp=c_addModule("flash0:/kd/libparse_http.prx");
+		lhttp=c_addModule("flash0:/kd/libhttp.prx");
+		sceHttpInit(0);
+		sceHttpSetMallocFunction(js_malloc,js_free,js_realloc);
+		ihttp=1;
+	}
+	js_setProperty(J2O(ARGV[-1]),"url",ARGV[1]);
+	int template = sceHttpCreateTemplate(J2S(js_getProperty(J2O(ARGV[-1]),"userAgent")),1,0);
+	js_setProperty(J2O(ARGV[-1]),"template",I2J(template));
+	int connection = sceHttpCreateConnectionWithURL(template,J2S(ARGV[1]),1);
+	js_setProperty(J2O(ARGV[-1]),"methode",ARGV[0]);
+	js_setProperty(J2O(ARGV[-1]),"connection",I2J(connection));
+	js_setProperty(J2O(ARGV[-1]),"readyState",I2J(1));//connected
+	js_callFunctionName(J2O(ARGV[-1]),"onreadystatechange",0,NULL);//0 to 1
+	return JS_TRUE;
+}
+JS_METH(xhr_send){
+	int request;
+	int readyState = J2I(js_getProperty(J2O(ARGV[-1]),"readyState"));
+	if(readyState==UNDEFINED||readyState==0){//not connected
+		return JS_TRUE;
+	}
+	if(!(strcmp(J2S(js_getProperty(J2O(ARGV[-1]),"methode")),"POST"))){//POST
+		request=sceHttpCreateRequestWithURL(J2I(js_getProperty(J2O(ARGV[-1]),"connection")),PSP_HTTP_METHOD_POST,J2S(js_getProperty(J2O(ARGV[-1]),"url")),0);
+		sceHttpSendRequest(request,J2S(ARGV[0]),js_getStringLength(JSVAL_TO_STRING(ARGV[0])));
+	}else{//GET
+		request=sceHttpCreateRequestWithURL(J2I(js_getProperty(J2O(ARGV[-1]),"connection")),PSP_HTTP_METHOD_GET,J2S(js_getProperty(J2O(ARGV[-1]),"url")),0);
+		sceHttpSendRequest(request,NULL,0);
+	}
+	js_setProperty(J2O(ARGV[-1]),"request",I2J(request));
+	js_setProperty(J2O(ARGV[-1]),"readyState",I2J(2));//requested
+	js_callFunctionName(J2O(ARGV[-1]),"onreadystatechange",0,NULL);//1 to 2
+	tmpObj = J2O(ARGV[-1]);
+	if(argc>2&&J2I(ARGV[0])==0)//synchronous mode
+		xhr_get(0,NULL);
+	else{//asynchronous mode
+		SceUID thid = sceKernelCreateThread("XHR_GET", xhr_get, 0x14, 0x10000, 0, NULL);
+		js_setProperty(J2O(ARGV[-1]),"thid",I2J(thid));
+		sceKernelStartThread(thid,0,NULL);
+	}
+	return JS_TRUE;
+}
+static JSBool class_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp){
+	if(!strcmp(J2S(id),"status")){//get status
+		int status=-1;
+		sceHttpGetStatusCode(J2I(js_getProperty(obj,"request")),&status);
+		*(vp) = I2J(status);
+	}else if(!strcmp(J2S(id),"responseText")){//get result
+		if(J2I(js_getProperty(obj,"readyState"))==4){//finished
+			//return string
+		}
+	}
+	return JS_TRUE;
+}
+static JSBool class_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp){
+/*
+	if(!strcmp(J2S(id),"readyState")){
+		js_callFunctionName(obj,"onreadystatechange",0,NULL);//called BEFORE the update, useless
+	}
+*/
+	return JS_TRUE;
+}
+static JSFunctionSpec XMLHttpRequestMethodes[] = {
+	JS_FN("open",xhr_open,3,0,0),
+	JS_FN("send", xhr_send,1,0,0),
+	JS_FS_END
+};
 int module_start(SceSize args, void *argp){
 	js_addModule(functions,0,0,var);
+	js_addClass(NULL,NULL,XMLHttpRequest,2,NULL,XMLHttpRequestMethodes,NULL,NULL,"XMLHttpRequest",
+		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
+// we can't unload other module beacause we are currently using the moduleMgr
 	return 0;
 }
