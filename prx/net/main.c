@@ -414,11 +414,7 @@ JS_FUN(AdhocMatchingGetPoolStat){
 	*rval = O2J(opt);
 	return JS_TRUE;
 }
-int stun(args,argp){
-	sceKernelSelfStopUnloadModule(0,0,NULL);
-	return 0;
-}
-JS_FUN(Unload){
+JS_FUN(_unload){
 	//resolverTerm
 	sceNetResolverTerm();
 	if(resolver_uid)c_delModule(resolver_uid);
@@ -432,12 +428,11 @@ JS_FUN(Unload){
 	if(inet_uid)c_delModule(inet_uid);
 	if(net_uid)c_delModule(net_uid);
 	if(ifhandle_uid)c_delModule(ifhandle_uid);
-	
-	sceKernelStartThread(sceKernelCreateThread("unload",stun,0x18,PSP_THREAD_ATTR_USER,0,NULL),0,NULL);
 	return JS_TRUE;
 }
 static JSFunctionSpec functions[] = {
-	{"unload",Unload,0},
+/*private*/
+	{"_unload",_unload,0},
 /*general*/
 	{"init",NetInit,4},
 	{"term",NetTerm,0},
@@ -510,5 +505,6 @@ int module_start(SceSize args, void *argp){
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
+// we can't unload other module beacause we are currently using the moduleMgr
 	return 0;
 }
