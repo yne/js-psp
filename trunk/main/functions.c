@@ -108,11 +108,12 @@ JS_FUN(js_include){
   return JS_TRUE;
 }
 JS_METH(js_exclude){
-	int ret=-1;
+	int ret=0;
 	js_callFunctionName(J2O(ARGV[-1]),"_unload",0,NULL);
-	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mStop/Unload %s : %i\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret);
+	printf("\x1B[33;40mStop/Unload %s : %i %08X\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret,sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")),0,NULL,&ret,NULL));
+#else
+	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL)
 #endif
 	sceKernelUnloadModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")));
 	*(vp) = I2J(ret);
