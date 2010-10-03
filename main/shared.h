@@ -4,6 +4,7 @@
 /*from JSVAL*/
 #define J2I(j) JSVAL_TO_INT(j)
 #define J2S(j) js_getStringBytes(js_valueToString(j))
+#define J2SL(j) js_getStringLength(js_valueToString(j))
 #define J2U(j) js_valueToECMAUint32(j)
 #define J2u(j) js_valueToUint16(j)
 #define J2O(j) JSVAL_TO_OBJECT(j)//(j,op) js_valueToObject(j,op)
