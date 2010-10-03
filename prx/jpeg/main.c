@@ -1,22 +1,17 @@
 #include <pspkernel.h>
-#include <pspgu.h>
-#include <psputility.h>
 #include <pspjpeg.h>
-#include <pspdisplay.h>
-
- 
-//#include "graphics.h"
 #define PIXEL_SIZE (4)
- //http://pastebin.com/Q81WZVXL
  
 #include "../../main/shared.h"
 
 PSP_MODULE_INFO("sceJpeg",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
 
-JS_FUN(LoadJpeg){
+u32 avMod = 0;//host avCodec UID
+JS_FUN(Open){
 	int width = 480, height = 272,texW=1,texH=1,size=0,i=0;
-	u32 avMod = c_addModule("flash0:/kd/avcodec.prx");
+	if(!avMod)
+		avMod = c_addModule("flash0:/kd/avcodec.prx");
 	sceJpegInitMJpeg();
 	jsval tmp;
 	if(JSVAL_IS_OBJECT(argv[0]))
@@ -68,8 +63,16 @@ JS_FUN(LoadJpeg){
 	*rval = O2J(obj);
 	return JS_TRUE;
 }
+
+JS_FUN(_Unload){
+	if(avMod)
+		c_addModule("flash0:/kd/avcodec.prx");
+	return JS_TRUE;
+}
+
 static JSFunctionSpec functions[] = {
-	{"loadJpeg",LoadJpeg,1},
+	{"_unload",_Unload,1},
+	{"open",Open,1},
 	{0}
 };
 int module_start(SceSize args, void *argp){

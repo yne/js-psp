@@ -1,4 +1,4 @@
-TARGET = ../sceJpeg
+TARGET = ../libJpeg
 OBJS = main.o ../../main/JSE.o
 
 CFLAGS   = -G0 -Wall -O2
@@ -8,8 +8,9 @@ LDFLAGS  = -mno-crt0 -nostartfiles
 PRX_EXPORTS = ../plugin.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
-INCDIR = ../../
-LIBS = -lpspjpeg
+INCDIR = ../../ ./lib
+
+LIBS = -ljpeg2
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
