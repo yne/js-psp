@@ -149,18 +149,18 @@ static JSPropertiesSpec var[] = {
 	{"PSP_CTRL_MS",I2J(PSP_CTRL_MS)}
 };
 static JSFunctionSpec lfun[] = {
-	{"PeekLatch",PeekLatch, 0},
-	{"ReadLatch",ReadLatch, 0},
-	{"SetSamplingMode",SetSamplingMode, 1},
-	{"GetSamplingMode",GetSamplingMode, 0},
-	{"SetSamplingCycle",SetSamplingCycle, 1},
-	{"GetSamplingCycle",GetSamplingCycle, 0},
-	{"PeekBufferPositive",PeekBufferPositive, 0},
-	{"PeekBufferNegative",PeekBufferNegative, 0},
-	{"ReadBufferPositive",ReadBufferPositive, 0},
-	{"ReadBufferNegative",ReadBufferNegative, 0},
-	{"SetIdleCancelThreshold",SetIdleCancelThreshold, 2},
-	{"GetIdleCancelThreshold",GetIdleCancelThreshold, 0},
+	{"peekLatch",PeekLatch, 0},
+	{"readLatch",ReadLatch, 0},
+	{"setSamplingMode",SetSamplingMode, 1},
+	{"getSamplingMode",GetSamplingMode, 0},
+	{"setSamplingCycle",SetSamplingCycle, 1},
+	{"getSamplingCycle",GetSamplingCycle, 0},
+	{"peekBufferPositive",PeekBufferPositive, 0},
+	{"peekBufferNegative",PeekBufferNegative, 0},
+	{"readBufferPositive",ReadBufferPositive, 0},
+	{"readBufferNegative",ReadBufferNegative, 0},
+	{"setIdleCancelThreshold",SetIdleCancelThreshold, 2},
+	{"getIdleCancelThreshold",GetIdleCancelThreshold, 0},
 	{0}
 };
 static JSFunctionSpec gfun[] = {
