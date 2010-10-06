@@ -103,7 +103,9 @@ JS_FUN(SendCommandi){
 	return JS_TRUE;
 }
 JS_FUN(GetMemory){
-	*rval = I2J(sceGuGetMemory(J2U(argv[0])));
+	void*m = sceGuGetMemory(J2U(argv[0]));
+	//printf("mem: %08X\n",(u32)m);
+	*rval = I2J(m);
 	return JS_TRUE;
 }
 JS_FUN(Start){
@@ -134,8 +136,9 @@ JS_FUN(SendList){
 	sceGuSendList(J2I(argv[0]),list,&geContext);
 	return JS_TRUE;
 }
+void* currentBuffer=NULL;
 JS_FUN(SwapBuffers){
-	void* currentBuffer=sceGuSwapBuffers();
+	currentBuffer=sceGuSwapBuffers();
 	js_setProperty(NULL,"GU_DRAW_BUFFER", I2J(currentBuffer));
 	*rval = I2J(currentBuffer);
 	return JS_TRUE;
@@ -184,6 +187,7 @@ JS_FUN(DrawArray){
 	if(js_typeOfValue(argv[4])==JSTYPE_OBJECT){
 		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),objectToVertex(J2I(argv[1]),J2O(argv[4]),J2I(argv[2])));
 	}else{
+		//printf("draw:%08X\n",J2U(argv[4]));
 		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)(J2U(argv[4])));
 	}
 	return JS_TRUE;
@@ -516,6 +520,15 @@ JS_FUN(SwapBuffersCallback){
 	//guSwapBuffersCallback (GuSwapBuffersCallback callback)
 	return JS_TRUE;
 }
+//custom unload
+int stun(args,argp){
+	sceKernelSelfStopUnloadModule(0,0,NULL);
+	return 0;
+}
+JS_FUN(Unload){
+	sceKernelStartThread(sceKernelCreateThread("unload",stun,0x18,PSP_THREAD_ATTR_USER,0,NULL),0,NULL);
+	return JS_TRUE;
+}
 //custom
 JS_FUN(Setup){
 	#define BUF_WIDTH (512)
@@ -525,8 +538,11 @@ JS_FUN(Setup){
 	#define FRAMEBUFFER_SIZE (PSP_LINE_SIZE*SCR_H*PIXEL_SIZE)
 
   sceGuInit();
-	if(!list)list=js_malloc(0x40000);
-  sceGuStart(GU_DIRECT, list);
+	if(!argc){
+		if(!list)list=js_malloc(0x40000);
+	}else
+		list=GU_LIST_VRAM;
+	sceGuStart(GU_DIRECT, list);
 	sceGuDrawBuffer(GU_PSM_8888, (void*)0, BUF_WIDTH);
 	sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, (void*)0x88000, BUF_WIDTH);
 	sceGuDepthBuffer((void*)0x110000, BUF_WIDTH);
@@ -614,11 +630,117 @@ JS_FUN(BlitImage){
 
 	return JS_TRUE;
 }
+#include <pspge.h>
+
+//void * 	sceGeEdramGetAddr();
+static unsigned short dbgfont[] __attribute__((aligned(16))) = {
+	0x5fd4,//@
+	0xb7d4,
+	0x75d6,
+	0xc49c,
+	0x76d6,
+	0xe59e,
+	0x259e,
+	0xd69c,
+	0xb7da,
+	0x4904,
+	0x6904,
+	0xb5da,
+	0xe492,
+	0xb7fa,
+	0xb6d6,
+	0x56d4,
+	0x25d6,
+	0xced4,
+	0xb5d6,
+	0x711c,
+	0x492e,
+	0xf6da,
+	0x56da,
+	0xbfda,
+	0xb55a,
+	0x255a,
+	0xe54e,
+	0xc92c,
+	0x9112,
+	0x6926,
+	0x0054,
+	0xe000,
+	0x0000,//(space)
+	0x4124,
+	0x005a,
+	0xbefa,
+	0x5d74,
+	0xa54a,
+	0xd554,
+	0x0024,
+	0x8928,
+	0x2922,
+	0x02aa,
+	0x0ba0,
+	0x2800,
+	0x0380,
+	0x4000,
+	0x2548,
+	0xf6de,
+	0x4934,
+	0xe7ce,
+	0xf34e,
+	0x9e92,
+	0xf39e,
+	0xf79e,
+	0x924e,
+	0xf7de,
+	0xf3de,
+	0x0820,
+	0x2820,
+	0x88a8,
+	0x1c70,
+	0x2a22,
+	0x4146
+};
+JS_FUN(debugPrint){//x,y,col,str
+	char*ch=J2S(argv[3]);
+	int i,X=J2I(argv[0]),Y=J2I(argv[1]);
+	u32* g_vram_base = (u32*) (0x44000000 | (u32)currentBuffer);
+	for(i=0;ch[i];i++){
+		unsigned c = ch[i];
+		if(c==10){//break line + screen check
+			X=1;
+			Y+=6;
+			if(Y>=270)Y=0;
+			continue;
+		}
+		if(c>63)c&=0x1F;
+		int p,x=X,y=Y*512;
+		short f=dbgfont[c];
+		for(p=1;p<16;++p){
+			if(!((p-1)%3)){x=X;y+=512;}
+			f>>=1;			
+			//*(g_vram_base+x+y)=(f&1)?J2U(argv[2]):0x0;
+			if(f&1)
+				*(g_vram_base+x+y)=J2U(argv[2]);
+			++x;
+		}
+		y=Y,X+=4;
+		if(X>=480){X=1;Y+=6;}//goto next line if needed	
+		if(Y>=270){Y=0;}//reset line n	
+	}
+	return JS_TRUE;
+}
+JS_FUN(debugFlush){// any suggestion ?
+	return JS_TRUE;
+}
 static JSFunctionSpec functions[]={
+	//custom unload proc
+	//{"unload",Unload,0},
 	//custom macro from graphics.c
 	{"getFPS",getFPS,0},
 	{"setup",Setup,0},
 	{"blitImage",BlitImage,3},
+	//debug-only sce* functions
+	{"debugPrint",debugPrint,5},
+	{"debugFlush",debugFlush,0},
 	//standard sce* functions
 	{"depthBuffer",DepthBuffer,2},
 	{"dispBuffer",DispBuffer,4},
@@ -717,7 +839,9 @@ static JSFunctionSpec functions[]={
 	{0}
 };
 static JSFunctionSpec gfunctions[]={
-//custom functions
+//debug-only sce* functions
+	{"sceGuDebugPrint",debugPrint,5},
+	{"sceGuDebugFlush",debugFlush,0},
 //standard sce* functions
 	{"sceGuDepthBuffer",DepthBuffer,2},
 	{"sceGuDispBuffer",DispBuffer,4},
@@ -1019,7 +1143,7 @@ int module_start(SceSize args, void *argp){
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
-	if(list)
+	if(list>(void*)0x08800000)//list stored in RAM so free is needed
 		js_free(list);
 	return 0;
 }
