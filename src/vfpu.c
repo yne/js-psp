@@ -8,7 +8,7 @@ double floor(double x){
 		"vf2id.s		s000, s000, 0\n" // s000 = (int)floor(s000)
 		"vi2f.s			s000, s000, 0\n" // s000 = (float)s000
 		"sv.s			s000, %0\n" // d
-		: "=m"(d) : "m"(s)
+		: "=m"(s) : "m"(d)
 	);
 	double r = s;
 	return (r);
