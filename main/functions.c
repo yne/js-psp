@@ -42,7 +42,6 @@ JS_FUN(js_run){
 	JS_DestroyScript(cx, script);
   return JS_TRUE;
 }
-extern int js_searchInfo(KfindProc);
 u32 fun2nid(char* fun){
 	u32 nid = 0xFFFFFFFF;
 	u8 digest[20];
@@ -50,15 +49,24 @@ u32 fun2nid(char* fun){
 		nid = digest[0] | (digest[1] << 8) | (digest[2] << 16) | (digest[3] << 24);
 	return nid;
 }
+extern u32 js_searchInfo(KfindProc);
 u32 getKinfo(char* name){
 	name[strrchr(name,'.')-name]=0;//module&librairie name
+	printf("hook %s :",name);
 	char fun[80];
 	KfindProc chaine;
 	strncpy(chaine.mod,name,80);
 	strncpy(chaine.lib,name,80);
 	sprintf(fun,"%s_addModule",name);
 	chaine.nid=fun2nid(fun);
-	return js_searchInfo(chaine);
+	u32 addr = js_searchInfo(chaine);
+	if(addr){
+		//u32 (*fun)() = (void*)addr;
+		printf(" 0x%08X !\n",addr);
+		return addr;
+	}
+	printf(" not found !\n");
+	return 0;
 }
 JS_FUN(js_include){
 	char* path = J2S(argv[0]);
@@ -74,12 +82,6 @@ JS_FUN(js_include){
 		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
 		return JS_FALSE;
 	}
-#ifdef USE_KERNEL
-	extern int tmpFunction();
-	printf("tmpFunction avan patchage (ret:%i)\n",tmpFunction());
-	if(getKinfo(strrchr(path,'/')+1))
-		printf("tmpFunction APRES patchage (ret:%i)\n",tmpFunction());
-#endif
 	if(mod_tmp_lfun)
 		JS_DefineFunctions(cx,obj,mod_tmp_lfun);
 	if(mod_tmp_gfun)
@@ -107,6 +109,33 @@ JS_FUN(js_include){
 #endif
   return JS_TRUE;
 }
+JS_FUN(js_kinclude){
+	char* path = J2S(argv[0]);
+	u32 uid = sceKernelLoadModule(path, 0, NULL);
+	int ret = 0;
+	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
+	if(mod != uid){
+		printf("\x1B[1;37;41mModule error 0x%08X \n", mod);
+		return JS_FALSE;
+	}
+//	extern int my_addModule();
+//	if(getKinfo(strrchr(path,'/')+1))
+//		printf("my_addModule (ret:%i)\n",my_addModule());
+	js_setProperty(obj,"UID",I2J(mod));
+	js_setProperty(obj,"path",argv[0]);
+#ifdef DEBUG_MODE
+	printf("\x1B[33;40mLoad/Start (kernel) host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);
+#endif
+  return JS_TRUE;
+}
+extern int KCall(u32 uid,u32 nid,u32 arg);
+JS_METH(js_kcall){
+	if(JSVAL_IS_STRING(ARGV[0]))
+		*(vp) = I2J(KCall(J2U(js_getProperty((JSObject*)THIS,"UID")),fun2nid(J2S(ARGV[0])),J2U(ARGV[1])));
+	if(JSVAL_IS_NUMBER(ARGV[0]))
+		*(vp) = I2J(KCall(J2U(js_getProperty((JSObject*)THIS,"UID")),J2U(ARGV[0]),J2U(ARGV[1])));
+  return JS_TRUE;
+}
 JS_METH(js_exclude){
 	int ret=0;
 	js_callFunctionName(J2O(ARGV[-1]),"_unload",0,NULL);
@@ -123,11 +152,22 @@ static JSFunctionSpec ModuleMethodes[] = {
 	JS_FN("unload",js_exclude,0,0,0),
 	JS_FS_END
 };
+static JSFunctionSpec KModuleMethodes[] = {
+	JS_FN("call",js_kcall,0,0,0),
+	JS_FS_END
+};
 JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 	js_addClass(
 		NULL,NULL,js_include,1,
 		NULL,ModuleMethodes,NULL,NULL,
 		"Module",JSCLASS_NEW_RESOLVE,
+		JSCLASS_NO_MANDATORY_MEMBERS,
+		JSCLASS_NO_OPTIONAL_MEMBERS
+	);
+	js_addClass(
+		NULL,NULL,js_kinclude,1,
+		NULL,KModuleMethodes,NULL,NULL,
+		"KModule",JSCLASS_NEW_RESOLVE,
 		JSCLASS_NO_MANDATORY_MEMBERS,
 		JSCLASS_NO_OPTIONAL_MEMBERS
 	);
