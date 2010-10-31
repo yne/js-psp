@@ -1,20 +1,19 @@
 TARGET = ../Kloader
 OBJS = main.o
 
+CFLAGS = -G0 -Wall -O2 -fshort-wchar -fno-pic -mno-check-zero-division
 LDFLAGS = -mno-crt0 -nostartfiles
-
+ASFLAGS = $(CFLAGS) -c
 #add the export list to the prx + create the stub list included in the main
 PRX_EXPORTS = export.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
-#work both with user/PSPsdk/kernel lib c/s
-#USE_PSPSDK_LIBC = 1
-#USE_PSPSDK_LIBS = 1
-#export don't work with KERNEL lib ...
-USE_KERNEL_LIBC = 1
-USE_KERNEL_LIBS = 1
 INCDIR = ../../
-LIBS =  -lpspkernel -lpspsystemctrl_kernel
+LIBS = -lpspsystemctrl_kernel
+
+USE_PSPSDK_LIBC = 1
+USE_PSPSDK_LIBS = 1
+
 BUILD_PRX = 1
 
 PSPSDK=$(shell psp-config --pspsdk-path)
