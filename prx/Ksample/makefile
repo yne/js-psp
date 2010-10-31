@@ -1,15 +1,15 @@
 TARGET = ../Ksample
 OBJS = main.o ../../main/JSE.o
 
-CFLAGS   = -G0 -Wall -O2
-ASFLAGS  = $(CFLAGS)
-LDFLAGS  = -mno-crt0 -nostartfiles
+CFLAGS = -G0 -Wall -O2
+LDFLAGS = -mno-crt0 -nostartfiles
+ASFLAGS = $(CFLAGS)
 
 PRX_EXPORTS = Kplugin.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS = -lpspsdk
+LIBS = 
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
