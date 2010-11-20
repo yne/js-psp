@@ -1,4 +1,6 @@
 #include <pspkernel.h>
+#include <kubridge.h>
+#include <systemctrl.h>
 #include <pspsdk.h>
 #include <string.h>
 
@@ -20,18 +22,15 @@ int sceIdStorageReadLeaf(u16 key, void *buf);
 /* 
 	Battery (code from Open Source Pandora Battery Tool by cory1492)
 */
-u32 read_eeprom(u8 addr){ // reversed function by silverspring (more info: http://my.malloc.us/silverspring/2007/12/19/380-and-pandora/)
-	int res;
- 	u32 k1 = pspSdkSetK1(0);
+u16 read_eeprom(u8 addr){ // reversed function by silverspring (more info: http://my.malloc.us/silverspring/2007/12/19/380-and-pandora/)
+	if(addr>0x7F)
+		return(0);
 	u8 param[0x60];
-	if (addr > 0x7F){
-		pspSdkSetK1(k1);
-		return(0x80000102);
-	}
 	param[0x0C] = 0x74; // read battery eeprom command
 	param[0x0D] = 3;	// tx packet length
 	param[0x0E] = addr;	// tx data
-	res = sceSysconCmdExec(param, 0);
+ 	u32 k1 = pspSdkSetK1(0);
+	int res = sceSysconCmdExec(param, 0);
 	pspSdkSetK1(k1);
 	if (res < 0)
 		return(res);
@@ -54,34 +53,19 @@ u32 write_eeprom(u8 addr, u16 data){ // reversed function by silverspring (more 
 	pspSdkSetK1(k1);
 	return 0;
 }
-int errCheck(u32 data){
-	if ((data & 0x80250000) == 0x80250000) // old way (data & 0x80000000) <- checking only for -1 wrather than specifically a syscon error
-		return -1;
-	else if (data & 0xffff0000)
-		return ((data & 0xffff0000)>>16);
-	return 0;
-}
 u32 getDevkitVersion(){
 	u32 k1 = pspSdkSetK1(0);
 	u32 ver = sceKernelDevkitVersion();
 	pspSdkSetK1(k1);
 	return ver;
 }
-u32 readSerial(u32 serial){
-	u16 data;
-	data = read_eeprom(0x07); // lower 16bit
-	if (errCheck(data) >= 0)	{
-		serial = (data & 0xffff);
-		data = read_eeprom(0x09); // upper 16bit
-		if (errCheck(data) >= 0)
-			serial = (data | (serial & 0xFFFF) << 16);;
-	}
-	return serial;
+int getBatSerial(){
+	return (read_eeprom(0x09) | (read_eeprom(0x07)&0xFFFF)<<16);
 }
-int writeSerial(u32 serial){
+int setBatSerial(int serial){
 	if (!write_eeprom(0x07, (serial>>16)))
 		write_eeprom(0x09, (serial&0xFFFF)); // lower 16bit
-	return readSerial(serial);
+	return getBatSerial(serial);
 }
 u32 getTachyonVersion(u32 in){
 	u32 k1 = pspSdkSetK1(0);
@@ -115,8 +99,23 @@ u32 getShippedFW(char* shippedfw){
 	fw|=(buffer[3]-0x30)<<8;
 	return fw;
 }
+int getKernelInitApitype(){
+	return kuKernelInitApitype();
+}
+int getModel(){
+	return sceKernelGetModel();
+}
 int Ksample_addModule(u32 serial){
 	return 5;
+}
+int getSE(){
+	return 0;
+}
+int getDevhook(){
+	return 0;
+}
+int getVersion(){
+	return sctrlHENGetVersion();
 }
 int module_start(SceSize args, void *argp){
 	return 0;

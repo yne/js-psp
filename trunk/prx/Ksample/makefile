@@ -5,11 +5,11 @@ CFLAGS = -G0 -Wall -O2
 LDFLAGS = -mno-crt0 -nostartfiles
 ASFLAGS = $(CFLAGS)
 
-PRX_EXPORTS = Kplugin.exp
+PRX_EXPORTS = Ksample.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS = 
+LIBS = -lpspkubridge -lpspsystemctrl_kernel
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
@@ -20,5 +20,5 @@ PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
 
 all :
-	psp-packer.exe $(TARGET).prx
+#	psp-packer.exe $(TARGET).prx
 	rm *.o $(TARGET).elf
