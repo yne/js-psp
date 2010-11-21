@@ -3,6 +3,7 @@
 #include <systemctrl.h>
 #include <pspsdk.h>
 #include <string.h>
+#include <malloc.h>
 
 #include "../../main/shared.h"
 
@@ -109,13 +110,83 @@ int Ksample_addModule(u32 serial){
 	return 5;
 }
 int getSE(){
-	return 0;
+	return sctrlHENIsSE();
+}
+int getHEN(){
+	return sctrlHENGetVersion();
 }
 int getDevhook(){
-	return 0;
+	return sctrlHENIsDevhook();
 }
 int getVersion(){
 	return sctrlHENGetVersion();
+}
+int getMBR(){
+	int fd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777); // open the input
+	char* mbr = malloc(512);
+	sceIoRead(fd, mbr, 512);// read the mbr
+	sceIoClose(fd);
+	fd = sceIoOpen("out.mbr", PSP_O_WRONLY|PSP_O_CREAT, 0777);
+	sceIoWrite(fd, mbr, 512);// write the mbr
+	sceIoClose(fd);
+	free(mbr);
+	return 0;
+}
+int setMBR(){
+	int fd = sceIoOpen("in.mbr", PSP_O_RDONLY, 0777); // open the input
+	if(fd<1)return -1;
+	char* mbr = malloc(512);
+	sceIoRead(fd, mbr, 512);// read the mbr
+	sceIoClose(fd);
+	fd = sceIoOpen("msstor:", PSP_O_WRONLY, 0777);
+	sceIoWrite(fd, mbr, 512);// write the mbr
+	sceIoClose(fd);
+	free(mbr);
+	return 0;
+}
+int setIPL(){//thestarman.pcministry.com/asm/mbr/PartTables.htm
+//file part
+	SceUID fd = sceIoOpen("in.ipl", PSP_O_RDONLY, 0777);
+	if(fd<1)return -1;
+	int size = sceIoLseek(fd,0,SEEK_END);
+	char* buffer = malloc(size);
+	sceIoLseek(fd,0,SEEK_SET);
+	sceIoRead(fd,buffer,size);
+	sceIoClose(fd);
+	if(size!=(size/512)*512){size = (size + 512) & 0xFFFFFE00;}//not a multiple of 512
+	if(size<4096)size=4096;
+//mbr part
+	char* mbr = malloc(512);
+	fd = sceIoOpen("msstor:", PSP_O_RDWR, 0777); // open the input
+	sceIoRead(fd, mbr, 512);// read the mbr
+	u32 part = (mbr[454]|mbr[455]<<8|mbr[456]<<16|mbr[457]<<24);//partion starting offset
+	free(mbr);
+	if(((part<< 9)-0x2000) < size)return -5;//delta between IPL and partition if not enought : writing will cause a file corruption
+//write ipl
+	sceIoLseek(fd, 0x2000, 0); // go to the ipl location (mbr@1C0)
+	sceIoWrite(fd, buffer, size); // write the ipl
+	sceIoClose(fd);
+	free(buffer);
+	return 0;
+}
+int getIPL(){
+//get size
+	char* mbr = malloc(512);
+	int fd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	sceIoRead(fd, mbr, 512);// read the mbr
+	u32 part = (mbr[454]|mbr[455]<<8|mbr[456]<<16|mbr[457]<<24);//partion starting offset
+	free(mbr);
+//dump
+	char* buffer = malloc((part<< 9)-0x2000);
+	sceIoLseek(fd, 0x2000, 0); // go to the ipl location (mbr@1C0)
+	sceIoRead(fd, mbr, (part<< 9)-0x2000);// read the IPL
+	sceIoClose(fd);
+//write
+	fd = sceIoOpen("out.ipl", PSP_O_WRONLY|PSP_O_CREAT|PSP_O_NBLOCK, 0777);
+	sceIoWrite(fd,buffer,((part<< 9)-0x2000));
+	sceIoClose(fd);
+	free(buffer);
+	return ((part<< 9)-0x2000);
 }
 int module_start(SceSize args, void *argp){
 	return 0;
