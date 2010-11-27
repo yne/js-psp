@@ -15,13 +15,12 @@
 #include <pspgum.h>
 #include <pspdisplay.h>
 #include <stdarg.h>
-#include <pspiofilemgr.h>
+#include <stdio.h>
 #include <string.h>
-#include <malloc.h>
 
 #include "intraFont.h"
-
 #include "../../main/shared.h"
+
 
 static unsigned int __attribute__((aligned(16))) clut[16];
 
@@ -35,11 +34,11 @@ unsigned long intraFontGetV(unsigned long n, unsigned char *p, unsigned long *b)
 	return v;
 }
 
-unsigned long* intraFontGetTable(SceUID file, unsigned long n_elements, unsigned long bp_element) {
+unsigned long* intraFontGetTable(FILE *file, unsigned long n_elements, unsigned long bp_element) {
 	unsigned long len_table = ((n_elements*bp_element+31)/32)*4;
 	unsigned char *raw_table = (unsigned char*)js_malloc(len_table*sizeof(unsigned char));
 	if (raw_table == NULL) return NULL;
-	if (sceIoRead(file,raw_table, len_table*sizeof(unsigned char)) != len_table*sizeof(unsigned char)) {
+	if (fread(raw_table, len_table*sizeof(unsigned char), 1, file) != 1) {
 		js_free(raw_table);
 		return NULL;
 	}
@@ -375,18 +374,18 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	//create font structure
 	intraFont* font = (intraFont*)js_malloc(sizeof(intraFont));
 	if (!font) return NULL;
-	//open pgf file and get file size
-  SceUID file = sceIoOpen(filename,PSP_O_RDONLY,0777); /* read from the file in binary mode */
-	if (!file) return NULL;
 	
-  unsigned long filesize = sceIoLseek(file, 0, SEEK_END);
-	sceIoLseek(file, 0, SEEK_SET);
+	//open pgf file and get file size
+    FILE *file = fopen(filename, "rb"); /* read from the file in binary mode */
+	if (!file) return NULL;
+	fseek(file, 0, SEEK_END);
+    unsigned long filesize = ftell(file);
+	fseek(file, 0, SEEK_SET);
 	
 	//read pgf header
 	static PGF_Header header;
-	if(sceIoRead(file,&header, sizeof(PGF_Header))!=sizeof(PGF_Header)){
-	js_test(0x69);
-		sceIoClose(file);
+	if (fread(&header, sizeof(PGF_Header), 1, file) != 1) {
+		fclose(file);
 		return NULL;
 	}
 	
@@ -398,7 +397,7 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	} else if (filesize == 1023372) { //only known size for bwfon -> refuse to work for modified sizes
 		font->fileType = FILETYPE_BWFON;
 	} else {
-	    sceIoClose(file);
+	    fclose(file);
 		return NULL;
 	}
 	
@@ -417,7 +416,7 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 		font->charmap_compr = (unsigned short*)js_malloc(font->charmap_compr_len*sizeof(unsigned short)*2);
 		font->charmap = (unsigned short*)js_malloc(header.charmap_len*sizeof(unsigned short));
 		if (!font->glyph || !font->shadowGlyph || !font->charmap_compr || !font->charmap) {
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
@@ -438,7 +437,7 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 		font->charmap_compr = (unsigned short*)bw_charmap_compr; //static for bwfon
 		font->charmap = NULL;                //not needed for bwfon
 		if (!font->glyphBW) {
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}	
@@ -448,17 +447,16 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	font->texHeight = font->texWidth;
 	font->texX = 1;
 	font->texY = 1;
-  font->options = options;
-	if ((options & INTRAFONT_CACHE_ASCII))
-		font->options -= INTRAFONT_CACHE_ASCII; //pre-cached texture enabled at the end of font-load
-	font->size = 1.0f;               //default size
-	font->color = 0xFFFFFFFF;        //non-transparent white
-	font->shadowColor = 0xFF000000;  //non-transparent black
+    font->options = options; 
+	if ((options & INTRAFONT_CACHE_ASCII) ) font->options -= INTRAFONT_CACHE_ASCII; //pre-cached texture enabled at the end of font-load
+    font->size = 1.0f;               //default size
+    font->color = 0xFFFFFFFF;        //non-transparent white
+    font->shadowColor = 0xFF000000;  //non-transparent black
 	font->altFont = NULL;            //no alternative font
 	font->filename = (char*)js_malloc((strlen(filename)+1)*sizeof(char));
 	font->texture = (unsigned char*)c_memalign(16,font->texWidth*font->texHeight>>1);
 	if (!font->filename || !font->texture) {
-		sceIoClose(file);
+		fclose(file);
 		intraFontUnload(font);
 		return NULL;
 	}
@@ -468,16 +466,16 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	if (font->fileType == FILETYPE_PGF) {
 
 		//read advance table
-		sceIoLseek32(file,header.header_len+(header.table1_len+header.table2_len+header.table3_len)*8, SEEK_SET);
+		fseek(file, header.header_len+(header.table1_len+header.table2_len+header.table3_len)*8, SEEK_SET);
 		signed long *advancemap = (signed long*)js_malloc(header.advance_len*sizeof(signed long)*2);
 		if (!advancemap) {
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}	
-		if (sceIoRead(file,advancemap, header.advance_len*sizeof(signed long)*2) != header.advance_len*sizeof(signed long)*2) {
+		if (fread(advancemap, header.advance_len*sizeof(signed long)*2, 1, file) != 1) {
 			js_free(advancemap);
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}	
@@ -486,17 +484,17 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 		unsigned long *ucs_shadowmap = intraFontGetTable(file, header.shadowmap_len, header.shadowmap_bpe);
 		if (ucs_shadowmap == NULL) {
 			js_free(advancemap);	
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
 	
 		//version 6.3 charmap compression
 		if (header.revision == 3) {
-			if (sceIoRead(file,font->charmap_compr, font->charmap_compr_len*sizeof(unsigned short)*2) != font->charmap_compr_len*sizeof(unsigned short)*2) {
+			if (fread(font->charmap_compr, font->charmap_compr_len*sizeof(unsigned short)*2, 1, file) != 1) {
 				js_free(advancemap);		
 				js_free(ucs_shadowmap);
-				sceIoClose(file);
+				fclose(file);
 				intraFontUnload(font);
 				return NULL;
 			}
@@ -507,10 +505,10 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	
 		//read charmap
 		if (header.charmap_bpe == 16) { //read directly from file...
-			if (sceIoRead(file,font->charmap, header.charmap_len*sizeof(unsigned short)) != header.charmap_len*sizeof(unsigned short)) {
-				js_free(advancemap);
+			if (fread(font->charmap, header.charmap_len*sizeof(unsigned short), 1, file) != 1) {
+				js_free(advancemap);	
 				js_free(ucs_shadowmap);
-				sceIoClose(file);
+				fclose(file);
 				intraFontUnload(font);
 				return NULL;
 			}
@@ -519,7 +517,7 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 			if (id_charmap == NULL) {
 				js_free(advancemap);	
 				js_free(ucs_shadowmap);
-				sceIoClose(file);
+				fclose(file);
 				intraFontUnload(font);
 				return NULL;
 			}
@@ -531,36 +529,37 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	
 		//read charptr
 		unsigned long *charptr = intraFontGetTable(file, header.charptr_len, header.charptr_bpe);
-		if (!charptr) {
+		if (charptr == NULL) {
 			js_free(advancemap);	
 			js_free(ucs_shadowmap);
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
 
 		//read raw fontdata
-		unsigned long len_fontdata = filesize-sceIoLseek(file,0,SEEK_CUR);
+		unsigned long start_fontdata = ftell(file);
+		unsigned long len_fontdata = filesize-start_fontdata;
 		font->fontdata = (unsigned char*)js_malloc(len_fontdata*sizeof(unsigned char));
 		if (font->fontdata == NULL) {
 			js_free(advancemap);	
 		    js_free(ucs_shadowmap);
 			js_free(charptr);
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
-		if (sceIoRead(file,font->fontdata, len_fontdata*sizeof(unsigned char)) != len_fontdata*sizeof(unsigned char)) {
+		if (fread(font->fontdata, len_fontdata*sizeof(unsigned char), 1, file) != 1) {
 			js_free(advancemap);	
 			js_free(ucs_shadowmap);
 			js_free(charptr);
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
 
 		//close file	
-		sceIoClose(file);
+		fclose(file);
 	
 		//count ascii chars and reduce mem required
 		if ((options & PGF_CACHE_MASK) == INTRAFONT_CACHE_ASCII) {
@@ -631,12 +630,12 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 			}		              
 		}
 	
-		//js_free temp stuff
+		//free temp stuff
 		js_free(advancemap);
 		js_free(ucs_shadowmap);
 		js_free(charptr);
 	
-		//cache chars, swizzle texture and js_free unneeded stuff (if INTRAFONT_CACHE_ALL or _ASCII)
+		//cache chars, swizzle texture and free unneeded stuff (if INTRAFONT_CACHE_ALL or _ASCII)
 		sceKernelDcacheWritebackAll();
 		if ( (options & INTRAFONT_CACHE_ASCII) && ((y + ysize + 1) <= font->texHeight) ) { //cache all and does it fit into cache?
 			if (!intraFontPreCache(font,options)) {
@@ -648,22 +647,22 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	} else { //FILETYPE_BWFON
 
 		//read raw fontdata
-		sceIoLseek(file, 0, SEEK_SET);
+		fseek(file, 0, SEEK_SET);
 		font->fontdata = (unsigned char*)js_malloc((filesize+40)*sizeof(unsigned char));
 		if (font->fontdata == NULL) {
-			sceIoClose(file);
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
-		if (sceIoRead(file,font->fontdata, filesize*sizeof(unsigned char)) != filesize*sizeof(unsigned char)) {
-			sceIoClose(file);
+		if (fread(font->fontdata, filesize*sizeof(unsigned char), 1, file) != 1) {
+			fclose(file);
 			intraFontUnload(font);
 			return NULL;
 		}
 		memcpy(font->fontdata+filesize,bw_shadow,40);
 
 		//close file	
-		sceIoClose(file);
+		fclose(file);
 
 		//count ascii chars and reduce mem required: no ascii chars in bwfon -> abort
 		if ((options & PGF_CACHE_MASK) == INTRAFONT_CACHE_ASCII) {
@@ -673,8 +672,8 @@ intraFont* intraFontLoad(const char *filename, unsigned int options) {
 	
 		//populate chars and count space used in cache to prebuffer all chars: not needed/available -> skip
 		//populate shadows and count space (only for chars needed): not needed/available -> skip
-		//js_free temp stuff: not needed -> skip
-		//cache chars, swizzle texture and js_free unneeded stuff (if INTRAFONT_CACHE_ALL or _ASCII): not available ->skip
+		//free temp stuff: not needed -> skip
+		//cache chars, swizzle texture and free unneeded stuff (if INTRAFONT_CACHE_ALL or _ASCII): not available ->skip
 
 	}
 
@@ -711,6 +710,23 @@ void intraFontShutdown(void) {
 	//Nothing yet
 }
 
+void intraFontActivate(intraFont *font) {
+	if(!font) return;
+	if(!font->texture) return;
+
+	sceGuClutMode(GU_PSM_8888, 0, 255, 0);
+	sceGuClutLoad(2, clut);
+
+	sceGuEnable(GU_TEXTURE_2D);
+	sceGuTexMode(GU_PSM_T4, 0, 0, (font->options & INTRAFONT_CACHE_ASCII) ? 1 : 0);
+	sceGuTexImage(0, font->texWidth, font->texWidth, font->texWidth, font->texture);
+	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
+	sceGuTexEnvColor(0x0);
+	sceGuTexOffset(0.0f, 0.0f);
+	sceGuTexWrap(GU_CLAMP, GU_CLAMP);
+	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+}
+
 void intraFontSetStyle(intraFont *font, float size, unsigned int color, unsigned int shadowColor, unsigned int options) {
 	if (!font) return;
 	font->size = size;
@@ -727,17 +743,33 @@ void intraFontSetEncoding(intraFont *font, unsigned int options) {
 
 void intraFontSetAltFont(intraFont *font, intraFont *altFont) {
 	if (!font) return;
-	intraFont* nextFont = altFont;
+	intraFont* nextFont;
+	nextFont = altFont;
 	while (nextFont) { 
 		if ((nextFont->altFont) == font) return; //it must not point at itself
 		nextFont = nextFont->altFont;
 	}
 	font->altFont = altFont; 
+}	
+
+float intraFontPrintf(intraFont *font, float x, float y, const char *text, ...) {
+	if(!font) return x;
+
+	char buffer[256];
+	va_list ap;
+	
+	va_start(ap, text);
+	vsnprintf(buffer, 256, text, ap);
+	va_end(ap);
+	buffer[255] = 0;
+	
+	return intraFontPrint(font, x, y, buffer);
 }
 
-float intraFontPrint(intraFont *font, float x, float y, const char *text,float width) {
+float intraFontPrint(intraFont *font, float x, float y, const char *text) {
 	if (!font) return x;
-	return intraFontPrintColumnEx(font, x, y, width, text, cccStrlenCode((cccCode*)text, font->options/0x00010000));
+	int length = cccStrlenCode((cccCode*)text, font->options/0x00010000);
+	return intraFontPrintColumnEx(font, x, y, 0.0f, text, length);
 }
 
 float intraFontPrintEx(intraFont *font, float x, float y, const char *text, int length) {
@@ -777,10 +809,11 @@ float intraFontPrintColumnEx(intraFont *font, float x, float y, float column, co
 	} else {                                                      //negative column prevents from drawing -> measure text
 		x = intraFontMeasureTextUCS2Ex(font, ucs2_text, length);  //(hack to share local buffer between intraFontPrint and intraFontMeasure)
 	}
-
+	
 	// Free temporary buffer if allocated
 	if (ucs2_text != buffer) js_free(ucs2_text);
-    return 0.0f;
+	
+    return x;
 }
 
 float intraFontPrintUCS2(intraFont *font, float x, float y, const cccUCS2 *text) {
@@ -797,7 +830,7 @@ float intraFontPrintColumnUCS2(intraFont *font, float x, float y, float column, 
 
 float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column, const cccUCS2 *text, int length) {
 	if (!text || length <= 0 || !font) return x;
-	char evalMe[128];
+
 	//for scrolling: if text contains '\n', replace with spaces and call intraFontColumnUCS2Ex again
 	int i;
 	if (font->options & INTRAFONT_SCROLL_LEFT) {
@@ -812,7 +845,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 			}
 		}
 	}
-
+	
 	unsigned int color = font->color, shadowColor = font->shadowColor;
 	float glyphscale = font->size;
 	float width = 0.0f, height = font->advancey * glyphscale / 4.0;
@@ -883,17 +916,11 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 		}
 		count++;
 	} while (changed && count <= length);
-
 	if (changed) return x; //not all chars fit into texture -> abort (better solution: split up string and call intraFontPrintUCS2 twice)
 	
 	//reserve memory in displaylist
-	sprintf(evalMe,"sceGuGetMemory(%i)",((n_glyphs+n_sglyphs)<<1) * sizeof(fontVertex));
-	v = (void*)J2I(js_evaluateScript(evalMe))-0x80000000;//TODO : solve the u32<>int conversion
-	//js_test((u32)v);
-	//js_evaluateScript("sceGuStart(0);sceGuClearColor(0x00444444);sceGuClear(5);sceGuFinish();sceGuSwapBuffers();");
+	v = sceGuGetMemory(((n_glyphs+n_sglyphs)<<1) * sizeof(fontVertex));
 
-	
-	
 	int s_index = 0, c_index = n_sglyphs, last_c_index = n_sglyphs; // index for shadow and character/overlay glyphs	
 	for (i = 0; i < length; i++) {
 
@@ -911,12 +938,11 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 					count = ux.i - uleft.i;
 					textwidth = intraFontMeasureTextUCS2Ex(font, text+i, length-i)+1;
 					if (textwidth > column) {  //scrolling really required
+		
 						switch (font->options & PGF_SCROLL_MASK) {
 
 							case INTRAFONT_SCROLL_LEFT:                                  //scroll left
-								sprintf(evalMe,"sceGuScissor(%f-2, 0, %f+4, 272)",left,left+column);
-								js_evaluateScript(evalMe);
-								//; //limit to column width
+								sceGuScissor(left-2, 0, left+column+4, 272); //limit to column width
 								if (count < 60) {
 									//show initial text for 1s
 								} else if (count < (textwidth+90)) {
@@ -930,8 +956,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 								break;
 
 							case INTRAFONT_SCROLL_SEESAW:  //scroll left and right
-								sprintf(evalMe,"sceGuScissor(%f, 0, %f, 272)",left-column/2-2,left+column/2+4);
-								js_evaluateScript(evalMe); //limit to column width
+								sceGuScissor(left-column/2-2, 0, left+column/2+4, 272); //limit to column width
 								textwidth -= column;
 								if (count < 60) {
 									left -= column/2; //show initial text (left side) for 1s
@@ -948,8 +973,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 								break;
 
 							case INTRAFONT_SCROLL_RIGHT:  //scroll right
-								sprintf(evalMe,"sceGuScissor(%f, 0, %f, 272)",left-column-2,left+4);
-								js_evaluateScript(evalMe); //limit to column width
+								sceGuScissor(left-column-2, 0, left+4, 272); //limit to column width
 								if (count < 60) {
 									left -= textwidth; //show initial text for 1s
 								} else if (count < (textwidth+90)) {
@@ -965,9 +989,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 								break;
 
 							case INTRAFONT_SCROLL_THROUGH:  //scroll through
-								//sprintf(evalMe,"sceGuScissor(%f, 0, %f, 272)",left-2,left+column+4);
-								js_evaluateScript(evalMe); //limit to column width
-
+								sceGuScissor(left-2, 0, left+column+4, 272); //limit to column width
 								if (count < (textwidth+column+30)) {
 									left += column+4-count; //scroll through
 								} else {
@@ -979,7 +1001,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 						}
 						ux.i++;             //increase counter
 						x = ux.f;           //copy back to original var 
-						js_evaluateScript("sceGuEnable(2)");//GU_SCISSOR_TEST
+						sceGuEnable(GU_SCISSOR_TEST);
 					}
 				} else {					//automatic line-break required
 					n_spaces = -1;
@@ -1126,42 +1148,20 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 		
 	//finalize and activate texture (if not already active or has been changed)
 	sceKernelDcacheWritebackAll();
-	if (!(font->options & INTRAFONT_ACTIVE)){
-		JSObject*IF=js_addObj("__IF__");
-		js_setProperty(IF,"clut",I2J((void*)clut));
-		js_setProperty(IF,"texWidth",I2J((void*)font->texWidth));
-		js_setProperty(IF,"texture",I2J((void*)font->texture));
-		js_setProperty(IF,"v",I2J((void*)v));
-		js_setProperty(IF,"size",I2J((n_glyphs+n_sglyphs)<<1));
-
-		js_evaluateScript("sceGuClutMode(3,0,255,0)");//GU_PSM_8888
-		js_evaluateScript("sceGuClutLoad(2, __IF__.clut)");
-		js_evaluateScript("sceGuEnable(9)");//GU_TEXTURE_2D
-		if(font->options & INTRAFONT_CACHE_ASCII)
-			js_evaluateScript("sceGuTexMode(4, 0, 0, 1)");//GU_PSM_T4
-		else
-			js_evaluateScript("sceGuTexMode(4, 0, 0, 0)");//GU_PSM_T4
-		js_evaluateScript("sceGuTexImage(0, __IF__.texWidth, __IF__.texWidth, __IF__.texWidth, __IF__.texture)");
-		js_evaluateScript("sceGuTexFunc(0,1)");//GU_TFX_MODULATE GU_TCC_RGBA
-		js_evaluateScript("sceGuTexEnvColor(0x0)");
-		js_evaluateScript("sceGuTexOffset(0.0f,0.0f)");
-		js_evaluateScript("sceGuTexWrap(1,1)");//GU_CLAMP
-		js_evaluateScript("sceGuTexFilter(1,1);");//GU_LINEAR
-	}
-	js_evaluateScript("sceGuDisable(1)");//GU_DEPTH_TEST
-	js_evaluateScript("sceGuDrawArray(6,0x80019F,__IF__.size,0,__IF__.v)");//GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D
-
-	//if (font->fileType == FILETYPE_BWFON) //draw chars again without shadows for improved readability
-		//sceGuDrawArray(GU_SPRITES, GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D, n_glyphs<<1, 0, v+(n_sglyphs<<1));
-	js_evaluateScript("sceGuEnable(1)");//GU_DEPTH_TEST
+	if (!(font->options & INTRAFONT_ACTIVE)) intraFontActivate(font);
+	
+	sceGuDisable(GU_DEPTH_TEST);
+	sceGuDrawArray(GU_SPRITES, GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D, (n_glyphs+n_sglyphs)<<1, 0, v);
+	if (font->fileType == FILETYPE_BWFON) //draw chars again without shadows for improved readability
+		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D, n_glyphs<<1, 0, v+(n_sglyphs<<1));
+	sceGuEnable(GU_DEPTH_TEST);
 	
 	if (scroll == 1) {
-		js_evaluateScript("sceGuScissor(0,0,480,272)"); //reset window to whole screen (test was previously enabled)
+		sceGuScissor(0, 0, 480, 272); //reset window to whole screen (test was previously enabled)
 		return x;             //for scrolling return x-pos (including updated counter)
 	} else {
 		return left+width;    //otherwise return x-pos at end of text
 	}
-
 }
 
 float intraFontMeasureText(intraFont *font, const char *text) {

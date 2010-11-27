@@ -1,14 +1,10 @@
+#include <pspsdk.h>
 #include <pspkernel.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <pspgu.h>
-#include <pspdisplay.h>
-
 #include "intraFont.h"
-
+#include "../gu/pspgu.h"
 #include "../../main/shared.h"
 
-PSP_MODULE_INFO("intraFont",PSP_MODULE_USER,1,1);
+PSP_MODULE_INFO("intraFont", 0x0006, 1, 0);
 PSP_NO_CREATE_MAIN_THREAD();
 
 JSObject* font2js(intraFont *font){
@@ -19,45 +15,51 @@ JS_FUN(Init){
 	*rval = intraFontInit();
 	return JS_TRUE;
 }
+
 JS_FUN(Shutdown){
 	intraFontShutdown();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
+
 JS_FUN(Load){
-	js_setProperty(obj,"path",argv[0]);
-	js_setProperty(obj,"param",argv[1]);
-	js_setProperty(obj,"data",I2J((u32)intraFontLoad(J2S(argv[0]),J2I(argv[1]))));
+	*rval = I2J(intraFontLoad(J2S(argv[0]), J2I(argv[1])));
 	return JS_TRUE;
 }
+
 JS_FUN(Unload){
 	intraFontUnload((void*)J2U(argv[0]));
-	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
+
 JS_FUN(Print){
-	float width = 0.0f;
-	if(argc==5)width = J2L(argv[4]);
-	if(js_typeOfValue(argv[0])==JSTYPE_OBJECT)
-		*rval = I2J(intraFontPrint((void*)J2U(js_getProperty(J2O(argv[0]),"data")), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]),width));
-	else
-		*rval = I2J(intraFontPrint((void*)J2U(argv[0]), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]),width));
+	intraFontPrint((void*)J2U(argv[0]), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]));
 	return JS_TRUE;
 }
+
 JS_FUN(SetStyle){
-	if(js_typeOfValue(argv[0])==JSTYPE_OBJECT)
-		intraFontSetStyle((void*)J2U(js_getProperty(J2O(argv[0]),"data")), J2L(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
+	intraFontSetStyle((void*)J2U(argv[0]), J2I(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
+	return JS_TRUE;
+}
+
+JS_METH(font_print){
+	
+	intraFontPrint((void*)J2U(ARGV[-1]), J2I(ARGV[1]), J2I(ARGV[2]), J2S(ARGV[0]));
+/*
+	u32 length;
+	if(argc==1)
+		length = js_getStringLength(JSVAL_TO_STRING(ARGV[0]));
 	else
-		intraFontSetStyle((void*)J2U(argv[0]), J2L(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
+		length = J2I(ARGV[1]);*/
+	*(vp) = I2J(4);//I2J(sceIoWrite(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),J2S(ARGV[0]),length));
 	return JS_TRUE;
 }
 static JSFunctionSpec lfun[] = {
-	{"Init",Init,0},
-	{"Shutdown",Shutdown,0},
-	{"Load",Load,2},
-	{"SetStyle",SetStyle,5},
-	{"Unload",Unload,1},
-	{"Print",Print,4},
+	{"init",Init,0},
+	{"load",Load,2},
+	{"setStyle",SetStyle,5},
+	{"unload",Unload,1},
+	{"print",Print,4},
 	{0}
 };
 static JSFunctionSpec gfun[] = {
@@ -103,19 +105,15 @@ static JSPropertiesSpec gvar[] = {
 	{"INTRAFONT_STRING_CP1252", I2J(INTRAFONT_STRING_CP1252)},
 	{"INTRAFONT_STRING_UTF8", I2J(INTRAFONT_STRING_UTF8)},
 
-	{"RED", I2J(0xFF0000FF)},
-	{"GREEN", I2J(0xFF00FF00)},
-	{"BLUE", I2J(0xFFFF0000)},
-	{"WHITE", I2J(0xFFFFFFFF)},
-	{"LITEGRAY", I2J(0xFFBFBFBF)},
-	{"GRAY", I2J(0xFF7F7F7F)},
-	{"DARKGRAY", I2J(0xFF3F3F3F)},		
-	{"BLACK", I2J(0xFF000000)},
 	{0}
+};
+static JSFunctionSpec fontMethodes[] = {
+	JS_FN("print", font_print,1,0,0),
+	JS_FS_END
 };
 int module_start(SceSize args, void *argp){
 	js_addModule(lfun,gfun,0,gvar);
-	js_addClass(NULL,NULL,Load,2,NULL,NULL,NULL,NULL,"Font",
+	js_addClass(NULL,NULL,Load,2,NULL,fontMethodes,NULL,NULL,"Font",
 		JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS);
 	return 0;
 }

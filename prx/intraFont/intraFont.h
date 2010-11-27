@@ -23,7 +23,6 @@ extern "C" {
  *  @{
  */
 
-
 #define INTRAFONT_ADVANCE_H        0x00000000 //default: advance horizontaly from one char to the next
 #define INTRAFONT_ADVANCE_V        0x00000100
 #define INTRAFONT_ALIGN_LEFT       0x00000000 //default: left-align the text
@@ -263,9 +262,9 @@ void intraFontSetAltFont(intraFont *font, intraFont *altFont);
  *
  * @returns The x position after the last char
  */
-float intraFontPrintUCS2        (intraFont *font, float x, float y, const unsigned short *text);
-float intraFontPrintUCS2Ex      (intraFont *font, float x, float y, const unsigned short *text, int length);
-float intraFontPrintColumnUCS2  (intraFont *font, float x, float y, float width, const unsigned short *text);
+float intraFontPrintUCS2(intraFont *font, float x, float y, const unsigned short *text);
+float intraFontPrintUCS2Ex(intraFont *font, float x, float y, const unsigned short *text, int length);
+float intraFontPrintColumnUCS2(intraFont *font, float x, float y, float width, const unsigned short *text);
 float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float width, const unsigned short *text, int length);
 
 /**
@@ -285,7 +284,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float width,
  *
  * @returns The x position after the last char
  */
-float intraFontPrint        (intraFont *font, float x, float y, const char *text, float width);
+float intraFontPrint        (intraFont *font, float x, float y, const char *text);
 float intraFontPrintEx      (intraFont *font, float x, float y, const char *text, int length);
 float intraFontPrintColumn  (intraFont *font, float x, float y, float width, const char *text);
 float intraFontPrintColumnEx(intraFont *font, float x, float y, float width, const char *text, int length);
