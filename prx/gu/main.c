@@ -1,7 +1,7 @@
 #include <pspkernel.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pspgu.h>
+#include "pspgu.h"
 #include <pspdisplay.h>
 #include <psprtc.h>
 
@@ -117,7 +117,7 @@ JS_FUN(Finish){
 	return JS_TRUE;
 }
 JS_FUN(FinishId){
-	*rval = I2J(sceGuFinishId(J2U(argv[0])));
+	//*rval = I2J(sceGuFinishId(J2U(argv[0])));
 	return JS_TRUE;
 }
 JS_FUN(CallList){
@@ -188,7 +188,8 @@ JS_FUN(DrawArray){
 		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),objectToVertex(J2I(argv[1]),J2O(argv[4]),J2I(argv[2])));
 	}else{
 		//printf("draw:%08X\n",J2U(argv[4]));
-		sceGuDrawArray(J2I(argv[0]),J2I(argv[1]),J2I(argv[2]),(void*)J2U(argv[3]),(void*)(J2U(argv[4])));
+		//js_test(J2U(argv[2]));
+		sceGuDrawArray(J2U(argv[0]),J2U(argv[1]),J2U(argv[2]),(void*)J2U(argv[3]),(void*)(J2U(argv[4])));
 	}
 	return JS_TRUE;
 }
@@ -475,7 +476,7 @@ JS_FUN(DrawSpline){
 	return JS_TRUE;
 }
 JS_FUN(SwapBuffersBehaviour){
-	guSwapBuffersBehaviour(J2I(argv[0]));
+	//guSwapBuffersBehaviour(J2I(argv[0]));
 	return JS_TRUE;
 }
 JS_FUN(BoneMatrix){
@@ -708,7 +709,7 @@ JS_FUN(debugPrint){//x,y,col,str
 		if(c==10){//break line + screen check
 			X=1;
 			Y+=6;
-			if(Y>=270)Y=0;
+			//if(Y>=270)Y=0;
 			continue;
 		}
 		if(c>63)c&=0x1F;
@@ -724,7 +725,7 @@ JS_FUN(debugPrint){//x,y,col,str
 		}
 		y=Y,X+=4;
 		if(X>=480){X=1;Y+=6;}//goto next line if needed	
-		if(Y>=270){Y=0;}//reset line n	
+		//if(Y>=270){Y=0;}//reset line n	
 	}
 	return JS_TRUE;
 }
@@ -839,6 +840,8 @@ static JSFunctionSpec functions[]={
 	{0}
 };
 static JSFunctionSpec gfunctions[]={
+//custom functions
+	{"sceGuSetup",Setup,1},
 //debug-only sce* functions
 	{"sceGuDebugPrint",debugPrint,5},
 	{"sceGuDebugFlush",debugFlush,0},
