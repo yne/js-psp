@@ -18,7 +18,7 @@ printf("SE     :"+k.call("getSE")+"\n");
 printf("DevHook:"+k.call("getDevhook")+"\n");
 printf("CtrlVer:"+k.call("getVersion").toString(16)+"\n");
 
-//printf("setIPL :"+k.call("setIPL")+"\n");
+printf("setIPL :"+k.call("setIPL")+"\n");
 //printf("getIPL :"+k.call("getIPL")+"\n");
 //printf("setMBR :"+k.call("setMBR")+"\n");
 //printf("getMBR :"+k.call("getMBR")+"\n");

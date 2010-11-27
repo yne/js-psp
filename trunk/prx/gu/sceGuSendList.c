@@ -10,7 +10,12 @@
 
 #include <pspkernel.h>
 #include <pspge.h>
-
+/* if your sdk have missing declaration, uncomment this line
+typedef struct PspGeListArgs{
+	unsigned int	size;
+	PspGeContext*	context;
+} PspGeListArgs;
+//*/
 void sceGuSendList(int mode, const void* list, PspGeContext* context)
 {
 	gu_settings.signal_offset = 0;

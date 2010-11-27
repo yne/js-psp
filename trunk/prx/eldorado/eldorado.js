@@ -8,11 +8,12 @@ var eldorado = new Module("prx/eldorado.prx");
 var titles = new File("res/titles.img").read();//images of titles
 var pal = new File("res/titles.pal").read();//titles palette
 var map = new File("res/world.map").read();//world map
+
 //init graphic
 gu.init(0x4000);
 gu.start(GU_DIRECT);
 gu.dispBuffer(480,272,0x000000,512);
-gu.drawBuffer(GU_PSM_8888,0x088000,512);
+gu.drawBuffer(GU_PSM_8888,0x000000,512);
 gu.disable(GU_DEPTH_TEST);
 gu.enable(GU_SCISSOR_TEST);
 gu.enable(GU_TEXTURE_2D);
@@ -40,7 +41,8 @@ while(1){
 	}
 	eldorado.mapToArray(x,y,map);//draw the map
 	gu.finish();
-	display.waitVblankStart();
+	gu.debugPrint(120,260,0xFFFFFF,gu.getFPS()+"fps");
+	//display.waitVblankStart();
 	gu.swapBuffers();
 }
 //unload lib
