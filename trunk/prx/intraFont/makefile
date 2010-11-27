@@ -1,7 +1,7 @@
 TARGET = ../intraFont
-OBJS = main.o intraFont.o libccc.o ../../main/JSE.o
+OBJS = main.o intraFont.o libccc.o ../gu/sceGu.o ../../main/JSE.o
 
-CFLAGS   = -G0 -Wall -O2
+CFLAGS   = -O2 -G0 -Wall
 ASFLAGS  = $(CFLAGS)
 LDFLAGS  = -mno-crt0 -nostartfiles
 
@@ -19,6 +19,6 @@ BUILD_PRX = 1
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
 
-all :
-	psp-packer.exe $(TARGET).prx
-	rm *.o $(TARGET).elf
+all:
+	psp-packer $(TARGET).prx
+	rm $(TARGET).elf *.o
