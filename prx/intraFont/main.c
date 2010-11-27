@@ -10,48 +10,54 @@ PSP_NO_CREATE_MAIN_THREAD();
 JSObject* font2js(intraFont *font){
 	return NULL;
 }
-
 JS_FUN(Init){
 	*rval = intraFontInit();
 	return JS_TRUE;
 }
-
 JS_FUN(Shutdown){
 	intraFontShutdown();
 	*rval = JSVAL_VOID;
 	return JS_TRUE;
 }
-
 JS_FUN(Load){
 	*rval = I2J(intraFontLoad(J2S(argv[0]), J2I(argv[1])));
 	return JS_TRUE;
 }
-
 JS_FUN(Unload){
 	intraFontUnload((void*)J2U(argv[0]));
 	return JS_TRUE;
 }
-
 JS_FUN(Print){
 	intraFontPrint((void*)J2U(argv[0]), J2I(argv[1]), J2I(argv[2]), J2S(argv[3]));
 	return JS_TRUE;
 }
-
 JS_FUN(SetStyle){
 	intraFontSetStyle((void*)J2U(argv[0]), J2I(argv[1]), J2U(argv[2]), J2U(argv[3]), J2U(argv[4]));
 	return JS_TRUE;
 }
-
-JS_METH(font_print){
-	
-	intraFontPrint((void*)J2U(ARGV[-1]), J2I(ARGV[1]), J2I(ARGV[2]), J2S(ARGV[0]));
-/*
-	u32 length;
-	if(argc==1)
-		length = js_getStringLength(JSVAL_TO_STRING(ARGV[0]));
+//constructor
+JS_FUN(Font){
+	if(!argc)return JS_TRUE;
+	intraFont* fnt;
+	if(J2I(argv[1])==UNDEFINED)
+		fnt = intraFontLoad(J2S(argv[0]),0);
 	else
-		length = J2I(ARGV[1]);*/
-	*(vp) = I2J(4);//I2J(sceIoWrite(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),J2S(ARGV[0]),length));
+		fnt = intraFontLoad(J2S(argv[0]), J2I(argv[1]));
+	if(fnt)
+		js_setProperty(obj,"p",I2J(fnt));
+	return JS_TRUE;
+}
+//methodes
+JS_METH(font_print){
+	intraFontPrint((void*)J2U(js_getProperty(J2O(ARGV[-1]),"p")), J2I(ARGV[1]), J2I(ARGV[2]), J2S(ARGV[0]));
+	return JS_TRUE;
+}
+JS_METH(font_style){
+	intraFontSetStyle((void*)J2U(js_getProperty(J2O(ARGV[-1]),"p")), J2D(ARGV[0]), J2U(ARGV[1]), J2U(ARGV[2]), J2U(ARGV[3]));
+	return JS_TRUE;
+}
+JS_METH(font_unload){
+	intraFontUnload((void*)J2U(js_getProperty(J2O(ARGV[-1]),"p")));
 	return JS_TRUE;
 }
 static JSFunctionSpec lfun[] = {
@@ -109,12 +115,15 @@ static JSPropertiesSpec gvar[] = {
 };
 static JSFunctionSpec fontMethodes[] = {
 	JS_FN("print", font_print,1,0,0),
+	JS_FN("style", font_style,1,0,0),
+	JS_FN("unload", font_unload,1,0,0),
 	JS_FS_END
 };
 int module_start(SceSize args, void *argp){
 	js_addModule(lfun,gfun,0,gvar);
-	js_addClass(NULL,NULL,Load,2,NULL,fontMethodes,NULL,NULL,"Font",
+	js_addClass(NULL,NULL,Font,2,NULL,fontMethodes,NULL,NULL,"Font",
 		JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS);
+	intraFontInit();//clut generation
 	return 0;
 }
 int module_stop(SceSize args, void *argp){

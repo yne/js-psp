@@ -106,9 +106,6 @@ int getKernelInitApitype(){
 int getModel(){
 	return sceKernelGetModel();
 }
-int Ksample_addModule(u32 serial){
-	return 5;
-}
 int getSE(){
 	return sctrlHENIsSE();
 }

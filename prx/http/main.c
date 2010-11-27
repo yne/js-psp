@@ -256,7 +256,7 @@ static JSPropertiesSpec var[] = {
 	{0}
 };
 
-#define MTU 768
+#define MTU 4096
 JSObject* tmpObj;//i can't pass it using argv :s
 int xhr_get(SceSize argc,void *argv){
 	JSObject* obj = tmpObj;
