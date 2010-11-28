@@ -78,7 +78,7 @@ EXT JSBool js_delProperty(JSObject *tobj,const char* name);
 EXT jsval js_convertValue(jsval v,JSType type);
 EXT char* js_getStringBytes(JSString* str);
 EXT size_t js_getStringLength(JSString *str);
-EXT JSString* js_newString(char* str,size_t size);
+EXT JSString* js_newString(const char* str,size_t size);
 EXT JSObject** js_valueToObject(jsval v,JSObject** tobj);
 EXT JSString* js_valueToString(jsval v);
 EXT u32 js_valueToECMAUint32(jsval v);

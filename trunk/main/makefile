@@ -27,6 +27,6 @@ PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
 
 all:
-	rm *.o ${TARGET}.elf ../EBOOT.PBP
+	rm *.o ${TARGET}.elf
 	echo y | psp-packer EBOOT.PBP
 	mv EBOOT.PBP ../EBOOT.PBP

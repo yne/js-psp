@@ -130,9 +130,17 @@ u16 js_valueToUint16(jsval v){
 	return u;
 }
 u32 js_valueToECMAUint32(jsval v){
-	u32 u;
-	JS_ValueToECMAUint32(cx,v,&u);
-	return u;
+	if (JSVAL_IS_INT(v)) {
+		//printf("J2U (int:%08X)\n",JSVAL_TO_INT(v));
+		return (uint32) JSVAL_TO_INT(v);
+	}
+	if (JSVAL_IS_DOUBLE(v)) {
+		//jsdouble d = ;
+		//unsigned t = d;
+		//printf("J2U (dbl:%08X)\n",t);
+		return *JSVAL_TO_DOUBLE(v);
+	}
+	return 0;
 }
 JSObject* js_valueToObject(jsval v){
 //JSObject** js_valueToObject(jsval v,JSObject** tobj){
