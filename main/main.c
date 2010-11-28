@@ -6,7 +6,6 @@
 #define MAIN 1
 
 #include "shared.h"
-
 #include "functions.h"
 
 PSP_MODULE_INFO("JSE", 0, 1, 1);
@@ -16,6 +15,17 @@ PSP_HEAP_SIZE_KB(-128);
 #else
 PSP_HEAP_SIZE_KB(-1024);//left 1.25MB free
 #endif
+typedef struct PBP_HEADER{
+	char magic[4];
+	char version[4];
+	u32 param;
+	u32 icon0;
+	u32 icon1;
+	u32 pic0;
+	u32 pic1;
+	u32 snd0;
+	u32 data;
+}PbpHeader;
 static JSClass global_class = {
 	"global", JSCLASS_GLOBAL_FLAGS,
 	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
@@ -23,6 +33,7 @@ static JSClass global_class = {
 	JSCLASS_NO_OPTIONAL_MEMBERS
 };
 JSFunctionSpec my_functions[] = {
+	{"print",js_print, 1},
 	{"printf",js_print, 1},
 	{"run",js_run, 1},
 	{"exit",js_exit, 0},
@@ -36,7 +47,29 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 		printf("\x1B[1;37;41m%s\x1B[0;39;109m\n",message);
 	sceKernelExitGame();//exit b4 bus error 8)
 }
+PbpHeader eboot;
+int getPbpInfo(){
+	SceUID fd = sceIoOpen("EBOOT.PBP",PSP_O_RDONLY,0777);
+	if(sceIoRead(fd,&eboot,sizeof(eboot))!=sizeof(eboot)){printf("fuuuu\n");return 1;}
+	if(eboot.param==eboot.icon0)eboot.icon0=0;
+	if(eboot.icon0==eboot.icon1)eboot.icon1=0;
+	if(eboot.icon1==eboot.pic0)eboot.pic0=0;
+	if(eboot.pic0==eboot.pic1)eboot.pic1=0;
+	if(eboot.pic1==eboot.snd0)eboot.snd0=0;
+	if(eboot.snd0==eboot.data)eboot.data=0;
+
+	printf("param %u\n",eboot.param);
+	printf("icon0 %u\n",eboot.icon0);
+	printf("icon1 %u\n",eboot.icon1);
+	printf("pic0 %u\n",eboot.pic0);
+	printf("pic1 %u\n",eboot.pic1);
+	printf("snd0 %u\n",eboot.snd0);
+	printf("data %u\n",eboot.data);
+
+	return 0;
+}
 int main(int argc, const char *argv[]){
+	getPbpInfo();
 #ifdef DEBUG_MODE
 	printf("\x1B[39;49mSpiderMonkey 1.8 ["__DATE__" "__TIME__"]\n");
 #endif
