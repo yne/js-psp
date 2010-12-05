@@ -2,6 +2,7 @@
 #include <pspsyscon.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <boot.h>
 
 #define MAIN 1
 
@@ -10,22 +11,9 @@
 
 PSP_MODULE_INFO("JSE", 0, 1, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU);
-#ifdef KERNEL
-PSP_HEAP_SIZE_KB(-128);
-#else
+
 PSP_HEAP_SIZE_KB(-1024);//left 1.25MB free
-#endif
-typedef struct PBP_HEADER{
-	char magic[4];
-	char version[4];
-	u32 param;
-	u32 icon0;
-	u32 icon1;
-	u32 pic0;
-	u32 pic1;
-	u32 snd0;
-	u32 data;
-}PbpHeader;
+
 static JSClass global_class = {
 	"global", JSCLASS_GLOBAL_FLAGS,
 	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
@@ -37,7 +25,6 @@ JSFunctionSpec my_functions[] = {
 	{"printf",js_print, 1},
 	{"run",js_run, 1},
 	{"exit",js_exit, 0},
-	{"meminfo",js_meminfo, 0},
 	{0}
 };
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
@@ -47,51 +34,31 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 		printf("\x1B[1;37;41m%s\x1B[0;39;109m\n",message);
 	sceKernelExitGame();//exit b4 bus error 8)
 }
-PbpHeader eboot;
-int getPbpInfo(){
-	SceUID fd = sceIoOpen("EBOOT.PBP",PSP_O_RDONLY,0777);
-	if(sceIoRead(fd,&eboot,sizeof(eboot))!=sizeof(eboot)){printf("fuuuu\n");return 1;}
-	if(eboot.param==eboot.icon0)eboot.icon0=0;
-	if(eboot.icon0==eboot.icon1)eboot.icon1=0;
-	if(eboot.icon1==eboot.pic0)eboot.pic0=0;
-	if(eboot.pic0==eboot.pic1)eboot.pic1=0;
-	if(eboot.pic1==eboot.snd0)eboot.snd0=0;
-	if(eboot.snd0==eboot.data)eboot.data=0;
-
-	printf("param %u\n",eboot.param);
-	printf("icon0 %u\n",eboot.icon0);
-	printf("icon1 %u\n",eboot.icon1);
-	printf("pic0 %u\n",eboot.pic0);
-	printf("pic1 %u\n",eboot.pic1);
-	printf("snd0 %u\n",eboot.snd0);
-	printf("data %u\n",eboot.data);
-
-	return 0;
-}
 int main(int argc, const char *argv[]){
-	getPbpInfo();
+	if(argc>1){
+		toExecute=argv[1];
+		printf("boot:%s(argv)\n",toExecute);
+	}
+	boot();
 #ifdef DEBUG_MODE
 	printf("\x1B[39;49mSpiderMonkey 1.8 ["__DATE__" "__TIME__"]\n");
 #endif
-#ifdef USE_KERNEL
-	int ret;
-	if(sceKernelStartModule(sceKernelLoadModule("prx/Kloader.prx", 0, NULL), 0, NULL, &ret, NULL)>0)
-		printf("\x1B[31;40mKernel is available\n");
-#endif
 	while(1){
-		JSRuntime *rt = JS_NewRuntime(14 * 1024 * 1024);// runtime
-		cx = JS_NewContext(rt, 8192); // Context
+		JSRuntime *rt = JS_NewRuntime(RunTimeSize*1024);// runtime
+		cx = JS_NewContext(rt, ContextSize); // Context
 		JS_SetErrorReporter(cx, reportError);//the error callback
 		gobj = JS_NewObject(cx, &global_class, NULL, NULL);// Create the global object.
 		JS_InitStandardClasses(cx, gobj); //Populate the global object with the standard globals (String,Object,Array...)
-		JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
 		JS_InitClasses(cx, gobj);//Populate the global object with the non-standard classes (Module)
-		JSScript *script=JS_CompileFile(cx, gobj, argc>1?argv[1]:"js/main.js");
-		jsval result;
+		JS_InitObjs(cx,gobj);
+		JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
+		
+		JSScript *script=JS_CompileFile(cx, gobj,toExecute);
 		if(!script){
 			printf("\x1B[1;37;41mCompilation error\n");
 			break;
 		}
+		jsval result;
 		if (!JS_ExecuteScript(cx, gobj, script, &result)){
 			printf("\x1B[1;37;41mExecution error\n");
 			break;
@@ -103,6 +70,8 @@ int main(int argc, const char *argv[]){
 		JS_DestroyRuntime(rt);
 	}
 	JS_ShutDown();
+	if(bootRemoveJs)
+		sceIoRemove(toExecute);
 	sceKernelExitGame();
 	return 0;
 }
