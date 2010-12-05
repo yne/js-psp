@@ -5,6 +5,7 @@
 #include "src/jsarray.h"
 
 #include "shared.h"
+#include "boot.h"
 
 /* my custom functions */
 
@@ -75,9 +76,9 @@ JS_FUN(js_include){
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
 	
 	if(mod != uid){
+		if(mod == 0x8002013B)return JS_TRUE;//printf(": <%s> already loaded/started",path);
 		printf("\x1B[1;37;41mModule error 0x%08X \n", mod);
 		//if(mod == 0x8002012E)printf(": <%s> not found!",path);
-		//if(mod == 0x8002013B)printf(": <%s> already loaded/started",path);
 		//if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
 		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
 		return JS_FALSE;
@@ -164,6 +165,7 @@ JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 		JSCLASS_NO_MANDATORY_MEMBERS,
 		JSCLASS_NO_OPTIONAL_MEMBERS
 	);
+	if(kMode)
 	js_addClass(
 		NULL,NULL,js_kinclude,1,
 		NULL,KModuleMethodes,NULL,NULL,
@@ -171,5 +173,14 @@ JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 		JSCLASS_NO_MANDATORY_MEMBERS,
 		JSCLASS_NO_OPTIONAL_MEMBERS
 	);
+	return JS_TRUE;
+}
+
+JSBool JS_InitObjs(JSContext *cx, JSObject *obj){
+#ifdef _PSP_FW_VERSION
+	JSObject* psp = JS_DefineObject(cx,obj,"PSP",0,NULL,JSPROP_ENUMERATE);
+	JS_DefineFunction(cx,psp,"meminfo",js_meminfo,0,0);
+	js_setProperty(psp,"ok",I2J(2000));
+#endif
 	return JS_TRUE;
 }
