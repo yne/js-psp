@@ -112,6 +112,9 @@ JS_FUN(Start){
 	sceGuStart(J2I(argv[0]),list);
 	return JS_TRUE;
 }
+void sceGuStartJs(int mode){
+	sceGuStart(mode,list);
+}
 JS_FUN(Finish){
 	*rval = I2J(sceGuFinish());
 	return JS_TRUE;
@@ -290,6 +293,7 @@ JS_FUN(PixelMask){
 	return JS_TRUE;
 }
 JS_FUN(Color){
+//	printf("%08X\n",J2U(argv[0]));
 	sceGuColor(J2U(argv[0]));
 	return JS_TRUE;
 }
@@ -536,45 +540,40 @@ JS_FUN(Setup){
 	#define SCR_WIDTH (480)
 	#define SCR_HEIGHT (272)
 	#define PIXEL_SIZE (4)
-	#define FRAMEBUFFER_SIZE (PSP_LINE_SIZE*SCR_H*PIXEL_SIZE)
+	#define FRAMEBUFFER_SIZE (BUF_WIDTH*SCR_HEIGHT*PIXEL_SIZE)
 
-  sceGuInit();
-	if(!argc){
-		if(!list)list=js_malloc(0x40000);
-	}else
-		list=GU_LIST_VRAM;
-	sceGuStart(GU_DIRECT, list);
-	sceGuDrawBuffer(GU_PSM_8888, (void*)0, BUF_WIDTH);
-	sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, (void*)0x88000, BUF_WIDTH);
-	sceGuDepthBuffer((void*)0x110000, BUF_WIDTH);
+	sceGuInit();
+	list=c_memalign(16,0x40000);
+	//list=js_malloc(0x40000);
+	sceGuStart(GU_DIRECT,list);
+	sceGuDrawBuffer(GU_PSM_8888, (void*)FRAMEBUFFER_SIZE, BUF_WIDTH);
+	sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, (void*)0, BUF_WIDTH);
 	sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
-  sceGuOffset(2048 - (SCR_WIDTH / 2), 2048 - (SCR_HEIGHT / 2));
-  sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
-  
+	sceGuDepthBuffer((void*) (FRAMEBUFFER_SIZE*2), BUF_WIDTH);
+	sceGuOffset(2048 - (SCR_WIDTH / 2), 2048 - (SCR_HEIGHT / 2));
+	sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
+	sceGuDepthRange(0xc350, 0x2710);
 	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-  sceGuEnable(GU_SCISSOR_TEST);
-  
+	sceGuEnable(GU_SCISSOR_TEST);
 	sceGuAlphaFunc(GU_GREATER, 0, 0xff);
-  sceGuEnable(GU_ALPHA_TEST);
-  
-  sceGuDepthRange(0xc350, 0x2710);
+	sceGuEnable(GU_ALPHA_TEST);
 	sceGuDepthFunc(GU_GEQUAL);
-  sceGuDisable(GU_DEPTH_TEST);
-  sceGuFrontFace(GU_CW);
-  sceGuShadeModel(GU_SMOOTH);
-  sceGuEnable(GU_CULL_FACE);
-  sceGuEnable(GU_TEXTURE_2D);
-  sceGuEnable(GU_CLIP_PLANES);
-  sceGuTexMode(GU_PSM_8888, 0, 0, 0);
-  sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
-  sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-  sceGuAmbientColor(0xffffffff);
-  sceGuEnable(GU_BLEND);
-  sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
-  sceGuFinish();
-  sceGuSync(0, 0);
+	sceGuEnable(GU_DEPTH_TEST);
+	sceGuFrontFace(GU_CW);
+	sceGuShadeModel(GU_SMOOTH);
+	sceGuEnable(GU_CULL_FACE);
+	sceGuEnable(GU_TEXTURE_2D);
+	sceGuEnable(GU_CLIP_PLANES);
+	sceGuTexMode(GU_PSM_8888, 0, 0, 0);
+	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+	sceGuAmbientColor(0xffffffff);
+	sceGuEnable(GU_BLEND);
+	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	sceGuFinish();
+	sceGuSync(0, 0);
 	sceDisplayWaitVblankStart();
-  sceGuDisplay(GU_TRUE);
+	sceGuDisplay(GU_TRUE);
 	return JS_TRUE;
 }
 u64 last_tick;
@@ -733,8 +732,6 @@ JS_FUN(debugFlush){// any suggestion ?
 	return JS_TRUE;
 }
 static JSFunctionSpec functions[]={
-	//custom unload proc
-	//{"unload",Unload,0},
 	//custom macro from graphics.c
 	{"getFPS",getFPS,0},
 	{"setup",Setup,0},
@@ -1146,7 +1143,9 @@ int module_start(SceSize args, void *argp){
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
-	if(list>(void*)0x08800000)//list stored in RAM so free is needed
+	if(list>(void*)0x08800000){//list stored in RAM so free is needed
 		js_free(list);
+		//c_free(list);
+	}
 	return 0;
 }

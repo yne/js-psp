@@ -411,7 +411,7 @@ extern void* sceGuGetMemory(int size);
   * @param list - Pointer to display-list (16 byte aligned)
 **/
 extern void sceGuStart(int cid, void* list);
-
+extern void sceGuStartJs(int cid);
 /**
   * Finish current display list and go back to the parent context
   *

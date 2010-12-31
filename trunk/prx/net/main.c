@@ -17,6 +17,9 @@
 PSP_MODULE_INFO("sceNet",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
 
+JSObject* socketObj;
+JSClass* SocketClass;
+
 u32 net_uid = 0; /* Net */
 u32 ifhandle_uid = 0;//sceNetInterface_Service : avoid sceNetInit 0x8002013A error
 u32 inet_uid = 0;
@@ -98,6 +101,104 @@ JS_FUN(InetInit){
 	*rval = I2J(sceNetInetInit());
 	return JS_TRUE;
 }
+JS_FUN(InetSocket){
+	*rval = I2J(sceNetInetSocket(AF_INET, SOCK_STREAM, 0));
+	return JS_TRUE;
+}
+typedef struct{
+	unsigned char sin_size; // size, not used
+	unsigned char sin_family; // usually AF_INET
+	unsigned short sin_port; // use htons()
+	unsigned char sin_addr[4];
+	char    sin_zero[8];
+}sockaddr_in;
+JS_FUN(InetBind){
+	if(!argc)return JS_TRUE;//socket needed
+	sockaddr_in addrListen;
+	addrListen.sin_family = AF_INET;
+	addrListen.sin_port = htons(J2I(argv[1]));
+	addrListen.sin_addr[0] = 0;
+	addrListen.sin_addr[1] = 0;
+	addrListen.sin_addr[2] = 0;
+	addrListen.sin_addr[3] = 0;
+	*rval = I2J(sceNetInetBind(J2I(argv[0]),(void*)&addrListen, sizeof(addrListen)));
+	return JS_TRUE;
+}
+JS_FUN(InetListen){
+	if(!argc)return JS_TRUE;//socket needed
+	*rval = I2J(sceNetInetListen(J2I(argv[0]),(argc<2)?1:J2I(argv[1])));
+	return JS_TRUE;
+}
+JS_FUN(InetAccept){
+	if(!argc)return JS_TRUE;//socket needed
+//	char szMyIPAddr[32];
+//	sceNetApctlGetInfo(8, (void*)szMyIPAddr);
+//	printf("%s\n",szMyIPAddr);
+	
+	sockaddr_in addrAccept;
+	u32 cbAddrAccept = sizeof(addrAccept);
+	*rval = I2J(sceNetInetAccept(J2I(argv[0]), (void*)&addrAccept, &cbAddrAccept));
+	return JS_TRUE;
+}
+JS_FUN(InetConnect){//5,192,168,0,3,21
+	if(argc<6)return JS_TRUE;
+	sockaddr_in addrConnect;
+	addrConnect.sin_family = AF_INET;
+	addrConnect.sin_addr[0] = J2I(argv[1]);
+	addrConnect.sin_addr[1] = J2I(argv[2]);
+	addrConnect.sin_addr[2] = J2I(argv[3]);
+	addrConnect.sin_addr[3] = J2I(argv[4]);
+	addrConnect.sin_port = htons(J2I(argv[5]));
+	*rval = I2J(sceNetInetConnect(J2I(argv[0]), (void*)&addrConnect,sizeof(addrConnect)));
+	return JS_TRUE;
+}
+JS_FUN(InetSetsockopt){
+	 if(argc<3)return JS_TRUE;
+	switch(J2I(argv[1])){
+		case SO_RCVTIMEO:{
+			u32 timeout = J2I(argv[2]);
+			*rval = I2J(sceNetInetSetsockopt(J2I(argv[0]), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)));
+			}break;
+		default:;
+	}
+	return JS_TRUE;
+}
+JS_FUN(InetSend){
+	if(argc<2)return JS_TRUE;//socket & buffer needed
+	*rval = I2J(sceNetInetSend(J2I(argv[0]),J2S(argv[1]),J2SL(argv[1]),0));
+	return JS_TRUE;
+}
+JS_FUN(InetRecv){
+	if(!argc)return JS_TRUE;//socket needed
+	char buffer[1536];
+	int size=sceNetInetRecv(J2I(argv[0]),buffer,sizeof(buffer)-1,0);
+	if(size<0){*rval = I2J(sceNetInetGetErrno());return JS_TRUE;}//error ?
+	char* ret = js_malloc(size);
+	memcpy(ret,buffer,size);
+	ret[size]=0;
+	*rval = S2J(ret,size);
+	return JS_TRUE;
+}
+JS_FUN(InetClose){
+	if(!argc)return JS_TRUE;//socket & buffer needed
+	*rval = I2J(sceNetInetClose(J2I(argv[0])));
+	return JS_TRUE;
+}
+JS_FUN(InetShutdown){
+	if(!argc)return JS_TRUE;//socket & buffer needed
+	*rval = I2J(sceNetInetShutdown(J2I(argv[0]),(argc<2)?2:J2I(argv[1])));
+	return JS_TRUE;
+}
+JS_FUN(InetGetErrno){
+	*rval = I2J(sceNetInetGetErrno());
+	return JS_TRUE;
+}
+/*
+int	sceNetInetGetsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
+int	sceNetInetSetsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+u32	sceNetInetRecvfrom(int s, void *buf, size_t flags, int, struct sockaddr *from, socklen_t *fromlen);
+u32	sceNetInetSendto(int s, const void *buf, size_t len, int flags, const struct sockaddr *to, socklen_t tolen);
+*/
 JS_FUN(InetTerm){
 	*rval = I2J(sceNetInetTerm());
 	return JS_TRUE;
@@ -269,13 +370,12 @@ JS_FUN(AdhocctlJoinEnterGameMode){
 JS_FUN(AdhocctlGetGameModeInfo){
 	struct SceNetAdhocctlGameModeInfo gamemodeinfo;
 	sceNetAdhocctlGetGameModeInfo(&gamemodeinfo);
-	JSObject* info = js_addObj(" ");
-	js_setProperty(info,"count",I2J(gamemodeinfo.count));
+	js_setProperty(obj,"count",I2J(gamemodeinfo.count));
 	//js_setProperty(info,"macs",STRING_TO_JSVAL(strncpy(js_malloc(6),(unsigned char)*gamemodeinfo.macs[0],6)));
 	/*
 	TODO:return mac list in array
 	*/
-	*rval = O2J(info);
+	*rval = O2J(obj);
 	return JS_TRUE;
 }
 JS_FUN(AdhocctlExitGameMode){
@@ -295,10 +395,9 @@ JS_FUN(AdhocctlGetScanInfo){
 	int length;
 	void* p=NULL;
 	*rval = I2J(sceNetAdhocctlGetScanInfo(&length,p));
-	JSObject*info = js_addObj(" ");
-	js_setProperty(info,"length",I2J(length));
-	js_setProperty(info,"p",I2J((u32)p));
-	*rval = O2J(info);
+	js_setProperty(obj,"length",I2J(length));
+	js_setProperty(obj,"p",I2J((u32)p));
+	*rval = O2J(obj);
 	return JS_TRUE;
 }
 JS_FUN(AdhocctlAddHandler){
@@ -321,12 +420,11 @@ JS_FUN(AdhocctlGetParameter){
 	struct SceNetAdhocctlParams params;
 	sceNetAdhocctlGetParameter(&params);
 	
-	JSObject*Parameter = js_addObj(" ");
-	js_setProperty(Parameter,"channel",I2J(params.channel));
-//	js_setProperty(Parameter,"name",S2J(params.name,8));
-//	js_setProperty(Parameter,"bssid",S2J(params.bssid,6));
-//	js_setProperty(Parameter,"nickname",S2J(params.nickname,128));
-	*rval = O2J(Parameter);
+	js_setProperty(obj,"channel",I2J(params.channel));
+//	js_setProperty(obj,"name",S2J(params.name,8));
+//	js_setProperty(obj,"bssid",S2J(params.bssid,6));
+//	js_setProperty(obj,"nickname",S2J(params.nickname,128));
+	*rval = O2J(obj);
 	return JS_TRUE;
 }
 u32 adhocMatching_uid = 0;/*AdhocMatching*/
@@ -384,20 +482,18 @@ JS_FUN(AdhocMatchingGetHelloOpt){
 	int len = 0;
 	void* p = NULL;
 	sceNetAdhocMatchingGetHelloOpt(J2I(argv[0]),&len,p);
-	JSObject*opt=js_addObj(" ");
-	js_setProperty(opt,"data",I2J(p));
-	js_setProperty(opt,"length",I2J(len));
-	*rval = O2J(opt);
+	js_setProperty(obj,"data",I2J(p));
+	js_setProperty(obj,"length",I2J(len));
+	*rval = O2J(obj);
 	return JS_TRUE;
 }
 JS_FUN(AdhocMatchingGetMembers){
 	int len = 0;
 	void* p = NULL;
 	sceNetAdhocMatchingGetMembers(J2I(argv[0]),&len,p);
-	JSObject*opt=js_addObj(" ");
-	js_setProperty(opt,"data",I2J(p));
-	js_setProperty(opt,"length",I2J(len));
-	*rval = O2J(opt);
+	js_setProperty(obj,"data",I2J(p));
+	js_setProperty(obj,"length",I2J(len));
+	*rval = O2J(obj);
 	return JS_TRUE;
 }
 JS_FUN(AdhocMatchingGetPoolMaxAlloc){
@@ -407,11 +503,10 @@ JS_FUN(AdhocMatchingGetPoolMaxAlloc){
 JS_FUN(AdhocMatchingGetPoolStat){
 	struct pspAdhocPoolStat poolstat;
 	sceNetAdhocMatchingGetPoolStat(&poolstat);
-	JSObject*opt=js_addObj(" ");
-	js_setProperty(opt,"data",I2J(poolstat.size));
-	js_setProperty(opt,"maxsize",I2J(poolstat.maxsize));
-	js_setProperty(opt,"freesize",I2J(poolstat.freesize));
-	*rval = O2J(opt);
+	js_setProperty(obj,"data",I2J(poolstat.size));
+	js_setProperty(obj,"maxsize",I2J(poolstat.maxsize));
+	js_setProperty(obj,"freesize",I2J(poolstat.freesize));
+	*rval = O2J(obj);
 	return JS_TRUE;
 }
 JS_FUN(_unload){
@@ -430,6 +525,81 @@ JS_FUN(_unload){
 	if(ifhandle_uid)c_delModule(ifhandle_uid);
 	return JS_TRUE;
 }
+/*socket API*/
+JS_FUN(Socket){
+	if(argc){//port specified : create socket
+		int s = sceNetInetSocket(AF_INET, SOCK_STREAM, 0);
+		js_setProperty(obj,"fd",I2J(s));
+		sockaddr_in addrListen;
+		addrListen.sin_family = AF_INET;
+		addrListen.sin_port = htons(J2I(argv[0]));
+		addrListen.sin_addr[0] = 0;//todo:memset
+		addrListen.sin_addr[1] = 0;
+		addrListen.sin_addr[2] = 0;
+		addrListen.sin_addr[3] = 0;
+		js_defineFunction(obj,"accept",Socket,0,JSPROP_ENUMERATE);
+		*rval = I2J(sceNetInetBind(s,(void*)&addrListen, sizeof(addrListen)));
+	}else{//no-port > accept
+		sockaddr_in addrAccept;
+		u32 cbAddrAccept = sizeof(addrAccept);
+		JSObject*out=js_newObject(SocketClass,socketObj,obj);
+		js_setProperty(out,"fd",I2J(sceNetInetAccept(J2I(js_getProperty(obj,"fd")), (void*)&addrAccept, &cbAddrAccept)));
+		*rval = O2J(out);
+	}
+	return JS_TRUE;
+}
+JS_METH(sock_listen){
+	char szMyIPAddr[32];
+	sceNetApctlGetInfo(8, (void*)szMyIPAddr);
+	printf("%s\n",szMyIPAddr);
+	u32 err=sceNetInetListen(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),(argc)?1:J2I(ARGV[0]));
+	if(err)*(vp)=I2J(err);
+	else *(vp)=THIS;
+	return JS_TRUE;
+}
+JS_METH(sock_recv){
+	char buffer[1536];
+	int size=sceNetInetRecv(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),buffer,sizeof(buffer)-1,0);
+	if(size<0){*(vp) = I2J(sceNetInetGetErrno());return JS_TRUE;}//error ?
+	char* ret = js_malloc(size);
+	memcpy(ret,buffer,size);
+	ret[size]=0;
+	*(vp) = S2J(ret,size);
+	return JS_TRUE;
+}
+JS_METH(sock_send){
+	*(vp) = I2J(sceNetInetSend(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),J2S(ARGV[0]),J2SL(ARGV[0]),0));
+	return JS_TRUE;
+}
+JS_METH(sock_opt){
+	switch(J2I(ARGV[0])){
+		case SO_RCVTIMEO:{
+			u32 timeout = J2I(ARGV[1]);
+			*(vp) = I2J(sceNetInetSetsockopt(J2I(js_getProperty(J2O(ARGV[-1]),"fd")), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)));
+			}break;
+		default:;
+	}
+	return JS_TRUE;
+}
+JS_METH(sock_close){
+//printf("%i\n",J2I(js_getProperty(J2O(ARGV[-1]),"fd")));
+	*(vp) = I2J(sceNetInetClose(J2I(js_getProperty(J2O(ARGV[-1]),"fd"))));
+	return JS_TRUE;
+}
+JS_METH(sock_shutdown){
+	*(vp) = I2J(sceNetInetShutdown(J2I(js_getProperty(J2O(ARGV[-1]),"fd")),J2I(ARGV[0])));
+	return JS_TRUE;
+}
+static JSFunctionSpec sockMeth[] = {
+	JS_FN("listen",sock_listen,1,0,0),
+//	JS_FN("accept",sock_accept,0,0,0),
+	JS_FN("opt",sock_opt,1,0,0),
+	JS_FN("send",sock_send,1,0,0),
+	JS_FN("recv",sock_recv,1,0,0),
+	JS_FN("close",sock_close,0,0,0),
+	JS_FN("shutdown",sock_shutdown,0,0,0),
+	JS_FS_END
+};
 static JSFunctionSpec functions[] = {
 /*private*/
 	{"_unload",_unload,0},
@@ -492,15 +662,45 @@ static JSFunctionSpec functions[] = {
 	{"apctlDisconnect",ApctlDisconnect,0},
 	{"apctlGetState",ApctlGetState,0},
 /*Inet*/
+	{"inetAccept",InetAccept,0},
+	{"inetBind",InetBind,0},
+	{"inetConnect",InetConnect,0},
+//	{"inetGetsockopt",InetGetsockopt,0},
+	{"inetListen",InetListen,0},
+	{"inetRecv",InetRecv,0},
+//	{"inetRecvfrom",InetRecvfrom,0},
+	{"inetSend",InetSend,0},
+//	{"inetSendto",InetSendto,0},
+	{"inetSetsockopt",InetSetsockopt,0},
+	{"inetShutdown",InetShutdown,0},
+	{"inetSocket",InetSocket,0},
+	{"inetClose",InetClose,0},
+	{"inetGetErrno",InetGetErrno,0},
 	{"inetInit",InetInit,0},
 	{"inetTerm",InetTerm,0},
 	{0}
 };
 static JSPropertiesSpec var[] = {
-	{"PSPNET_H", I2J(1)},
+	{"AF_INET", I2J(2)},
+	{"SOCK_STREAM", I2J(1)},
+	{"SOCK_DGRAM", I2J(2)},
+	{"SOCK_RAW", I2J(3)},
+	{"SOCK_RDM", I2J(4)},
+	{"SOCK_SEQPACKET", I2J(5)},
+	{"SO_SNDBUF", I2J(0x1001)},/* send buffer size */
+	{"SO_RCVBUF", I2J(0x1002)},/* receive buffer size */
+	{"SO_SNDLOWAT", I2J(0x1003)},/* send low-water mark */
+	{"SO_RCVLOWAT", I2J(0x1004)},/* receive low-water mark */
+	{"SO_SNDTIMEO", I2J(0x1005)},/* send timeout */
+	{"SO_RCVTIMEO", I2J(0x1006)},/* receive timeout */
+	{"SO_ERROR", I2J(0x1007)},/* get error status and clear */
+	{"SO_TYPE", I2J(0x1008)},/* get socket type */
+	{"SO_OVERFLOWED", I2J(0x1009)},/* datagrams: return packets dropped */
+	{"SO_NONBLOCK", I2J(0x1009)},/* non-blocking I/O */
 	{0}
 };
 int module_start(SceSize args, void *argp){
+	socketObj = js_addClass(NULL,NULL,Socket,1,NULL,sockMeth,NULL,NULL,"Socket",JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS,&SocketClass);
 	js_addModule(functions,0,0,var);
 	return 0;
 }

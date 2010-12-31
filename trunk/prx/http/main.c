@@ -349,7 +349,7 @@ static JSFunctionSpec XMLHttpRequestMethodes[] = {
 int module_start(SceSize args, void *argp){
 	js_addModule(functions,0,0,var);
 	js_addClass(NULL,NULL,XMLHttpRequest,2,NULL,XMLHttpRequestMethodes,NULL,NULL,"XMLHttpRequest",
-		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS);
+		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS,NULL);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){

@@ -122,7 +122,7 @@ static JSFunctionSpec fontMethodes[] = {
 int module_start(SceSize args, void *argp){
 	js_addModule(lfun,gfun,0,gvar);
 	js_addClass(NULL,NULL,Font,2,NULL,fontMethodes,NULL,NULL,"Font",
-		JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS);
+		JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS,NULL);
 	intraFontInit();//clut generation
 	return 0;
 }

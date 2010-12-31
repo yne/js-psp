@@ -50,7 +50,7 @@ OBJS = main.o ../../main/JSE.o\
 	sceGuTexWrap.o sceGuViewport.o \
 	sendCommand.o
 
-CFLAGS   = -G0 -Wall -O4
+CFLAGS   = -G0 -Wall -O4 -DUSE_FPS_METER
 ASFLAGS  = $(CFLAGS)
 LDFLAGS  = -mno-crt0 -nostartfiles
 
@@ -58,7 +58,7 @@ PRX_EXPORTS = pluginGu.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
 
 INCDIR = ../../
-LIBS =
+LIBS = -lpsprtc
 
 USE_PSPSDK_LIBC = 1
 USE_PSPSDK_LIBS = 1
@@ -70,4 +70,4 @@ include $(PSPSDK)/lib/build.mak
 
 all :
 	psp-packer.exe $(TARGET).prx
-	rm *.o $(TARGET).elf
+#	rm *.o $(TARGET).elf
