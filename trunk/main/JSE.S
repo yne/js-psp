@@ -2,9 +2,10 @@
 
 #include "pspstub.s"
 
-	STUB_START "JSE",0x00090000,0x00210005
+	STUB_START "JSE",0x00090000,0x00240005
 	STUB_FUNC  0x95935AFC,js_test
 	STUB_FUNC  0x8D642FB1,js_addModule
+	STUB_FUNC  0x5AF181FB,js_newObject
 	STUB_FUNC  0x1776BE04,js_addObj
 	STUB_FUNC  0xBBB84232,js_addClass
 	STUB_FUNC  0x7AC58FDC,js_getContext
@@ -28,6 +29,8 @@
 	STUB_FUNC  0xCA3D7C28,js_callFunctionName
 	STUB_FUNC  0x7803EBA9,js_typeOfValue
 	STUB_FUNC  0x6C56460A,js_computeThis
+	STUB_FUNC  0x2B6D57E0,js_defineFunction
+	STUB_FUNC  0xDCE4B405,js_defineFunctions
 	STUB_FUNC  0x3465956E,js_strdup
 	STUB_FUNC  0xDFF11919,js_realloc
 	STUB_FUNC  0xFC4105A3,js_malloc

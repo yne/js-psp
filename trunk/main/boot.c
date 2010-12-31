@@ -68,7 +68,9 @@ int getPbpInfo(SceUID in){
 		int ret;
 		if(sceKernelStartModule(sceKernelLoadModule(tmp_name, 0, NULL), 0, NULL, &ret, NULL)>0){
 			kMode = 1;
+			#ifdef DEBUG_MODE
 			printf("\x1B[31;40mKernel is available\n");
+			#endif
 		}
 		sceIoRemove(tmp_name);
 		free(ptr);
@@ -83,7 +85,9 @@ int getPbpInfo(SceUID in){
 		free(ptr);
 		toExecute=bootTmpJsName;
 		bootRemoveJs=1;
+		#ifdef DEBUG_MODE
 		printf("boot:%s(psar)\n",toExecute);
+		#endif
 	}
 	return 0;
 }
@@ -128,11 +132,15 @@ void boot(){
 	getPbpInfo(PBP);
 	if(!toExecute){//nothing from psar
 		getSfoInfo(PBP,"JS_FILE",NULL,toExecute);
+		#ifdef DEBUG_MODE
 		printf("boot:%s (SFO)\n",toExecute);
+		#endif
 	}
 	if(!toExecute){//nothing from SFO
 		toExecute="js/main.js";
+		#ifdef DEBUG_MODE
 		printf("boot:%s (default)\n",toExecute);
+		#endif
 	}
 	getSfoInfo(PBP,"JS_RT_SIZE",&RunTimeSize,NULL);
 	getSfoInfo(PBP,"JS_CX_SIZE",&ContextSize,NULL);

@@ -37,11 +37,13 @@ void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lv
 	mod_tmp_lvar=lvar;
 	mod_tmp_gvar=gvar;
 }
-JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots){
+JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots,JSClass** outClass){
 #ifdef DEBUG_MODE
 	printf("\x1B[33;40madding class : %s\n",name);
 #endif
-	JSClass* tmpClass = JS_malloc(cx,sizeof(JSClass));
+	JSClass*tmpClass = JS_malloc(cx,sizeof(JSClass));
+	if(outClass)*outClass=tmpClass;
+	//else{printf("no class specified\n");}
 	tmpClass->name=name;
   tmpClass->flags=flags;
 
@@ -73,8 +75,11 @@ JSBool js_convertArguments(uintN argc, jsval *argv, const char *format, ...){
 	va_end(ap);
 	return ok;
 }
-JSObject* js_addObj(const char* name){
-	return JS_DefineObject(cx,gobj,name,0,NULL,JSPROP_ENUMERATE);
+JSObject* js_newObject(JSClass *clasp, JSObject *proto,JSObject *parent){
+	return JS_NewObject(cx,clasp,proto,parent);
+}
+JSObject* js_addObj(const char* name,JSObject*obj){
+	return JS_DefineObject(cx,obj?obj:gobj,name,0,NULL,JSPROP_ENUMERATE);
 }
 jsval js_getElement(JSObject *tobj,int index){
 	jsval vp;
@@ -167,6 +172,12 @@ JSType js_typeOfValue(jsval v){
 jsval js_computeThis(JSContext *cx, jsval *vp){
 	return JS_ComputeThis(cx,vp);
 }
+JSBool js_defineFunctions(JSFunctionSpec *fs,JSObject *obj){
+	return JS_DefineFunctions(cx,obj?obj:gobj,fs);
+}
+JSFunction * js_defineFunction(JSObject *obj,const char *name, JSNative call, uintN nargs, uintN flags){
+	return JS_DefineFunction(cx,obj,name,call,nargs,flags);
+}
 /* C stuff (handled by SM) */
 char* js_strdup(const char* str){
 	return JS_strdup(cx,str);
@@ -206,7 +217,7 @@ int c_delModule(u32 uid){
 	printf("\x1B[33;40mStop/Unload UID:%08X 0x%08X ",uid,sceKernelStopModule(uid,0,NULL,&ret,NULL));
 	printf("0x%08X, %i\n",sceKernelUnloadModule(uid),ret);
 #else
-	sceKernelStopModule(uid,0,NULL,&ret,NULL),ret);
+	sceKernelStopModule(uid,0,NULL,&ret,NULL);
 	sceKernelUnloadModule(uid);
 #endif
 	return ret?uid:ret;

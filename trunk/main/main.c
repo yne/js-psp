@@ -24,6 +24,7 @@ JSFunctionSpec my_functions[] = {
 	{"print",js_print, 1},
 	{"printf",js_print, 1},
 	{"run",js_run, 1},
+	{"delay",js_delay, 1},
 	{"exit",js_exit, 0},
 	{0}
 };

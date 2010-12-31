@@ -14,7 +14,7 @@
 #define I2J(i) INT_TO_JSVAL(i)
 #define D2J(i) js_numberToValue(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
-#define S2J(i) STRING_TO_JSVAL(js_newString((i),0))
+#define S2J(s,l) STRING_TO_JSVAL(js_newString(s,l))
 
 /* for methode prupose */
 #define THIS   js_computeThis(cx, vp)
@@ -65,9 +65,10 @@ JSPropertiesSpec* mod_tmp_gvar;
 /* functions hosted by the interpreter */
 
 EXT int js_test(int);
-EXT JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots);
+EXT JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots,JSClass** outClass);
 EXT void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lvar,JSPropertiesSpec* gvar);
-EXT JSObject* js_addObj(const char*);
+EXT JSObject* js_addObj(const char*,JSObject*obj);
+EXT JSObject* js_newObject(JSClass *clasp, JSObject *proto,JSObject *parent);
 EXT JSContext* js_getContext(void);
 EXT JSObject* js_getGlobalObject(void);
 EXT JSBool js_convertArguments(uintN, jsval*, const char *, ...);
@@ -89,7 +90,8 @@ EXT jsval js_evaluateScript(char* eval);
 EXT jsval js_callFunctionName(JSObject *obj,const char* name,uintN argc,jsval *argv);
 EXT JSType js_typeOfValue(jsval v);
 EXT jsval js_computeThis(JSContext *cx, jsval *vp);
-
+EXT JSFunction * js_defineFunction(JSObject *obj,const char *name, JSNative call, uintN nargs, uintN flags);
+EXT JSBool js_defineFunctions(JSFunctionSpec *fs,JSObject *obj);
 EXT char* js_strdup(const char* str);
 EXT void* js_malloc(size_t nbytes);
 EXT void* js_realloc(void *p,size_t nbytes);
