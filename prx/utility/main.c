@@ -1,4 +1,5 @@
 #include <pspkernel.h>
+#include <pspdisplay.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,10 +18,12 @@
 #include <psputility_usbmodules.h>
 #include <psputility_modules.h>
 
+#include "../gu/pspgu.h"
 #include "../../main/shared.h"
 
 PSP_MODULE_INFO("sceUtility",PSP_MODULE_USER,1,1);
 PSP_NO_CREATE_MAIN_THREAD();
+PSP_HEAP_SIZE_KB(0);
 
 /* modules */
 JS_FUN(LoadModule){
@@ -391,36 +394,42 @@ JS_FUN(Prompt){
 	return JS_TRUE;
 }
 JS_FUN(Connect){
-  pspUtilityNetconfData data; //Struct for dialog settings
-  memset(&data, 0, sizeof(data)); //Clear it
-  data.base.size = sizeof(data);
+	memset(&Netconf,0,sizeof(Netconf));
+	pspUtilityDialogCommon base;
+
 	int value=0;
+	base.size=sizeof(Netconf);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&value);
-	data.base.language = value;
+	base.language = value;
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN,&value);
-	data.base.buttonSwap = value;
-	data.base.graphicsThread = 17;
-	data.base.accessThread = 19;
-	data.base.fontThread = 18;
-	data.base.soundThread = 16;
-  data.action = 3;//PSP_NETCONF_ACTION_CONNECTAP_LASTUSED
-
-  sceUtilityNetconfInitStart(&data); //Start the dialog
-
-  int done = 0; //Reset loop-break trigger
-  while(!done){//Loop until trigger
-    switch(sceUtilityNetconfGetStatus()){
-			case 2:
-				if(!argc)js_evaluateScript(cleanStuff);
-				else js_evaluateScript(J2S(argv[2]));
-				sceUtilityNetconfUpdate(1);
-			break;
-			case 3:sceUtilityNetconfShutdownStart();break;
-			case 4:done = 1;break;
+	base.buttonSwap = value;
+	base.soundThread=16;
+	base.graphicsThread=17;
+	base.fontThread=18;
+	base.accessThread=19;
+	Netconf.base=base;
+	Netconf.action=3;
+	
+	value=sceUtilityNetconfInitStart(&Netconf);
+	*rval = I2J(value);
+	if(value<0)return JS_TRUE;
+	
+	value=0;
+	while(!value){
+		sceGuStartJs(GU_DIRECT);
+		sceGuClear(5);
+		sceGuFinish();
+		switch(sceUtilityNetconfGetStatus()){
+			case 0:break;//NONE
+			case 1:break;//INIT
+			case 2:sceUtilityNetconfUpdate(1);break;//VISIBLE
+			case 3:sceUtilityNetconfShutdownStart();break;//QUIT
+			case 4:value=1;break;//FINISHED
 			default:break;
 		}
-		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
-  }
+		sceDisplayWaitVblankStart();
+		sceGuSwapBuffers();
+	}
 	return JS_TRUE;
 }
 static JSPropertiesSpec var[] = {
@@ -638,7 +647,7 @@ static JSPropertiesSpec var[] = {
 	{0}
 };
 static JSFunctionSpec lfun[] = {
-	{"connectAP",Connect,1},
+	{"connectAP",Connect,0},
 
 	{"loadAvModule",LoadAvModule,1},
 	{"unloadAvModule",UnloadAvModule,1},
@@ -672,6 +681,7 @@ static JSFunctionSpec lfun[] = {
 	{0}
 };
 static JSFunctionSpec gfun[] = {
+	{"connect",Connect,0},
 	{"prompt",Prompt,3},
 	{"alert",Alert,2},
 	{"confirm",Confirm,2},

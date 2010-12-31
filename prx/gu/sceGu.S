@@ -2,7 +2,7 @@
 
 #include "pspstub.s"
 
-	STUB_START "sceGu",0x00090000,0x005B0005
+	STUB_START "sceGu",0x00090000,0x005C0005
 	STUB_FUNC  0xE4A45C4A,sceGuDepthBuffer
 	STUB_FUNC  0xA79E81D7,sceGuDispBuffer
 	STUB_FUNC  0xCB7DC84F,sceGuDrawBuffer
@@ -23,6 +23,7 @@
 	STUB_FUNC  0xC467EB3E,sceGuSendCommandi
 	STUB_FUNC  0xCCCC2EDC,sceGuGetMemory
 	STUB_FUNC  0x5F01916F,sceGuStart
+	STUB_FUNC  0x7A3B53D2,sceGuStartJs
 	STUB_FUNC  0xBA8CF6B9,sceGuFinish
 	STUB_FUNC  0xA109D5DF,sceGuCallList
 	STUB_FUNC  0xBA640D21,sceGuCallMode

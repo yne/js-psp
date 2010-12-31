@@ -4,51 +4,58 @@ var gu = new Module("prx/sceGu.prx");
 var ctrl = new Module("prx/sceCtrl.prx");
 var io = new Module("prx/sceIo.prx");
 var eldorado = new Module("prx/eldorado.prx");
+var osk = new Module("prx/lightOsk.prx");
 //load the files
-var titles = new File("res/titles.img").read();//images of titles
-var pal = new File("res/titles.pal").read();//titles palette
-var map = new File("res/world.map").read();//world map
+var kb1 =    new File("prx/lightOsk/osk.raw").read();//world map
+var map =    new File("prx/eldorado/map/world.map").read();//world map
+var titles = new File("prx/eldorado/map/titles.raw");//images of titles
+var pal =    new File("prx/eldorado/map/titles.rawpal");//titles palette
 
+var player = new File("prx/eldorado/player.raw");//images of the player
+var charmap="QR?PTUVSXYZWKL(J    NO)MBC:AEF_DHI-G\n"
 //init graphic
-gu.init(0x4000);
-gu.start(GU_DIRECT);
-gu.dispBuffer(480,272,0x000000,512);
-gu.drawBuffer(GU_PSM_8888,0x000000,512);
-gu.disable(GU_DEPTH_TEST);
-gu.enable(GU_SCISSOR_TEST);
-gu.enable(GU_TEXTURE_2D);
-gu.scissor(0,0,480,272);
-//set image+palette
-gu.clutMode(GU_PSM_5551,0,255,0);
-gu.clutLoad(8/8,pal);
-gu.texMode(GU_PSM_T4,0,0,1);
-gu.texFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
-gu.texImage(0,256,512,256,titles);
-
-gu.finish();
-gu.display(1);
+sceGuInit(0x4000);
+sceGuStart(GU_DIRECT);
+sceGuDispBuffer(480,272,0,512);
+sceGuDrawBuffer(GU_PSM_8888,0,512);
+sceGuDisable(GU_DEPTH_TEST);
+sceGuEnable(GU_TEXTURE_2D);
+sceGuScissor(0,0,480,272);
+sceGuEnable(GU_SCISSOR_TEST);
+sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);//activated later
+sceGuAlphaFunc(GU_GREATER, 0, 0xff);
+//sceGuSetCallback//sceGuCallMode
+sceGuFinish();
+sceGuDisplay(1);
 //main loop
-var x=y=2048;
+eldorado.setTitle(titles.read());
+eldorado.setPal(pal.read());
+eldorado.setPlayer(player.read());
+var dir=1,step=0;
 while(1){
-	gu.start(GU_DIRECT);
 	var btn = ctrl.peekBufferPositive().Buttons;
+	gu.start(GU_DIRECT);
 	if(btn){
-		if(btn&PSP_CTRL_UP)y--;
-		if(btn&PSP_CTRL_DOWN)y++;
-		if(btn&PSP_CTRL_LEFT)x--;
-		if(btn&PSP_CTRL_RIGHT)x++;
-		if(btn&PSP_CTRL_START)break;
+	dir=eldorado.setMove(btn);
+		step++;
+		step%=32;
 	}
-	eldorado.mapToArray(x,y,map);//draw the map
+	
+	eldorado.drawLayer(map);//draw the map
+	eldorado.drawPlayer(dir,step,player);//draw the player
+	var c=osk.draw(kb1,btn);
+	if(c!=undefined){
+		printf(charmap[c]+"\n");
+	}
 	gu.finish();
-	gu.debugPrint(120,260,0xFFFFFF,gu.getFPS()+"fps");
-	//display.waitVblankStart();
+	display.waitVblankStart();
 	gu.swapBuffers();
+	//printf(gu.getFPS()+"\n");
+	//gu.debugPrint(120,260,0xFFFFFF,gu.getFPS()+"fps");
 }
 //unload lib
 eldorado.unload();
 ctrl.unload();
 io.unload();
-gu.term();
 gu.unload();
 display.unload();

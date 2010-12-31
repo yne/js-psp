@@ -376,7 +376,7 @@ static JSBool class_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp){
 }
 int module_start(SceSize args, void *argp){
 	js_addClass(NULL,NULL,File,2,NULL,fileMethodes,NULL,NULL,"File",
-		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS);
+		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS,NULL);
 	js_addModule(functions,gfunctions,0,var);
 	return 0;
 }

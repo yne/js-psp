@@ -1,5 +1,5 @@
 TARGET = ../sceUtility
-OBJS = main.o ../../main/JSE.o
+OBJS = main.o ../../main/JSE.o ../gu/sceGu.o
 
 CFLAGS   = -G0 -Wall -O2
 ASFLAGS  = $(CFLAGS)
