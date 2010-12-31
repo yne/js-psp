@@ -29,6 +29,10 @@ JS_FUN(js_meminfo){
 	*rval=O2J(obj);
   return JS_TRUE;
 }
+JS_FUN(js_clear){
+	JS_MaybeGC(cx);
+  return JS_TRUE;
+}
 JS_FUN(js_run){
 	JSScript *script=JS_CompileFile(cx, gobj, J2S(argv[0]));
 	jsval result;
@@ -41,6 +45,10 @@ JS_FUN(js_run){
 		*rval=I2J(-2);//return -2 on a execution error
 	JS_MaybeGC(cx);
 	JS_DestroyScript(cx, script);
+  return JS_TRUE;
+}
+JS_FUN(js_delay){
+	sceKernelDelayThread(J2I(argv[0]));
   return JS_TRUE;
 }
 u32 fun2nid(char* fun){
@@ -143,7 +151,7 @@ JS_METH(js_exclude){
 #ifdef DEBUG_MODE
 	printf("\x1B[33;40mStop/Unload %s : %i %08X\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret,sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")),0,NULL,&ret,NULL));
 #else
-	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL)
+	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL);
 #endif
 	sceKernelUnloadModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")));
 	*(vp) = I2J(ret);
@@ -163,7 +171,8 @@ JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 		NULL,ModuleMethodes,NULL,NULL,
 		"Module",JSCLASS_NEW_RESOLVE,
 		JSCLASS_NO_MANDATORY_MEMBERS,
-		JSCLASS_NO_OPTIONAL_MEMBERS
+		JSCLASS_NO_OPTIONAL_MEMBERS,
+		NULL
 	);
 	if(kMode)
 	js_addClass(
@@ -171,7 +180,8 @@ JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 		NULL,KModuleMethodes,NULL,NULL,
 		"KModule",JSCLASS_NEW_RESOLVE,
 		JSCLASS_NO_MANDATORY_MEMBERS,
-		JSCLASS_NO_OPTIONAL_MEMBERS
+		JSCLASS_NO_OPTIONAL_MEMBERS,
+		NULL
 	);
 	return JS_TRUE;
 }
@@ -180,7 +190,7 @@ JSBool JS_InitObjs(JSContext *cx, JSObject *obj){
 #ifdef _PSP_FW_VERSION
 	JSObject* psp = JS_DefineObject(cx,obj,"PSP",0,NULL,JSPROP_ENUMERATE);
 	JS_DefineFunction(cx,psp,"meminfo",js_meminfo,0,0);
-	js_setProperty(psp,"ok",I2J(2000));
+	JS_DefineFunction(cx,psp,"clear",js_clear,0,0);
 #endif
 	return JS_TRUE;
 }
