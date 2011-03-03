@@ -32,7 +32,7 @@ include $(PSPSDK)/lib/build.mak
 all:
 	mksfoex.exe JS-PSP PARAM.SFO -d MEMSIZE=1 -s DISC_ID=SPDR00000 -d JS_RT_SIZE=14336 -d JS_CX_SIZE=8192 -s JS_FILE=main.js
 	pack-pbp EBOOT.PBP PARAM.SFO NULL ../prx/Kloader.prx NULL NULL NULL ../main.prx ../js/pong.js
-	rm *.o ${TARGET}.elf ../EBOOT.PBP
+	rm -f *.o ${TARGET}.elf ../EBOOT.PBP
 	echo y | psp-packer EBOOT.PBP
-	mv EBOOT.PBP ../EBOOT.PBP
+	mv EBOOT.PBP ..
 	

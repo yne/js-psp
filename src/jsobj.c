@@ -3453,13 +3453,14 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
     int scopeIndex, protoIndex;
     JSProperty *prop;
     JSScopeProperty *sprop;
-
+		int tried=0;
+try_again:
     obj = cx->fp->scopeChain;
     type = OBJ_SCOPE(obj)->shape;
     for (scopeIndex = 0; ; scopeIndex++) {
         if (obj->map->ops->lookupProperty == js_LookupProperty) {
-            protoIndex =
-                js_LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop);
+						protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop);
+						//if(!prop)noPropertyFallBack();
         } else {
             if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
                 return -1;
@@ -3483,7 +3484,14 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
             *pobjp = pobj;
             *propp = prop;
             return scopeIndex;
-        }
+        }else{
+						extern int fallbackFunction(const char*);
+						if(!tried){
+							fallbackFunction(js_AtomToPrintableString(cx, JSID_TO_ATOM(id)));
+							tried=1;
+							goto try_again;
+						}
+				}
 
         lastobj = obj;
         obj = OBJ_GET_PARENT(cx, obj);
