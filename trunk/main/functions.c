@@ -77,6 +77,11 @@ u32 getKinfo(char* name){
 	printf(" not found !\n");
 	return 0;
 }
+int ldstart(const char* path){
+	int ret = 0;
+	u32 uid = sceKernelLoadModule(path, 0, NULL);
+	return sceKernelStartModule(uid, 0, NULL, &ret, NULL);
+}
 JS_FUN(js_include){
 	char* path = J2S(argv[0]);
 	u32 uid = sceKernelLoadModule(path, 0, NULL);
@@ -165,6 +170,68 @@ static JSFunctionSpec KModuleMethodes[] = {
 	JS_FN("call",js_kcall,0,0,0),
 	JS_FS_END
 };
+int fileExiste(char*path){
+	SceUID fd = sceIoOpen(path,PSP_O_RDONLY,0777);
+	sceIoClose(fd);
+	return (fd>0);
+}
+#define MAJ(c) (c>64&&c<91)
+#define MIN(c) (c>96&&c<123)
+char* toLowerCase(char* str){
+	int i=0;
+	while(str[i]){
+		if(MAJ(str[i]))str[i]+=32;
+		i++;
+	}
+	return str;
+}
+char tmpPath[32];
+char* tryPath(char* folder,char* name){
+	tmpPath[0]=0;
+	strcat(tmpPath,folder);
+	strcat(tmpPath,name);
+	strcat(tmpPath,".prx");
+	return tmpPath;
+}
+int fbEval(char* obj,char* path){
+	char evalStr[256];
+	sprintf(evalStr,"var %s = new Module('%s')",obj,path);
+	printf("autoLoad:%s (%s)\n",path,obj);
+	js_evaluateScript(evalStr);
+	return 0;
+}
+int fallbackFunction(const char* name){
+	char path[32],lib[32];
+	int s=0;
+	strncpy(path,name,31);
+	if(
+	(path[0]=='s'&&path[1]=='c'&&path[2]=='e'&&MAJ(path[3]))||//sce*
+	(path[0]=='p'&&path[1]=='s'&&path[2]=='p'&&MAJ(path[3]))){//psp*
+		s=3;
+		strncpy(lib,name+s,31);
+		int i=s+1;
+		while(path[i]&&!MAJ(path[i]))i++;
+		lib[i-s]=path[i]=0;
+	}else{//non-sce
+		while(path[s]&&!MAJ(path[s]))s++;
+		strncpy(lib,name+s,31);
+		int i=s+1;
+		while(path[i]&&!MAJ(path[i]))i++;
+		lib[i-s]=path[i]=0;
+		//printf("%s %s %s\n",lib,path,path+s);
+		//return 0;
+	}
+	toLowerCase(lib);
+	if(fileExiste(tryPath("prx/",path)))
+		return fbEval(lib, tryPath("prx/",path));
+	if(fileExiste(tryPath("prx/",path+s)))
+		return fbEval(lib, tryPath("prx/",path+s));
+	if(fileExiste(tryPath("",path)))
+		return fbEval(lib, tryPath("",path));
+	if(fileExiste(tryPath("",path+s)))
+		return fbEval(lib, tryPath("",path+s));
+	return -1;
+}
 JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 	js_addClass(
 		NULL,NULL,js_include,1,
@@ -185,7 +252,6 @@ JSBool JS_InitClasses(JSContext *cx, JSObject *obj){
 	);
 	return JS_TRUE;
 }
-
 JSBool JS_InitObjs(JSContext *cx, JSObject *obj){
 #ifdef _PSP_FW_VERSION
 	JSObject* psp = JS_DefineObject(cx,obj,"PSP",0,NULL,JSPROP_ENUMERATE);
