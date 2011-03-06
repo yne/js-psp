@@ -2768,8 +2768,10 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
     JS_FS("options",        Options,        0,0,0),
     JS_FS("load",           Load,           1,0,0),
+#ifdef NO_LIBC
     JS_FN("readline",       ReadLine,       0,0,0),
-    JS_FS("print",          Print,          0,0,0),
+#endif
+		JS_FS("print",          Print,          0,0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("gc",             GC,             0,0,0),

@@ -115,7 +115,12 @@ PRMJ_LocalGMTDifference()
     memset((char *)&ltime,0,sizeof(ltime));
     ltime.tm_mday = 2;
     ltime.tm_year = 70;
+#ifdef NO_LIBC
+		puts("warning : mktime() not implemented");
+    return 0 - (24L * 3600L);
+#else
     return (JSInt32)mktime(&ltime) - (24L * 3600L);
+#endif
 }
 
 /* Constants for GMT offset from 1970 */
@@ -519,10 +524,6 @@ PRMJ_DSTOffset(JSInt64 local_time)
     JSInt64  maxtimet;
     struct tm tm;
     PRMJTime prtm;
-#ifndef HAVE_LOCALTIME_R
-    struct tm *ptm;
-#endif
-
 
     JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC);
     JSLL_DIV(local_time, local_time, us2s);
@@ -539,7 +540,16 @@ PRMJ_DSTOffset(JSInt64 local_time)
     JSLL_L2UI(local,local_time);
     PRMJ_basetime(local_time,&prtm);
 #ifndef HAVE_LOCALTIME_R
-    ptm = localtime(&local);
+	#ifdef NO_LIBC
+//		time_t t;
+//		struct timeval t;
+//		sceKernelLibcTime(&t);
+//		sceKernelLibcGettimeofday(&t,&z);
+		puts("warning : localtime() not implemented");
+		struct tm *ptm = NULL;
+	#else
+    struct tm *ptm = localtime(&local);
+	#endif
     if(!ptm){
         return 0;
     }
@@ -641,9 +651,9 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     oldHandler = _set_invalid_parameter_handler(PRMJ_InvalidParameterHandler);
     oldReportMode = _CrtSetReportMode(_CRT_ASSERT, 0);
 #endif
-
+#ifndef NO_LIBC
     result = strftime(buf, buflen, fmt, &a);
-
+#endif
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
     _set_invalid_parameter_handler(oldHandler);
     _CrtSetReportMode(_CRT_ASSERT, oldReportMode);

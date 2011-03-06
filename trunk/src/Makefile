@@ -1,6 +1,45 @@
+#BUILD PROPERTY HERE
+USE_PSPSDK_LIBC = 1
+USE_AUTOLOAD = 1
+USE_VFPU = 1
+USE_PALLOC = 1
+BUILD_PRX = 1
+
+#DO NOT TOUCH THIS PART
+ifeq ($(BUILD_PRX),1)
+TARGET = libjs
+LDFLAGS += -mno-crt0 -nostartfiles
+OBJS += crt0.o ../main/shared.o ../main/functions.o ../prx/kernel/modK.o
+PRX_EXPORTS = ../main/export.exp
+$(shell psp-build-exports -s ${PRX_EXPORTS})
+else
 TARGET_LIB = ./libspidermonkey.a
-OBJS = \
-		vfpu.o \
+endif
+#include malloc in stdlib to avoid lot of undefined warning
+ifeq ($(USE_PSPSDK_LIBC),1)
+CFLAGS += -DNO_LIBC
+INCDIR += ../main/  ../
+endif
+
+ifeq ($(USE_PALLOC),1)
+CFLAGS += -DUSE_PALLOC
+endif
+
+ifeq ($(USE_VFPU),1)
+CFLAGS += -DUSE_VFPU
+OBJS += vfpu.o
+endif
+
+ifeq ($(USE_AUTOLOAD),1)
+CFLAGS += -DUSE_AUTOLOAD
+endif
+
+#COMMON PART
+
+CFLAGS += -G0 -Wall -O2 -DRND_PRODQUOT
+ASFLAGS += $(CFLAGS)
+
+OBJS += \
 		jsapi.o \
 		jsarena.o \
 		jsarray.o \
@@ -36,10 +75,15 @@ OBJS = \
 		jsutil.o \
 		jsxdrapi.o \
 		jsxml.o \
-		prmjtime.o
-
-CFLAGS = -G0 -Wall -O2 -DUSE_VFPU -DRND_PRODQUOT
-ASFLAGS = $(CFLAGS)
+		prmjtime.o \
+		
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
+
+all:
+ifeq ($(BUILD_PRX),1)
+	rm -f ../${TARGET}.prx ${TARGET}.elf
+	psp-packer ${TARGET}.prx ../libjs
+	mv ${TARGET}.prx ..
+endif

@@ -25,6 +25,7 @@
 #define JS_METH(meth_name) static JSBool meth_name (JSContext *cx, uintN argc, jsval *vp)
 
 #define JSCLASS_NO_MANDATORY_MEMBERS 0,0,0,0,0,0,0,0
+#define JSCLASS_DEFAULT_MANDATORY_MEMBERS JS_PropertyStub,JS_PropertyStub,JS_PropertyStub,JS_PropertyStub,JS_EnumerateStub,JS_ResolveStub,JS_ConvertStub,JS_FinalizeStub
 
 #ifndef __JS_SHARED_H__
 #define __JS_SHARED_H__
