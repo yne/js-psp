@@ -3453,8 +3453,10 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
     int scopeIndex, protoIndex;
     JSProperty *prop;
     JSScopeProperty *sprop;
+#ifdef USE_AUTOLOAD
 		int tried=0;
 try_again:
+#endif
     obj = cx->fp->scopeChain;
     type = OBJ_SCOPE(obj)->shape;
     for (scopeIndex = 0; ; scopeIndex++) {
@@ -3484,7 +3486,9 @@ try_again:
             *pobjp = pobj;
             *propp = prop;
             return scopeIndex;
-        }else{
+        }
+				#ifdef USE_AUTOLOAD
+				else{
 						extern int fallbackFunction(const char*);
 						if(!tried){
 							fallbackFunction(js_AtomToPrintableString(cx, JSID_TO_ATOM(id)));
@@ -3492,7 +3496,7 @@ try_again:
 							goto try_again;
 						}
 				}
-
+				#endif
         lastobj = obj;
         obj = OBJ_GET_PARENT(cx, obj);
         if (!obj)
