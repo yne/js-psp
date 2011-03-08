@@ -9,6 +9,7 @@ BUILD_PRX = 1
 ifeq ($(BUILD_PRX),1)
 TARGET = libjs
 LDFLAGS += -mno-crt0 -nostartfiles
+INCDIR += ../main/  ../
 OBJS += crt0.o ../main/shared.o ../main/functions.o ../prx/kernel/modK.o
 PRX_EXPORTS = ../main/export.exp
 $(shell psp-build-exports -s ${PRX_EXPORTS})
@@ -18,7 +19,7 @@ endif
 #include malloc in stdlib to avoid lot of undefined warning
 ifeq ($(USE_PSPSDK_LIBC),1)
 CFLAGS += -DNO_LIBC
-INCDIR += ../main/  ../
+LIBS += -lpsprtc
 endif
 
 ifeq ($(USE_PALLOC),1)

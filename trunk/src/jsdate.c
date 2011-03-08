@@ -2062,7 +2062,16 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         date = date_constructor(cx, obj);
         if (!date)
             return JS_FALSE;
-
+/*
+#include <psprtc.h>
+u64 tickA=0;
+sceRtcGetCurrentTick(&tickA);
+pspTime pt;
+sceRtcSetTick(&pt,&tickA);
+jsdouble tmp = date_msecFromDate(pt.year,pt.month-1,pt.day,pt.hour,pt.minutes,pt.seconds,pt.microseconds/1000);
+*date = tmp;//date is corrected with this but the second are fucked up ... that a choice
+return JS_TRUE;
+*/
         us = PRMJ_Now();
         JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
         JSLL_DIV(ms, us, us2ms);
