@@ -116,7 +116,7 @@ PRMJ_LocalGMTDifference()
     ltime.tm_mday = 2;
     ltime.tm_year = 70;
 #ifdef NO_LIBC
-		puts("warning : mktime() not implemented");
+//		puts("warning : mktime() not implemented");
     return 0 - (24L * 3600L);
 #else
     return (JSInt32)mktime(&ltime) - (24L * 3600L);

@@ -297,9 +297,11 @@ JS_FUN(OskGetStatus){
 	*rval = I2J(sceUtilityOskGetStatus());
 	return JS_TRUE;	
 }
-char* cleanStuff = "sceGuStart(GU_DIRECT);sceGuClear(5);sceGuFinish();";
 JS_FUN(Alert){
 	if(!argc)return JS_TRUE;
+//test gu
+	if(sceGuGetAllStatus()==0x8002013A)
+		js_evaluateScript("sceGuSetup()");
 	memset(&dialog, 0, sizeof(dialog));
 	dialog.base.size = sizeof(dialog);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&dialog.base.language); // Prompt language
@@ -311,22 +313,29 @@ JS_FUN(Alert){
 	dialog.mode = PSP_UTILITY_MSGDIALOG_MODE_TEXT;
 	dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
 	strcpy(dialog.message, J2S(argv[0]));
-	sceUtilityMsgDialogInitStart(&dialog);
-	int done=0;
+	int done=sceUtilityMsgDialogInitStart(&dialog);
 	while(!done){
-		if(argc==1)js_evaluateScript(cleanStuff);
-		else js_evaluateScript(J2S(argv[2]));
-		switch(sceUtilityMsgDialogGetStatus()) {
+		if(argc==1){
+			sceGuStartJs(GU_DIRECT);
+			sceGuClear(5);
+			sceGuFinish();
+		}else js_evaluateScript(J2S(argv[2]));
+		switch(sceUtilityMsgDialogGetStatus()){
 			case 2:sceUtilityMsgDialogUpdate(1);break;
 			case 3:sceUtilityMsgDialogShutdownStart();break;
 			case 0:done=1;break;
 		}
-		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
+		sceDisplayWaitVblankStart();
+		sceGuSwapBuffers();
 	}
 	return JS_TRUE;
 }
 JS_FUN(Confirm){
 	if(!argc)return JS_TRUE;
+//test gu
+	if(sceGuGetAllStatus()==0x8002013A)
+		js_evaluateScript("sceGuSetup()");
+
 	memset(&dialog, 0, sizeof(dialog));
 	dialog.base.size = sizeof(dialog);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&dialog.base.language); // Prompt language
@@ -339,23 +348,31 @@ JS_FUN(Confirm){
 	dialog.options = PSP_UTILITY_MSGDIALOG_OPTION_TEXT;
 	dialog.options |= PSP_UTILITY_MSGDIALOG_OPTION_YESNO_BUTTONS|PSP_UTILITY_MSGDIALOG_OPTION_DEFAULT_NO;		
 	strcpy(dialog.message, J2S(argv[0]));
-	sceUtilityMsgDialogInitStart(&dialog);
-	int done=0;
+	int done = sceUtilityMsgDialogInitStart(&dialog);
 	while(!done){
-		if(argc==1)js_evaluateScript(cleanStuff);
-		else js_evaluateScript(J2S(argv[2]));
+		if(argc==1){
+			sceGuStartJs(GU_DIRECT);
+			sceGuClear(5);
+			sceGuFinish();
+			sceGuSync(0,0); 
+		}else js_evaluateScript(J2S(argv[2]));
 		switch(sceUtilityMsgDialogGetStatus()) {
 			case 2:sceUtilityMsgDialogUpdate(1);break;
 			case 3:sceUtilityMsgDialogShutdownStart();break;
 			case 0:done=1;break;
 		}
-		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
+		sceDisplayWaitVblankStart();
+		sceGuSwapBuffers();
 	}
 	*rval = I2J(dialog.buttonPressed);
 	return JS_TRUE;
 }
 JS_FUN(Prompt){
 	if(argc<2)return JS_TRUE;
+//test gu
+	if(sceGuGetAllStatus()==0x8002013A)
+		js_evaluateScript("sceGuSetup()");
+
 	memset(&data, 0, sizeof(SceUtilityOskData));
 	data.language = PSP_UTILITY_OSK_LANGUAGE_DEFAULT; // Use system default for text input
 	data.lines = 1;
@@ -380,23 +397,36 @@ JS_FUN(Prompt){
 	sceUtilityOskInitStart(&params);
 	int done=0;
 	while(!done){
-		if(argc==2)js_evaluateScript(cleanStuff);
-		else js_evaluateScript(J2S(argv[2]));
+		if(argc==2){//no CB
+			sceGuStartJs(GU_DIRECT);
+			sceGuClear(5);
+			sceGuFinish();
+      sceGuSync(0,0); 
+		}else js_evaluateScript(J2S(argv[2]));
 		switch(sceUtilityOskGetStatus()){
 			case PSP_UTILITY_DIALOG_VISIBLE:sceUtilityOskUpdate(1);break;
 			case PSP_UTILITY_DIALOG_QUIT:sceUtilityOskShutdownStart();break;
 			case PSP_UTILITY_DIALOG_NONE:done = 1;
 			default:break;
 		}
-		js_evaluateScript("sceDisplayWaitVblankStart();sceGuSwapBuffers();");
-	}
+		sceDisplayWaitVblankStart();
+		sceGuSwapBuffers();
+	} 
 	*rval = STRING_TO_JSVAL(js_newString((void*)packUIStr(outtext,js_malloc(data.outtextlength),data.outtextlength),0));
 	return JS_TRUE;
 }
 JS_FUN(Connect){
+//test gu
+	if(sceGuGetAllStatus()==0x8002013A)
+		js_evaluateScript("sceGuSetup()");
+//test net
+	#include <pspnet.h>
+	SceNetMallocStat stat;
+	if(sceNetGetMallocStat(&stat)<0)//netlib !loaded || !inited
+		js_evaluateScript("sceNetInit(128*1024, 42, 4*1024, 42, 4*1024);sceNetInetInit();sceNetApctlInit(0x8000, 48);");
+
 	memset(&Netconf,0,sizeof(Netconf));
 	pspUtilityDialogCommon base;
-
 	int value=0;
 	base.size=sizeof(Netconf);
 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE,&value);
@@ -409,16 +439,17 @@ JS_FUN(Connect){
 	base.accessThread=19;
 	Netconf.base=base;
 	Netconf.action=3;
-	
 	value=sceUtilityNetconfInitStart(&Netconf);
 	*rval = I2J(value);
 	if(value<0)return JS_TRUE;
-	
 	value=0;
 	while(!value){
-		sceGuStartJs(GU_DIRECT);
-		sceGuClear(5);
-		sceGuFinish();
+		if(!argc){
+			sceGuStartJs(GU_DIRECT);
+			sceGuClear(5);
+			sceGuFinish();
+			sceGuSync(0,0);
+		}else js_evaluateScript(J2S(argv[2]));
 		switch(sceUtilityNetconfGetStatus()){
 			case 0:break;//NONE
 			case 1:break;//INIT

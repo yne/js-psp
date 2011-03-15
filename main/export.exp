@@ -42,6 +42,9 @@ PSP_EXPORT_FUNC(c_addModule)
 PSP_EXPORT_FUNC(c_delModule)
 PSP_EXPORT_FUNC(c_strlen)
 PSP_EXPORT_FUNC(c_memalign)
+PSP_EXPORT_FUNC(c_malloc)
+PSP_EXPORT_FUNC(c_free)
+PSP_EXPORT_FUNC(c_realloc)
 PSP_EXPORT_END
  
 PSP_END_EXPORTS 

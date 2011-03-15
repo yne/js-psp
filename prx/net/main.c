@@ -600,6 +600,49 @@ static JSFunctionSpec sockMeth[] = {
 	JS_FN("shutdown",sock_shutdown,0,0,0),
 	JS_FS_END
 };
+static JSFunctionSpec gfunctions[] = {
+	{"sceNetInit",NetInit,4},
+	{"sceNetTerm",NetTerm,0},
+	{"sceNetFreeThreadinfo",FreeThreadinfo,1},
+	{"sceNetThreadAbort",ThreadAbort,1},
+	{"sceNetEtherStrton",EtherStrton,0},
+	{"sceNetEtherNtostr",EtherNtostr,0},
+	{"sceNetGetLocalEtherAddr",GetLocalEtherAddr,0},
+	{"sceNetGetMallocStat",GetMallocStat,0},
+
+	{"sceNetResolverInit",ResolverInit,0},
+	{"sceNetResolverDelete",ResolverDelete,1},
+	{"sceNetResolverCreate",ResolverCreate,0},
+	{"sceNetResolverTerm",ResolverTerm,0},
+	{"sceNetResolverStop",ResolverStop,1},
+	{"sceNetResolverStartNtoA",ResolverStartNtoA,0},
+	{"sceNetResolverStartAtoN",ResolverStartAtoN,0},
+	{"sceNetApctlInit",ApctlInit,2},
+	{"sceNetApctlTerm",ApctlTerm,0},
+	{"sceNetApctlGetInfo",ApctlGetInfo,2},
+	{"sceNetApctlAddHandler",ApctlAddHandler,2},
+	{"sceNetApctlDelHandler",ApctlDelHandler,1},
+	{"sceNetApctlConnect",ApctlConnect,1},
+	{"sceNetApctlDisconnect",ApctlDisconnect,0},
+	{"sceNetApctlGetState",ApctlGetState,0},
+	{"sceNetInetAccept",InetAccept,0},
+	{"sceNetInetBind",InetBind,0},
+	{"sceNetInetConnect",InetConnect,0},
+//	{"inetGetsockopt",InetGetsockopt,0},
+	{"sceNetInetListen",InetListen,0},
+	{"sceNetInetRecv",InetRecv,0},
+//	{"inetRecvfrom",InetRecvfrom,0},
+	{"sceNetInetSend",InetSend,0},
+//	{"inetSendto",InetSendto,0},
+	{"sceNetInetSetsockopt",InetSetsockopt,0},
+	{"sceNetInetShutdown",InetShutdown,0},
+	{"sceNetInetSocket",InetSocket,0},
+	{"sceNetInetClose",InetClose,0},
+	{"sceNetInetGetErrno",InetGetErrno,0},
+	{"sceNetInetInit",InetInit,0},
+	{"sceNetInetTerm",InetTerm,0},
+	{0}
+};
 static JSFunctionSpec functions[] = {
 /*private*/
 	{"_unload",_unload,0},
@@ -701,7 +744,7 @@ static JSPropertiesSpec var[] = {
 };
 int module_start(SceSize args, void *argp){
 	socketObj = js_addClass(NULL,NULL,Socket,1,NULL,sockMeth,NULL,NULL,"Socket",JSCLASS_NEW_RESOLVE,JSCLASS_NO_MANDATORY_MEMBERS,JSCLASS_NO_OPTIONAL_MEMBERS,&SocketClass);
-	js_addModule(functions,0,0,var);
+	js_addModule(functions,gfunctions,0,var);
 	return 0;
 }
 int module_stop(SceSize args, void *argp){

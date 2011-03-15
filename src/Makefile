@@ -3,6 +3,7 @@ USE_PSPSDK_LIBC = 1
 USE_AUTOLOAD = 1
 USE_VFPU = 1
 USE_PALLOC = 1
+DEBUG_MODE = 1
 BUILD_PRX = 1
 
 #DO NOT TOUCH THIS PART
@@ -23,7 +24,11 @@ LIBS += -lpsprtc
 endif
 
 ifeq ($(USE_PALLOC),1)
-CFLAGS += -DUSE_PALLOC
+CFLAGS += -DUSE_PARTITION
+endif
+
+ifeq ($(DEBUG_MODE),1)
+CFLAGS += -DDEBUG_MODE
 endif
 
 ifeq ($(USE_VFPU),1)

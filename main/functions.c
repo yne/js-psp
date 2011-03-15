@@ -196,8 +196,8 @@ char* tryPath(char* folder,char* name){
 int fbEval(char* obj,char* path){
 	char evalStr[256];
 	sprintf(evalStr,"var %s = new Module('%s')",obj,path);
-#ifdef DEBUG
-	printf("autoLoad:%s (%s)\n",path,obj);
+#ifdef DEBUG_MODE
+	printf("autoLoad: %s (as %s)\n",path,obj);
 #endif
 	js_evaluateScript(evalStr);
 	return 0;
@@ -205,6 +205,10 @@ int fbEval(char* obj,char* path){
 int fallbackFunction(const char* name){
 	char path[32],lib[32];
 	int s=0;
+#ifdef DEBUG_MODE
+	printf("fallback: %s\n",name);
+#endif
+
 	strncpy(path,name,31);
 	if(
 	(path[0]=='s'&&path[1]=='c'&&path[2]=='e'&&MAJ(path[3]))||//sce*

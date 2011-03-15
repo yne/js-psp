@@ -29,8 +29,7 @@ JS_FUN(GetSamplingMode){
 	return JS_TRUE;
 }
 JS_FUN(ReadBufferPositive){
-	JSObject*opad;
-	argc?(opad=J2O(argv[0])):(opad=obj);
+	JSObject*opad=argc?J2O(argv[0]):obj;
 	SceCtrlData pad;
 	sceCtrlReadBufferPositive(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
@@ -40,8 +39,7 @@ JS_FUN(ReadBufferPositive){
 	return JS_TRUE;
 }
 JS_FUN(ReadBufferNegative){
-	JSObject*opad;
-	argc?(opad=J2O(argv[0])):(opad=obj);
+	JSObject*opad=argc?J2O(argv[0]):obj;
 	SceCtrlData pad;
 	sceCtrlReadBufferNegative(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
@@ -51,8 +49,7 @@ JS_FUN(ReadBufferNegative){
 	return JS_TRUE;
 }
 JS_FUN(PeekBufferPositive){
-	JSObject*opad;
-	argc?(opad=J2O(argv[0])):(opad=obj);
+	JSObject*opad=argc?J2O(argv[0]):obj;
 	SceCtrlData pad;
 	sceCtrlPeekBufferPositive(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
@@ -62,11 +59,7 @@ JS_FUN(PeekBufferPositive){
 	return JS_TRUE;
 }
 JS_FUN(PeekBufferNegative){
-	JSObject*opad;
-	if(argv[0])
-		opad=J2O(argv[0]);
-	else
-		opad=js_addObj(" ");
+	JSObject*opad=argc?J2O(argv[0]):obj;
 	SceCtrlData pad;
 	sceCtrlPeekBufferNegative(&pad,1);
 	js_setProperty(opad,"Buttons",I2J(pad.Buttons));
@@ -76,11 +69,7 @@ JS_FUN(PeekBufferNegative){
 	return JS_TRUE;
 }
 JS_FUN(PeekLatch){
-	JSObject*olatch;
-	if(argv[0])
-		olatch=J2O(argv[0]);
-	else
-		olatch=js_addObj(" ");
+	JSObject*olatch=argc?J2O(argv[0]):obj;
 	SceCtrlLatch latch_data;
 	sceCtrlPeekLatch(&latch_data);
 	js_setProperty(olatch,"uiMake",I2J(latch_data.uiMake));
@@ -91,11 +80,7 @@ JS_FUN(PeekLatch){
 	return JS_TRUE;
 }
 JS_FUN(ReadLatch){
-	JSObject*olatch;
-	if(argv[0])
-		olatch=J2O(argv[0]);
-	else
-		olatch=js_addObj(" ");
+	JSObject*olatch=argc?J2O(argv[0]):obj;
 	SceCtrlLatch latch_data;
 	sceCtrlPeekLatch(&latch_data);
 	js_setProperty(olatch,"uiMake",I2J(latch_data.uiMake));
@@ -110,16 +95,12 @@ JS_FUN(SetIdleCancelThreshold){
 	return JS_TRUE;
 }
 JS_FUN(GetIdleCancelThreshold){
-	JSObject*Threshold;
-	if(argv[0])
-		Threshold=J2O(argv[0]);
-	else
-		Threshold=js_addObj(" ");
+	JSObject*othreshold=argc?J2O(argv[0]):obj;
 	int idlerest, idleback;
 	sceCtrlGetIdleCancelThreshold(&idlerest,&idleback);
-	js_setProperty(Threshold,"idlerest",I2J(idlerest));
-	js_setProperty(Threshold,"idleback",I2J(idleback));
-	*rval = JSVAL_VOID;//O2J(Threshold);
+	js_setProperty(othreshold,"idlerest",I2J(idlerest));
+	js_setProperty(othreshold,"idleback",I2J(idleback));
+	*rval = JSVAL_VOID;//O2J(othreshold);
 	return JS_TRUE;
 }
 static JSPropertiesSpec var[] = {
