@@ -183,53 +183,23 @@ char* js_strdup(const char* str){
 	return JS_strdup(cx,str);
 }
 void* js_malloc(size_t nbytes){
-#ifdef USE_PARTITION
-	if(!size || size>sceKernelMaxFreeMemSize())return NULL;
-	SceUID part = sceKernelAllocPartitionMemory(2, "mem", PSP_SMEM_Low, size+sizeof(SceUID), NULL);
-	u32* ptr = (u32*)sceKernelGetBlockHeadAddr(part);
-	printf("M UID:%08X p:%p size:%08X\n",part,ptr,size);
-	ptr[0] = part;
-	return &ptr[1];
-#else
 	void* p = JS_malloc(cx,nbytes);
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mmalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
+	printf("\x1B[35;40mJalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
 #endif
 	return p;
-#endif
-}
-void* js_realloc(void *p,size_t nbytes){
-#ifdef USE_PARTITION
-#ifdef DEBUG_MODE
-	printf("R p:%p size:%08X\n",src,size);
-#endif
-	if(src<0x08800000)return my_malloc(size);
-	if(!size){my_free(src);return NULL;}
-	void* dst = my_malloc(size);
-	if(!dst)return NULL;
-	memcpy(dst,src,size);
-	my_free(src);
-	return dst;
-#else
-#ifdef DEBUG_MODE
-	printf("\x1B[35;40mrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
-#endif
-	return JS_realloc(cx,p,nbytes);
-#endif
 }
 void js_free(void *p){
-#ifdef USE_PARTITION
-	if(ptr<0x08800000)return;//printf("free : invalid argument");
-	sceKernelFreePartitionMemory(((u32*)ptr)[-1]);
 #ifdef DEBUG_MODE
-	printf("F UID:%08X p:%p\n",((u32*)ptr)[-1],ptr-4);
-#endif
-#else
-#ifdef DEBUG_MODE
-	printf("\x1B[35;40mfree   0x%08X\n",(int)p);
+	printf("\x1B[35;40mJfree   0x%08X\n",(int)p);
 #endif
 	JS_free(cx,p);
+}
+void* js_realloc(void *p,size_t nbytes){
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mJrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
 #endif
+	return JS_realloc(cx,p,nbytes);
 }
 /* real C stuff (if you don't want use libc in your prx) */
 u32 c_addModule(const char *mod){
@@ -255,6 +225,65 @@ int c_delModule(u32 uid){
 size_t c_strlen(char *str){
 	return strlen(str);
 }
-void* c_memalign(size_t blocksize, size_t bytes){
-	return memalign(blocksize,bytes);
+void* c_malloc(size_t nbytes){
+#ifdef USE_PARTITION
+	if(!nbytes || nbytes>sceKernelMaxFreeMemSize())return NULL;
+	SceUID part = sceKernelAllocPartitionMemory(2, "mem", PSP_SMEM_Low, nbytes+sizeof(SceUID), NULL);
+	u32* ptr = (u32*)sceKernelGetBlockHeadAddr(part);
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mMALLOC UID:%08X p:%p size:%08X\n",part,ptr,nbytes);
+#endif
+	ptr[0] = part;
+	return &ptr[1];
+#else
+	void* p = malloc(nbytes);
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mmalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
+#endif
+	return p;
+#endif
 }
+void* c_memalign(size_t blocksize, size_t bytes){
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mmemalign size:%08X align:%i\n",bytes,blocksize);
+#endif
+#ifdef USE_PARTITION
+	return c_malloc(bytes);
+#else
+	return memalign(blocksize,bytes);
+#endif
+}
+void c_free(void *p){
+#ifdef USE_PARTITION
+	if((u32)p<0x08800000)return;//printf("free : invalid argument");
+	sceKernelFreePartitionMemory(((u32*)p)[-1]);
+#ifdef DEBUG_MODE
+	printf("FREE UID:%08X p:%p\n",((u32*)p)[-1],p-4);
+#endif
+#else
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mfree   0x%08X\n",(int)p);
+#endif
+	free(p);
+#endif
+}
+void* c_realloc(void *p,size_t nbytes){
+#ifdef USE_PARTITION
+#ifdef DEBUG_MODE
+	printf("REALLOC p:%p size:%08X\n",p,nbytes);
+#endif
+	if((size_t)p<0x08800000)return malloc(nbytes);
+	if(!nbytes){free(p);return NULL;}
+	void* dst = malloc(nbytes);
+	if(!dst)return NULL;
+	memcpy(dst,p,nbytes);
+	free(p);
+	return dst;
+#else
+#ifdef DEBUG_MODE
+	printf("\x1B[35;40mrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
+#endif
+	return realloc(p,nbytes);
+#endif
+}
+

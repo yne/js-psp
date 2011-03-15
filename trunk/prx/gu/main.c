@@ -15,6 +15,8 @@ typedef struct ScePspCVector3 {
 } ScePspCVector3;
 #define GU_LIST_VRAM (void*)(0x04000000+0x00200000)
 void* list=NULL;
+static unsigned int __attribute__((aligned(16))) prx_list[262144];
+
 PspGeContext __attribute__((aligned(16))) geContext;
 
 JS_FUN(DepthBuffer){
@@ -541,7 +543,29 @@ JS_FUN(Setup){
 	#define SCR_HEIGHT (272)
 	#define PIXEL_SIZE (4)
 	#define FRAMEBUFFER_SIZE (BUF_WIDTH*SCR_HEIGHT*PIXEL_SIZE)
-
+	sceGuInit();
+	list=prx_list;
+	//list=js_malloc(0x40000);
+	sceGuStart(GU_DIRECT,list);
+	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,(void*)0,BUF_WIDTH);
+	sceGuDrawBuffer(GU_PSM_8888,(void*)0x88000,BUF_WIDTH);
+	sceGuDepthBuffer((void*)0x110000,BUF_WIDTH);
+	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2));
+	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT);
+	sceGuDepthRange(0xc350,0x2710);
+	sceGuScissor(0,0,SCR_WIDTH,SCR_HEIGHT);
+	sceGuEnable(GU_SCISSOR_TEST);
+	sceGuDepthFunc(GU_GEQUAL);
+	sceGuEnable(GU_DEPTH_TEST);
+	sceGuFrontFace(GU_CW);
+	sceGuShadeModel(GU_SMOOTH);
+	sceGuEnable(GU_CULL_FACE);
+	sceGuEnable(GU_CLIP_PLANES);
+	sceGuFinish();
+	sceGuSync(0,0);
+	sceDisplayWaitVblankStart();
+	sceGuDisplay(GU_TRUE);
+/*
 	sceGuInit();
 	list=c_memalign(16,0x40000);
 	//list=js_malloc(0x40000);
@@ -574,6 +598,7 @@ JS_FUN(Setup){
 	sceGuSync(0, 0);
 	sceDisplayWaitVblankStart();
 	sceGuDisplay(GU_TRUE);
+	*/
 	return JS_TRUE;
 }
 u64 last_tick;
@@ -603,8 +628,10 @@ JS_FUN(BlitImage){
 	imgH=J2I(js_getProperty(J2O(argv[0]),"imgH"));
 	texW=J2I(js_getProperty(J2O(argv[0]),"texW"));
 	texH=J2I(js_getProperty(J2O(argv[0]),"texH"));
-
-	sceGuTexImage(0, texW, texH, texW, (void*) J2S(js_getProperty(J2O(argv[0]),"data")));
+	memcpy(0x40000000,J2S(js_getProperty(J2O(argv[0]),"data")),512*272*4);
+//	sceGuCopyImage(GU_PSM_8888, sx, sy, imgW, imgH, texW,J2S(js_getProperty(J2O(argv[0]),"data")), dx, dy, 512, 0x44000000);
+//	return JS_TRUE;
+	sceGuTexImage(GU_PSM_8888, texW, texH, texW, (void*) J2S(js_getProperty(J2O(argv[0]),"data")));
 	//float u = 1.0f / ((float)texW);
 	//float v = 1.0f / ((float)texH);
 	//sceGuTexScale(u, v);
@@ -627,7 +654,6 @@ JS_FUN(BlitImage){
 		sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, v);
 		j += sliceWidth;
 	}
-
 	return JS_TRUE;
 }
 #include <pspge.h>

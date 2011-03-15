@@ -102,5 +102,8 @@ EXT u32 c_addModule(const char *mod);
 EXT int c_delModule(u32 uid);
 EXT size_t c_strlen(const char *str);
 EXT void* c_memalign(size_t blocksize, size_t bytes);
+EXT void* c_malloc(size_t blocksize);
+EXT void* c_free(void* p);
+EXT void* c_realloc(void* p, size_t bytes);
 
 #endif

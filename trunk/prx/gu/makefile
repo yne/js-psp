@@ -70,4 +70,5 @@ include $(PSPSDK)/lib/build.mak
 
 all :
 	psp-packer.exe $(TARGET).prx
-#	rm *.o $(TARGET).elf
+	rm $(TARGET).elf
+#	rm *.o
