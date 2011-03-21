@@ -81,6 +81,16 @@ int module_start(SceSize args, void *argp){
 	4 > variables defined as global ex: modloaded will be called using modloaded, can make conflit with another module use the same variable name
 	*/
 	js_addModule(lfun,gfun,lvar,gvar);
+	/*
+	js_addClass(
+		NULL,NULL,js_kinclude,1,
+		NULL,KModuleMethodes,NULL,NULL,
+		"KModule",JSCLASS_NEW_RESOLVE,
+		JSCLASS_NO_MANDATORY_MEMBERS,
+		JSCLASS_NO_OPTIONAL_MEMBERS,
+		NULL
+	);
+	*/
 	
 	js_addClass(
 		NULL, // object to define the class (leave NULL to use the global object)
@@ -101,7 +111,7 @@ int module_start(SceSize args, void *argp){
 		(JSResolveOp)my_resolve,
 		my_convert,
 		myFinalizeStub,
-		JSCLASS_NO_OPTIONAL_MEMBERS
+		JSCLASS_NO_OPTIONAL_MEMBERS,NULL
 	);
 	return 0;
 }

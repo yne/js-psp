@@ -26,27 +26,41 @@ typedef void *(*SceHttpReallocFunction)(void *p, SceSize size);
 typedef void (*SceHttpFreeFunction)(void *p);
 
 int sceHttpSetMallocFunction(SceHttpMallocFunction malloc_func,
-							 SceHttpFreeFunction free_func,
-							 SceHttpReallocFunction realloc_func);
+				 SceHttpFreeFunction free_func,
+				 SceHttpReallocFunction realloc_func);
 /* -------------------------- */
-u32 puri=0,phttp=0,lhttp=0,ihttp=0;
-JS_FUN(Init){//[poolSize]
+u32 reso=0,puri=0,phttp=0,lhttp=0,ihttp=0;
+char* buf=NULL;//read data buffer
+const int bufSize=32*1024;//32ko
+int init(int size){
 	if(ihttp)
-		return JS_TRUE;
+		return 0;
+	if(!reso){
+		reso=c_addModule("flash0:/kd/pspnet_resolver.prx");
+		sceNetResolverInit();
+	}
 	puri=c_addModule("flash0:/kd/libparse_uri.prx");
 	phttp=c_addModule("flash0:/kd/libparse_http.prx");
 	lhttp=c_addModule("flash0:/kd/libhttp.prx");
-	*rval = I2J(sceHttpInit(argc?J2I(argv[0]):20000));
-	if(!J2I(argv[0]))
+	int ret = sceHttpInit(size?size:20000);
+	if(ret<0){js_test(__LINE__);return js_test(ret);}
+	if(!size)
 		sceHttpSetMallocFunction(js_malloc,js_free,js_realloc);
+	buf=c_malloc(bufSize);
 	ihttp=1;
+	return ret;
+}
+JS_FUN(Init){//[poolSize]
+	*rval = I2J(init(argc?J2I(argv[0]):0));
 	return JS_TRUE;
 }
 JS_FUN(End){
+	*rval = I2J(sceHttpEnd());
 	if(lhttp)lhttp=c_delModule(lhttp);
 	if(phttp)phttp=c_delModule(phttp);
 	if(puri)puri=c_delModule(puri);
-	*rval = I2J(sceHttpEnd());
+	if(reso){sceNetResolverTerm();c_delModule(reso);}
+	if(buf)c_free(buf);
 	ihttp=0;
 	return JS_TRUE;
 }
@@ -202,6 +216,44 @@ JS_FUN(SetSendTimeOut){//cnx
 	*rval = I2J(sceHttpSetSendTimeOut(J2I(argv[0]),J2U(argv[1])));
 	return JS_TRUE;
 }
+/* utils functions */
+JS_FUN(Get){//"url"|{param}
+	if(!argc)return JS_TRUE;
+	int template, cnx, req, ret, status;
+//	SceULong64 contentsize;
+//	unsigned char buf[0x2000];
+	if((template=sceHttpCreateTemplate("libhttp/1.0.0", 1, 1))<0){js_test(__LINE__);return js_test(template);}
+	if((ret=sceHttpSetResolveTimeOut(template, 3*1000*1000))<0){js_test(__LINE__);return js_test(ret);}
+	if((ret=sceHttpSetRecvTimeOut(template, 60*1000*1000))<0){js_test(__LINE__);return js_test(ret);}
+	if((ret=sceHttpSetSendTimeOut(template, 60*1000*1000))<0){js_test(__LINE__);return js_test(ret);}
+	if((cnx = sceHttpCreateConnectionWithURL(template, J2S(argv[0]), 0))<0){js_test(__LINE__);return js_test(cnx);}
+	if((req = sceHttpCreateRequestWithURL(cnx, PSP_HTTP_METHOD_GET, (char*)J2S(argv[0]), 0))<0){js_test(__LINE__);return js_test(req);}
+	if((ret = sceHttpSendRequest(req, 0, 0))<0){js_test(__LINE__);return js_test(ret);}
+	if((ret = sceHttpGetStatusCode(req, &status))<0){js_test(__LINE__);return js_test(ret);}
+	if(argc>=2){//file mode
+		SceUID fd = sceIoOpen(J2S(argv[1]), PSP_O_WRONLY | PSP_O_CREAT, 0777);
+		while(1){
+			if(!(ret = sceHttpReadData(req,buf,bufSize))||(ret<0))break;
+			sceIoWrite(fd,buf,ret);
+		}
+		sceIoClose(fd);
+	}else{//var mod
+		int len=sceHttpReadData(req,buf,bufSize);
+		if(len>=0){
+			char* dst=js_malloc(len);
+			memcpy(dst,buf,len);
+			*rval = S2J(dst,len);
+		}
+	}
+	sceHttpDeleteRequest(req);
+	sceHttpDeleteConnection(cnx);
+	sceHttpDeleteTemplate(template);
+	return JS_TRUE;
+}
+JS_FUN(Post){//"url"|{param}
+	return JS_TRUE;
+}
+
 /* XMLHttpRequest stuff */
 JS_FUN(XMLHttpRequest){
 	js_setProperty(obj,"userAgent",argv[0]);
@@ -213,7 +265,11 @@ JS_FUN(XMLHttpRequest){
 	return JS_TRUE;
 }
 static JSFunctionSpec functions[] = {
+//custom
+	{"get",Get,1},
+	{"post",Post,1},
 	{"_unload",End,0},//unload callback
+//sce
 	{"init",Init,1},
 	{"end",End,0},
 	{"createTemplate",CreateTemplate,3},
@@ -242,6 +298,12 @@ static JSFunctionSpec functions[] = {
 	{"setSendTimeOut",SetSendTimeOut,2},
 	{"setResolveTimeOut",SetResolveTimeOut,2},
 	{"setResolveRetry",SetResolveRetry,2},
+	{0}
+};
+static JSFunctionSpec gfunctions[] = {
+//psptube compatibility
+	{"GetContents",Get,1},
+	{"PostContents",Post,1},
 	{0}
 };
 static JSPropertiesSpec var[] = {
@@ -277,14 +339,7 @@ int xhr_get(SceSize argc,void *argv){
 	return 0;
 }
 JS_METH(xhr_open){
-	if(!ihttp){
-		puri=c_addModule("flash0:/kd/libparse_uri.prx");
-		phttp=c_addModule("flash0:/kd/libparse_http.prx");
-		lhttp=c_addModule("flash0:/kd/libhttp.prx");
-		sceHttpInit(0);
-		sceHttpSetMallocFunction(js_malloc,js_free,js_realloc);
-		ihttp=1;
-	}
+	init(0);
 	js_setProperty(J2O(ARGV[-1]),"url",ARGV[1]);
 	int template = sceHttpCreateTemplate(J2S(js_getProperty(J2O(ARGV[-1]),"userAgent")),1,0);
 	js_setProperty(J2O(ARGV[-1]),"template",I2J(template));
@@ -347,7 +402,7 @@ static JSFunctionSpec XMLHttpRequestMethodes[] = {
 	JS_FS_END
 };
 int module_start(SceSize args, void *argp){
-	js_addModule(functions,0,0,var);
+	js_addModule(functions,gfunctions,0,var);
 	js_addClass(NULL,NULL,XMLHttpRequest,2,NULL,XMLHttpRequestMethodes,NULL,NULL,"XMLHttpRequest",
 		JSCLASS_NEW_RESOLVE,NULL,NULL,class_get,class_set,NULL,NULL,NULL,NULL,JSCLASS_NO_OPTIONAL_MEMBERS,NULL);
 	return 0;

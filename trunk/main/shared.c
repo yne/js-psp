@@ -162,6 +162,9 @@ jsval js_evaluateScript(char* eval){
 }
 jsval js_callFunctionName(JSObject *obj,const char* name,uintN argc,jsval *argv){
 	if(!obj)obj=gobj;
+	JSBool haz;
+	JS_HasProperty(cx,obj,"_unload",&haz);
+	if(!haz)return JS_TRUE;
 	jsval rval;
 	JS_CallFunctionName(cx,obj,name,argc,argv,&rval);
 	return rval;
@@ -205,9 +208,9 @@ void* js_realloc(void *p,size_t nbytes){
 u32 c_addModule(const char *mod){
 	int ret=0;
 	u32 uid = sceKernelLoadModule(mod,0,NULL);
-	sceKernelStartModule(uid,0,NULL,&ret,NULL);
+	int start = sceKernelStartModule(uid,0,NULL,&ret,NULL);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mLoad/Start host0:/%s UID: 0x%08X\n",mod,uid);
+	printf("\x1B[33;40mLoad/Start %s UID: 0x%08X (%08X)\n",mod,uid,start);
 #endif
 	return uid;
 }

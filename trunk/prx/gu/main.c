@@ -14,9 +14,7 @@ typedef struct ScePspCVector3 {
 	signed char x, y, z;
 } ScePspCVector3;
 #define GU_LIST_VRAM (void*)(0x04000000+0x00200000)
-void* list=NULL;
-static unsigned int __attribute__((aligned(16))) prx_list[262144];
-
+static unsigned int __attribute__((aligned(16))) list[262144];
 PspGeContext __attribute__((aligned(16))) geContext;
 
 JS_FUN(DepthBuffer){
@@ -61,23 +59,27 @@ JS_FUN(Fog){
 }
 JS_FUN(Init){
 	sceGuInit();
+	/*
 	if(list)//list is already inited
 		return JS_TRUE;
 	if(!argc)//no size specified
-		list=js_malloc(0x40000);//malloc 262144 in RAM
+		list=c_malloc(0x40000);//malloc 262144 in RAM
 	else{//size specified
 		if(J2I(argv[0])>0)//positive size :
-			list=js_malloc(J2I(argv[0]));//malloc in RAM
+			list=c_malloc(J2I(argv[0]));//malloc in RAM
 		else//negative size :
 			list=(void*)((0x04000000+(3*4*512*272)-J2I(argv[0])));//store in VRAM (juste after DepthBuffer)
-	}      //0x198000             
+	}      //0x198000
+	*/
 	return JS_TRUE;
 }
 JS_FUN(Term){
 	sceGuTerm();
+	/*
 	if(list>(void*)0x08800000)//list stored in RAM so free is needed
-		js_free(list);
+		c_free(list);
 	list=NULL;
+	*/
 	return JS_TRUE;
 }
 JS_FUN(Break){
@@ -536,6 +538,7 @@ JS_FUN(Unload){
 	sceKernelStartThread(sceKernelCreateThread("unload",stun,0x18,PSP_THREAD_ATTR_USER,0,NULL),0,NULL);
 	return JS_TRUE;
 }
+//static unsigned int __attribute__((aligned(16))) prx_list[262144];
 //custom
 JS_FUN(Setup){
 	#define BUF_WIDTH (512)
@@ -544,25 +547,36 @@ JS_FUN(Setup){
 	#define PIXEL_SIZE (4)
 	#define FRAMEBUFFER_SIZE (BUF_WIDTH*SCR_HEIGHT*PIXEL_SIZE)
 	sceGuInit();
-	list=prx_list;
-	//list=js_malloc(0x40000);
+//	list=prx_list;
+//	list=c_malloc(0x40000);
 	sceGuStart(GU_DIRECT,list);
-	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,(void*)0,BUF_WIDTH);
-	sceGuDrawBuffer(GU_PSM_8888,(void*)0x88000,BUF_WIDTH);
-	sceGuDepthBuffer((void*)0x110000,BUF_WIDTH);
-	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2));
-	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT);
-	sceGuDepthRange(0xc350,0x2710);
-	sceGuScissor(0,0,SCR_WIDTH,SCR_HEIGHT);
+	sceGuDrawBuffer(GU_PSM_8888, (void*)FRAMEBUFFER_SIZE, BUF_WIDTH);
+	sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, (void*)0, BUF_WIDTH);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
+	sceGuDepthBuffer((void*) (FRAMEBUFFER_SIZE*2), BUF_WIDTH);
+	sceGuOffset(2048 - (SCR_WIDTH / 2), 2048 - (SCR_HEIGHT / 2));
+	sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
+	sceGuDepthRange(0xc350, 0x2710);
+	sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	sceGuEnable(GU_SCISSOR_TEST);
+	sceGuAlphaFunc(GU_GREATER, 0, 0xff);
+	sceGuEnable(GU_ALPHA_TEST);
 	sceGuDepthFunc(GU_GEQUAL);
 	sceGuEnable(GU_DEPTH_TEST);
 	sceGuFrontFace(GU_CW);
 	sceGuShadeModel(GU_SMOOTH);
 	sceGuEnable(GU_CULL_FACE);
+	sceGuEnable(GU_TEXTURE_2D);
 	sceGuEnable(GU_CLIP_PLANES);
+	sceGuTexMode(GU_PSM_8888, 0, 0, 0);
+	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+	sceGuAmbientColor(0xffffffff);
+	sceGuEnable(GU_BLEND);
+	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
 	sceGuFinish();
-	sceGuSync(0,0);
+	sceGuSync(0, 0);
+	
 	sceDisplayWaitVblankStart();
 	sceGuDisplay(GU_TRUE);
 /*
@@ -628,7 +642,7 @@ JS_FUN(BlitImage){
 	imgH=J2I(js_getProperty(J2O(argv[0]),"imgH"));
 	texW=J2I(js_getProperty(J2O(argv[0]),"texW"));
 	texH=J2I(js_getProperty(J2O(argv[0]),"texH"));
-	memcpy(0x40000000,J2S(js_getProperty(J2O(argv[0]),"data")),512*272*4);
+//	memcpy(0x40000000,J2S(js_getProperty(J2O(argv[0]),"data")),512*272*4);
 //	sceGuCopyImage(GU_PSM_8888, sx, sy, imgW, imgH, texW,J2S(js_getProperty(J2O(argv[0]),"data")), dx, dy, 512, 0x44000000);
 //	return JS_TRUE;
 	sceGuTexImage(GU_PSM_8888, texW, texH, texW, (void*) J2S(js_getProperty(J2O(argv[0]),"data")));
@@ -1169,9 +1183,10 @@ int module_start(SceSize args, void *argp){
 	return 0;
 }
 int module_stop(SceSize args, void *argp){
+/*
 	if(list>(void*)0x08800000){//list stored in RAM so free is needed
-		js_free(list);
-		//c_free(list);
+		c_free(list);
 	}
+	*/
 	return 0;
 }

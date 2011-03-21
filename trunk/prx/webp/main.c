@@ -138,7 +138,7 @@ JS_FUN(_Unload){
 }
 
 static JSFunctionSpec gfunctions[] = {
-	{"webpOpen",Open,1},
+	{"Webp",Open,1},
 	{0}
 };
 static JSFunctionSpec functions[] = {

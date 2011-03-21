@@ -10,9 +10,13 @@
 PSP_MODULE_INFO("libJS" ,PSP_MODULE_USER,1,1);
 SceUID mainTh;//used on unload to avoid exeption
 int sce_newlib_heap_kb_size;//defined later
+JSRuntime *rt;
 
 int module_stop(SceSize args,void* argp){
 	if(argp)puts(argp);else puts("external request");
+	mod_remAll();
+	if(cx)JS_DestroyContext(cx);
+	if(rt)JS_DestroyRuntime(rt);
 	JS_ShutDown();
 	extern int __psp_free_heap(void);
 	__psp_free_heap();
@@ -51,7 +55,7 @@ int _start(SceSize args,void* argp){
 	//printf("file:%s\n",argv[1]+1?argv[1]:"main.js");
 //main
 	do{
-		JSRuntime *rt = JS_NewRuntime(sce_newlib_heap_kb_size*1024);// runtime
+		rt = JS_NewRuntime(sce_newlib_heap_kb_size*1024);// runtime
 		cx = JS_NewContext(rt, 8192); // Context
 		JS_SetErrorReporter(cx, reportError);//the error callback
 		static JSClass global_class={"global",JSCLASS_GLOBAL_FLAGS,JSCLASS_DEFAULT_MANDATORY_MEMBERS, JSCLASS_NO_OPTIONAL_MEMBERS};
@@ -82,8 +86,6 @@ int _start(SceSize args,void* argp){
 		//printf("returned : %08X\n",JSVAL_TO_INT(result));
 		JS_MaybeGC(cx);
 		JS_DestroyScript(cx, script);
-		JS_DestroyContext(cx);
-		JS_DestroyRuntime(rt);
 	}while(0);
 	module_stop(0,"end of main");//exit
 	return 0;
