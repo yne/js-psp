@@ -6,6 +6,52 @@
 
 #include "shared.h"
 #include "boot.h"
+/* table function */
+typedef struct{
+	void* prev;//Mod*
+	JSObject* obj;
+}Mod;
+Mod* last = NULL;
+
+void mod_add(JSObject* obj){
+	Mod* prev=last;
+	Mod* mod = malloc(sizeof(Mod));
+	mod->obj=obj;
+	mod->prev=prev;
+	last=mod;
+}
+Mod* find(JSObject* obj){
+	Mod* mod=last;
+	while(mod){
+		if(mod->obj==obj)return mod;
+		mod=mod->prev;
+	}
+	return NULL;
+}
+int c_exclude(JSObject* obj);
+void mod_rem(JSObject* obj){
+	Mod* mod=last;
+	Mod* it=find(obj);
+	if(!it){/*printf("%p not found\n",obj);*/return;}
+	if(it==mod){
+		last = it->prev;
+		c_exclude(it->obj);
+		return free(it);
+	}
+	while(mod){
+		if(mod->prev==it){
+			mod->prev = it->prev;
+			c_exclude(it->obj);
+			return free(it);
+		}
+		mod=mod->prev;
+	}
+}
+void mod_remAll(){
+	while(last){
+		mod_rem(last->obj);
+	}
+}
 
 /* my custom functions */
 
@@ -30,7 +76,7 @@ JS_FUN(js_meminfo){
   return JS_TRUE;
 }
 JS_FUN(js_clear){
-	JS_MaybeGC(cx);
+	JS_GC(cx);
   return JS_TRUE;
 }
 JS_FUN(js_run){
@@ -114,6 +160,7 @@ JS_FUN(js_include){
 	}
 	js_setProperty(obj,"UID",I2J(mod));
 	js_setProperty(obj,"path",argv[0]);
+	mod_add(obj);
 	mod_tmp_lfun=NULL;
 	mod_tmp_gfun=NULL;
 	mod_tmp_lvar=NULL;
@@ -150,16 +197,20 @@ JS_METH(js_kcall){
 		*(vp) = I2J(KCall(J2U(js_getProperty((JSObject*)THIS,"UID")),J2U(ARGV[0]),J2U(ARGV[1])));
   return JS_TRUE;
 }
-JS_METH(js_exclude){
-	int ret=0;
-	js_callFunctionName(J2O(ARGV[-1]),"_unload",0,NULL);
+int c_exclude(JSObject* obj){
+	int ret=-1;
+	js_callFunctionName(obj,"_unload",0,NULL);
+	SceUID mod = J2I(js_getProperty(obj,"UID"));
+	u32 res = sceKernelStopModule(mod, 0, NULL, &ret, NULL);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mStop/Unload %s : %i %08X\n",J2S(js_getProperty(J2O(ARGV[-1]),"path")),ret,sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")),0,NULL,&ret,NULL));
-#else
-	sceKernelStopModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")), 0, NULL, &ret, NULL);
+	printf("\x1B[33;40mStop/Unload %s : %i %08X\n",J2S(js_getProperty(obj,"path")),ret,res);
 #endif
-	sceKernelUnloadModule(J2I(js_getProperty(J2O(ARGV[-1]),"UID")));
-	*(vp) = I2J(ret);
+	sceKernelUnloadModule(J2I(js_getProperty(obj,"UID")));
+	mod_rem(obj);
+	return ret;
+}
+JS_METH(js_exclude){
+	*(vp) = I2J(c_exclude(J2O(ARGV[-1])));
 	return JS_TRUE;
 }
 static JSFunctionSpec ModuleMethodes[] = {

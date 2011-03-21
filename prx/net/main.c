@@ -511,11 +511,15 @@ JS_FUN(AdhocMatchingGetPoolStat){
 }
 JS_FUN(_unload){
 	//resolverTerm
-	sceNetResolverTerm();
-	if(resolver_uid)c_delModule(resolver_uid);
+	if(resolver_uid){
+		js_test(sceNetResolverTerm());
+		c_delModule(resolver_uid);
+	}
 	//apctlTerm
-	sceNetApctlTerm();
-	if(apctl_uid)c_delModule(apctl_uid);
+	if(apctl_uid){
+		sceNetApctlTerm();
+		c_delModule(apctl_uid);
+	}
 	//inetTerm
 	sceNetInetTerm();
 	//term
