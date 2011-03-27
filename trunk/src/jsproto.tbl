@@ -89,7 +89,11 @@ JS_PROTO(Function,               2,     js_InitFunctionAndObjectClasses)
 JS_PROTO(Array,                  3,     js_InitArrayClass)
 JS_PROTO(Boolean,                4,     js_InitBooleanClass)
 JS_PROTO(Call,                   5,     js_InitCallClass)
+#if DATE_PRX
+JS_PROTO(Date,                   6,     js_InitNullClass)
+#else
 JS_PROTO(Date,                   6,     js_InitDateClass)
+#endif
 JS_PROTO(Math,                   7,     js_InitMathClass)
 JS_PROTO(Number,                 8,     js_InitNumberClass)
 JS_PROTO(String,                 9,     js_InitStringClass)
