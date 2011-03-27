@@ -79,18 +79,50 @@ JS_FUN(js_clear){
 	JS_GC(cx);
   return JS_TRUE;
 }
-JS_FUN(js_run){
-	JSScript *script=JS_CompileFile(cx, gobj, J2S(argv[0]));
+int c_run(char*path){
+	puts(path);
+	JSScript *script=JS_CompileFile(cx, gobj, path);
 	jsval result;
-	*rval=I2J(0);//if no error occure, run return 0
-	if(!script){
-		*rval=I2J(-1);//return -1 on a compilation error (bad path etc...)
+	if(!script)return -1;
+	if(!JS_ExecuteScript(cx, gobj, script, &result));//return -2;
+	JS_GC(cx);
+	JS_DestroyScript(cx, script);
+	return JS_TRUE;
+}
+int isJsFile(char* n){
+	int i=255;
+	while(!n[--i]);
+	return(n[i--]=='s'&&n[i--]=='j'&&n[i--]=='.');
+}
+JS_FUN(js_run){
+	SceIoDirent dir;
+	SceUID fd=sceIoDopen(J2S(argv[0]));
+	if(fd>0){//is a directory : run *.js
+		if(!J2SL(argv[0])||((J2SL(argv[0])==1)&&J2S(argv[0])[0]=='.'))return JS_TRUE;
+		sceIoChdir(J2S(argv[0]));
+		while(sceIoDread(fd,&dir)>0){
+			if(dir.d_stat.st_size&&isJsFile(dir.d_name))
+				c_run(dir.d_name);
+		}
+		sceIoChdir(cwd);
+		sceIoClose(fd);
 		return JS_TRUE;
 	}
-	if(!JS_ExecuteScript(cx, gobj, script, &result))
-		*rval=I2J(-2);//return -2 on a execution error
-	JS_MaybeGC(cx);
-	JS_DestroyScript(cx, script);
+	if((fd=sceIoOpen(J2S(argv[0]),PSP_O_RDONLY,0777))>0){//is a file
+		sceIoClose(fd);
+		c_run(J2S(argv[0]));
+	}
+	/*	
+	c_run(J2S(argv[0]));
+	
+	SceUID fd=sceIoOpen(path,PSP_O_RDONLY,0777));
+	if(fd>0)sceIoClose(fd);
+	if(fd==80010002){
+	
+	}
+
+
+	*/
   return JS_TRUE;
 }
 JS_FUN(js_delay){
