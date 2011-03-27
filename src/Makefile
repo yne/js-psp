@@ -5,6 +5,7 @@ USE_VFPU = 1
 USE_PALLOC = 1
 DEBUG_MODE = 1
 BUILD_PRX = 1
+DATE_PRX = 1
 
 #DO NOT TOUCH THIS PART
 ifeq ($(BUILD_PRX),1)
@@ -40,6 +41,10 @@ ifeq ($(USE_AUTOLOAD),1)
 CFLAGS += -DUSE_AUTOLOAD
 endif
 
+ifeq ($(DATE_PRX),1)
+CFLAGS += -DDATE_PRX
+endif
+
 #COMMON PART
 
 CFLAGS += -G0 -Wall -O2 -DRND_PRODQUOT
@@ -52,7 +57,6 @@ OBJS += \
 		jsatom.o \
 		jsbool.o \
 		jscntxt.o \
-		jsdate.o \
 		jsdbgapi.o \
 		jsdhash.o \
 		jsdtoa.o \
@@ -82,6 +86,7 @@ OBJS += \
 		jsxdrapi.o \
 		jsxml.o \
 		prmjtime.o \
+#		jsdate.o \
 		
 
 PSPSDK=$(shell psp-config --pspsdk-path)

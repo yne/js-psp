@@ -1321,29 +1321,32 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
         return JS_FALSE;
 
     /* Initialize the rest of the standard objects and functions. */
-    return js_InitArrayClass(cx, obj) &&
-           js_InitBlockClass(cx, obj) &&
-           js_InitBooleanClass(cx, obj) &&
-           js_InitCallClass(cx, obj) &&
-           js_InitExceptionClasses(cx, obj) &&
-           js_InitMathClass(cx, obj) &&
-           js_InitNumberClass(cx, obj) &&
-           js_InitRegExpClass(cx, obj) &&
-           js_InitStringClass(cx, obj) &&
-           js_InitEval(cx, obj) &&
+    return js_InitArrayClass(cx, obj)
+           &&js_InitBlockClass(cx, obj)
+           &&js_InitBooleanClass(cx, obj)
+           &&js_InitCallClass(cx, obj)
+           &&js_InitExceptionClasses(cx, obj)
+           &&js_InitMathClass(cx, obj)
+           &&js_InitNumberClass(cx, obj)
+           &&js_InitRegExpClass(cx, obj)
+           &&js_InitStringClass(cx, obj)
+           &&js_InitEval(cx, obj)
 #if JS_HAS_SCRIPT_OBJECT
-           js_InitScriptClass(cx, obj) &&
+           &&js_InitScriptClass(cx, obj)
 #endif
 #if JS_HAS_XML_SUPPORT
-           js_InitXMLClasses(cx, obj) &&
+           &&js_InitXMLClasses(cx, obj)
 #endif
 #if JS_HAS_FILE_OBJECT
-           js_InitFileClass(cx, obj) &&
+           &&js_InitFileClass(cx, obj)
 #endif
 #if JS_HAS_GENERATORS
-           js_InitIteratorClasses(cx, obj) &&
+           &&js_InitIteratorClasses(cx, obj)
 #endif
-           js_InitDateClass(cx, obj);
+#ifndef DATE_PRX
+           &&js_InitDateClass(cx, obj)
+#endif
+					 ;
 }
 
 #define CLASP(name)                 ((JSClass *)&js_##name##Class)
@@ -1388,7 +1391,9 @@ static JSStdName standard_class_atoms[] = {
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
     {js_InitBlockClass,                 EAGER_ATOM_AND_CLASP(Block)},
     {js_InitBooleanClass,               EAGER_ATOM_AND_CLASP(Boolean)},
+#ifndef DATE_PRX
     {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
+#endif
     {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
     {js_InitNumberClass,                EAGER_ATOM_AND_CLASP(Number)},
     {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
