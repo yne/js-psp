@@ -40,6 +40,7 @@ int _start(SceSize args,void* argp){
 	int argc=0,i=0;
 	while((i+=strlen(argv[argc++]=&((char*)argp)[i])+1)<args);
 	if(argc<2)module_stop(0,"libjs script.js 1024");
+	strcpy(cwd,argv[0]);
 //	for(i=0;argv[i]+1;i++)
 //		printf("argv[%i] : %s\n",i,argv[i]);
 //set path

@@ -55,6 +55,8 @@ typedef struct kfindproc {
 #endif
 
 /* variables hosted by the interpreter */
+char cwd[256];
+
 JSContext *cx;
 JSObject *gobj;
 
