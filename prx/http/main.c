@@ -31,7 +31,7 @@ int sceHttpSetMallocFunction(SceHttpMallocFunction malloc_func,
 /* -------------------------- */
 u32 reso=0,puri=0,phttp=0,lhttp=0,ihttp=0;
 char* buf=NULL;//read data buffer
-const int bufSize=32*1024;//32ko
+const int bufSize=128*1024;//32ko
 int init(int size){
 	if(ihttp)
 		return 0;
@@ -232,8 +232,10 @@ JS_FUN(Get){//"url"|{param}
 	if((ret = sceHttpGetStatusCode(req, &status))<0){js_test(__LINE__);return js_test(ret);}
 	if(argc>=2){//file mode
 		SceUID fd = sceIoOpen(J2S(argv[1]), PSP_O_WRONLY | PSP_O_CREAT, 0777);
+		js_test(fd);
 		while(1){
 			if(!(ret = sceHttpReadData(req,buf,bufSize))||(ret<0))break;
+			js_test(ret);
 			sceIoWrite(fd,buf,ret);
 		}
 		sceIoClose(fd);

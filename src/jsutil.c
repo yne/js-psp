@@ -53,7 +53,11 @@
 
 JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 {
-    fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
+#ifdef DEBUG_MODE
+    fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);		
+#else
+    puts("Assertion failure");
+#endif
 #if defined(WIN32)
     DebugBreak();
     exit(3);

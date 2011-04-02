@@ -28,10 +28,17 @@ int module_stop(SceSize args,void* argp){
 	return 0;
 }
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
+#ifdef DEBUG_MODE
 	if(report->filename)// error in file
 		printf("\x1B[1;37;41m%s:%i:%s\x1B[0;39;109m\n",report->filename,report->lineno,message);
 	else// internal error
 		printf("\x1B[1;37;41m%s\x1B[0;39;109m\n",message);
+#else
+	if(report->filename)
+		puts("file error");
+	else
+		puts("internal error");
+#endif
 	module_stop(0,"script error");//exit b4 bus error 8)
 }
 int _start(SceSize args,void* argp){
@@ -40,11 +47,11 @@ int _start(SceSize args,void* argp){
 	int argc=0,i=0;
 	while((i+=strlen(argv[argc++]=&((char*)argp)[i])+1)<args);
 	if(argc<2)module_stop(0,"libjs script.js 1024");
-	strcpy(cwd,argv[0]);
+//	strcpy(cwd,argv[0]);
 //	for(i=0;argv[i]+1;i++)
 //		printf("argv[%i] : %s\n",i,argv[i]);
 //set path
-	char cwd[64];
+//	char cwd[64];
 	memcpy(cwd,argv[0]+1?argv[0]:"ms0:/",64);
 	for(i=strlen(cwd);i>0;i--)
 		if(cwd[i]=='/'){cwd[i+1]=0;break;}
@@ -76,12 +83,12 @@ int _start(SceSize args,void* argp){
 		JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
 		JSScript *script=JS_CompileFile(cx, gobj,argv[1]+1?argv[1]:"main.js");
 		if(!script){
-			printf("\x1B[1;37;41mCompilation error\n");
+			puts("\x1B[1;37;41mCompilation error\n");
 			break;
 		}
 		jsval result;
 		if (!JS_ExecuteScript(cx, gobj, script, &result)){
-			printf("\x1B[1;37;41mExecution error\n");
+			puts("\x1B[1;37;41mExecution error\n");
 			break;
 		}
 		//printf("returned : %08X\n",JSVAL_TO_INT(result));

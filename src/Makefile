@@ -43,6 +43,9 @@ endif
 
 ifeq ($(DATE_PRX),1)
 CFLAGS += -DDATE_PRX
+OBJS += prmjtime.lib.o
+else
+OBJS += jsdate.o prmjtime.o
 endif
 
 #COMMON PART
@@ -85,8 +88,6 @@ OBJS += \
 		jsutil.o \
 		jsxdrapi.o \
 		jsxml.o \
-		prmjtime.o \
-#		jsdate.o \
 		
 
 PSPSDK=$(shell psp-config --pspsdk-path)
