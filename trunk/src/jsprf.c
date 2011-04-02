@@ -361,8 +361,11 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
         }
     }
 #endif
+#ifdef DEBUG_MODE
     sprintf(fout, fin, d);
-
+#else
+		puts("unimplemented (double) parsing");
+#endif
     /*
     ** This assert will catch overflow's of fout, when building with
     ** debugging on. At least this way we can track down the evil piece

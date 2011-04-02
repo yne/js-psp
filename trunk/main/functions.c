@@ -56,7 +56,8 @@ void mod_remAll(){
 /* my custom functions */
 
 JS_FUN(js_print){
-	printf("\x1B[1;37;40m%s\x1B[0;39;49m",J2S(argv[0]));
+	puts(J2S(argv[0]));
+//	printf("\x1B[1;37;40m%s\x1B[0;39;49m",J2S(argv[0]));
 	return JS_TRUE;
 }
 JS_FUN(js_exit){
@@ -139,20 +140,25 @@ u32 fun2nid(char* fun){
 extern u32 js_searchInfo(KfindProc);
 u32 getKinfo(char* name){
 	name[strrchr(name,'.')-name]=0;//module&librairie name
+#ifdef DEBUG_MODE
 	printf("hook %s :",name);
+#endif
 	char fun[80];
 	KfindProc chaine;
 	strncpy(chaine.mod,name,80);
 	strncpy(chaine.lib,name,80);
-	sprintf(fun,"%s_addModule",name);
+	strcpy(fun,name);
+	strcat(fun,"addModule");
 	chaine.nid=fun2nid(fun);
 	u32 addr = js_searchInfo(chaine);
 	if(addr){
 		//u32 (*fun)() = (void*)addr;
+#ifdef DEBUG_MODE
 		printf(" 0x%08X !\n",addr);
+#endif
 		return addr;
 	}
-	printf(" not found !\n");
+	puts(" not found !\n");
 	return 0;
 }
 int ldstart(const char* path){
@@ -168,7 +174,11 @@ JS_FUN(js_include){
 	
 	if(mod != uid){
 		if(mod == 0x8002013B)return JS_TRUE;//printf(": <%s> already loaded/started",path);
-		printf("\x1B[1;37;41mModule error 0x%08X \n", mod);
+#ifdef DEBUG_MODE
+		printf("\x1B[1;37;41mModule error %08X",mod);
+#else
+		puts("\x1B[1;37;41mModule error");
+#endif
 		//if(mod == 0x8002012E)printf(": <%s> not found!",path);
 		//if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
 		//if(mod == 0x8002013C)printf(": can't start prx : User compiled as kernel");
@@ -208,7 +218,9 @@ JS_FUN(js_kinclude){
 	int ret = 0;
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
 	if(mod != uid){
+#ifdef DEBUG_MODE
 		printf("\x1B[1;37;41mModule error 0x%08X \n", mod);
+#endif
 		return JS_FALSE;
 	}
 //	extern int my_addModule();
@@ -278,7 +290,11 @@ char* tryPath(char* folder,char* name){
 }
 int fbEval(char* obj,char* path){
 	char evalStr[256];
-	sprintf(evalStr,"var %s = new Module('%s')",obj,path);
+	strcpy(evalStr,"var ");
+	strcat(evalStr,obj);
+	strcat(evalStr," = new Module('");
+	strcat(evalStr,path);
+	strcat(evalStr,"')");
 #ifdef DEBUG_MODE
 	printf("autoLoad: %s (as %s)\n",path,obj);
 #endif
@@ -291,7 +307,9 @@ int fallbackFunction(const char* name){
 #ifdef DEBUG_MODE
 	printf("fallback: %s\n",name);
 #endif
-
+/*
+utility : utility.prx
+*/
 	strncpy(path,name,31);
 	if(
 	(path[0]=='s'&&path[1]=='c'&&path[2]=='e'&&MAJ(path[3]))||//sce*

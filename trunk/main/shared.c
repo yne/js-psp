@@ -19,7 +19,9 @@ JSObject* js_getGlobalObject(void){
 }
 /* exported functions */
 int js_test(int in){
+#ifdef DEBUG_MODE
 	printf("\x1B[32;47m%08X\x1B[49m\n",in);
+#endif
 	return in;
 }
 typedef struct JSPropertiesSpec{
