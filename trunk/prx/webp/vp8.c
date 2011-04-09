@@ -10,6 +10,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <stdlib.h>
+#include "../../main/shared.h"
 #include "vp8i.h"
 
 //-----------------------------------------------------------------------------
@@ -27,7 +28,8 @@ void VP8InitIo(VP8Io* const io) {
 }
 
 VP8Decoder* VP8New() {
-  VP8Decoder* dec = (VP8Decoder*)calloc(1, sizeof(VP8Decoder));
+  VP8Decoder* dec = (VP8Decoder*)c_malloc(sizeof(VP8Decoder));
+	memset (dec,0,sizeof(VP8Decoder));
   if (dec) {
     SetOk(dec);
     dec->ready_ = 0;
@@ -49,7 +51,7 @@ const char* VP8StatusMessage(VP8Decoder* const dec) {
 void VP8Delete(VP8Decoder* const dec) {
   if (dec) {
     VP8Clear(dec);
-    free(dec);
+    c_free(dec);
   }
 }
 
@@ -631,7 +633,7 @@ void VP8Clear(VP8Decoder* const dec) {
     return;
   }
   if (dec->mem_) {
-    free(dec->mem_);
+    c_free(dec->mem_);
   }
   dec->mem_ = NULL;
   dec->mem_size_ = 0;
