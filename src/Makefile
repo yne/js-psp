@@ -6,6 +6,7 @@ USE_PALLOC = 1
 DEBUG_MODE = 1
 BUILD_PRX = 1
 DATE_PRX = 1
+REGEXP_PRX = 1
 
 #DO NOT TOUCH THIS PART
 ifeq ($(BUILD_PRX),1)
@@ -48,6 +49,12 @@ else
 OBJS += jsdate.o prmjtime.o
 endif
 
+ifeq ($(REGEXP_PRX),1)
+OBJS += jsregexp.lib.o
+else
+OBJS += jsregexp.o
+endif
+
 #COMMON PART
 
 CFLAGS += -G0 -Wall -O2 -DRND_PRODQUOT
@@ -80,7 +87,6 @@ OBJS += \
 		jsopcode.o \
 		jsparse.o \
 		jsprf.o \
-		jsregexp.o \
 		jsscan.o \
 		jsscope.o \
 		jsscript.o \

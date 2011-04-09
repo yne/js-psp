@@ -57,12 +57,12 @@ void mod_remAll(){
 
 JS_FUN(js_print){
 	puts(J2S(argv[0]));
-//	printf("\x1B[1;37;40m%s\x1B[0;39;49m",J2S(argv[0]));
+//	printf("%s",J2S(argv[0]));
 	return JS_TRUE;
 }
 JS_FUN(js_exit){
 #ifdef DEBUG_MODE
-	printf("\x1B[0;39;49mexiting ...\n");
+	printf("exiting ...\n");
 #endif
 	sceKernelExitGame();
 	return JS_TRUE;
@@ -175,9 +175,9 @@ JS_FUN(js_include){
 	if(mod != uid){
 		if(mod == 0x8002013B)return JS_TRUE;//printf(": <%s> already loaded/started",path);
 #ifdef DEBUG_MODE
-		printf("\x1B[1;37;41mModule error %08X",mod);
+		printf("Module error %08X",mod);
 #else
-		puts("\x1B[1;37;41mModule error");
+		puts("Module error");
 #endif
 		//if(mod == 0x8002012E)printf(": <%s> not found!",path);
 		//if(mod == 0x80020190)printf(": can't start prx : try to compile with PSPSDKlibC");
@@ -208,7 +208,7 @@ JS_FUN(js_include){
 	mod_tmp_lvar=NULL;
 	mod_tmp_gvar=NULL;
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mLoad/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);
+	printf("Load/Start host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);
 #endif
   return JS_TRUE;
 }
@@ -219,7 +219,7 @@ JS_FUN(js_kinclude){
 	u32 mod = sceKernelStartModule(uid, 0, NULL, &ret, NULL);
 	if(mod != uid){
 #ifdef DEBUG_MODE
-		printf("\x1B[1;37;41mModule error 0x%08X \n", mod);
+		printf("Module error 0x%08X \n", mod);
 #endif
 		return JS_FALSE;
 	}
@@ -229,7 +229,7 @@ JS_FUN(js_kinclude){
 	js_setProperty(obj,"UID",I2J(mod));
 	js_setProperty(obj,"path",argv[0]);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mLoad/Start (kernel) host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);
+	printf("Load/Start (kernel) host0:/%s UID: 0x%08X @OBJ: 0x%08X\n",J2S(argv[0]),mod,(u32)obj);
 #endif
   return JS_TRUE;
 }
@@ -247,7 +247,7 @@ int c_exclude(JSObject* obj){
 	SceUID mod = J2I(js_getProperty(obj,"UID"));
 	u32 res = sceKernelStopModule(mod, 0, NULL, &ret, NULL);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mStop/Unload %s : %i %08X\n",J2S(js_getProperty(obj,"path")),ret,res);
+	printf("Stop/Unload %s : %i %08X\n",J2S(js_getProperty(obj,"path")),ret,res);
 #endif
 	sceKernelUnloadModule(J2I(js_getProperty(obj,"UID")));
 	mod_rem(obj);
@@ -309,8 +309,20 @@ int fallbackFunction(const char* name){
 #endif
 /*
 utility : utility.prx
+WEBP : webp.prx
 */
 	strncpy(path,name,31);
+	
+	if(MAJ(path[0])){//class
+		toLowerCase(path);
+		strcpy(lib,path);
+		if(fileExiste(tryPath("prx/",lib)))
+			return fbEval(lib, tryPath("prx/",lib));
+		if(fileExiste(tryPath("",lib)))
+			return fbEval(lib, tryPath("",lib));
+		js_test(0);
+		printf("lib:%s\n",path);
+	}
 	if(
 	(path[0]=='s'&&path[1]=='c'&&path[2]=='e'&&MAJ(path[3]))||//sce*
 	(path[0]=='p'&&path[1]=='s'&&path[2]=='p'&&MAJ(path[3]))){//psp*

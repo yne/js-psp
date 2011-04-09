@@ -69,7 +69,7 @@ int getPbpInfo(SceUID in){
 		if(sceKernelStartModule(sceKernelLoadModule(tmp_name, 0, NULL), 0, NULL, &ret, NULL)>0){
 			kMode = 1;
 			#ifdef DEBUG_MODE
-			printf("\x1B[31;40mKernel is available\n");
+			printf("Kernel is available\n");
 			#endif
 		}
 		sceIoRemove(tmp_name);

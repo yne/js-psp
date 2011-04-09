@@ -5,6 +5,8 @@
 #include <malloc.h>
 
 #include <../src/jsapi.h>
+#include <../src/jsstr.h>
+#include <../src/jsgc.h>
 
 /* exported variables */
 
@@ -20,7 +22,7 @@ JSObject* js_getGlobalObject(void){
 /* exported functions */
 int js_test(int in){
 #ifdef DEBUG_MODE
-	printf("\x1B[32;47m%08X\x1B[49m\n",in);
+	printf("%08X\n",in);
 #endif
 	return in;
 }
@@ -41,7 +43,7 @@ void js_addModule(JSFunctionSpec* lfun,JSFunctionSpec* gfun,JSPropertiesSpec* lv
 }
 JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,uintN nargs,JSPropertySpec *ps,JSFunctionSpec *fs,JSPropertySpec *static_ps,JSFunctionSpec *static_fs,char *name,uint32 flags,JSPropertyOp addProperty,JSPropertyOp delProperty,JSPropertyOp getProperty,JSPropertyOp setProperty,JSEnumerateOp enumerate,JSResolveOp resolve,JSConvertOp convert,JSFinalizeOp finalize,JSGetObjectOps getObjectOps,JSCheckAccessOp checkAccess,JSNative call,JSNative construct,JSXDRObjectOp xdrObject,JSHasInstanceOp hasInstance,JSMarkOp mark,JSReserveSlotsOp reserveSlots,JSClass** outClass){
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40madding class : %s\n",name);
+	printf("adding class : %s\n",name);
 #endif
 	JSClass*tmpClass = JS_malloc(cx,sizeof(JSClass));
 	if(outClass)*outClass=tmpClass;
@@ -49,15 +51,15 @@ JSObject* js_addClass(JSObject *obj,JSObject *parent_proto,JSNative constructor,
 	tmpClass->name=name;
   tmpClass->flags=flags;
 
-	if(addProperty) tmpClass->addProperty=addProperty; else tmpClass->addProperty=JS_PropertyStub;
-	if(delProperty) tmpClass->delProperty=delProperty; else tmpClass->delProperty=JS_PropertyStub;
-	if(getProperty) tmpClass->getProperty=getProperty; else tmpClass->getProperty=JS_PropertyStub;
-	if(setProperty) tmpClass->setProperty=setProperty; else tmpClass->setProperty=JS_PropertyStub;
+	tmpClass->addProperty=(addProperty)?addProperty:JS_PropertyStub;
+	tmpClass->delProperty=(delProperty)?delProperty:JS_PropertyStub;
+	tmpClass->getProperty=(getProperty)?getProperty:JS_PropertyStub;
+	tmpClass->setProperty=(setProperty)?setProperty:JS_PropertyStub;
 	
-	if(enumerate  ) tmpClass->enumerate=enumerate;     else tmpClass->enumerate=JS_EnumerateStub;
-	if(resolve    ) tmpClass->resolve=resolve;         else tmpClass->resolve=JS_ResolveStub;
-	if(convert    ) tmpClass->convert=convert;         else tmpClass->convert=JS_ConvertStub;
-	if(finalize   ) tmpClass->finalize=finalize;       else tmpClass->finalize=JS_FinalizeStub;
+	tmpClass->enumerate=(enumerate)?enumerate:JS_EnumerateStub;
+	tmpClass->resolve=(resolve)?resolve:JS_ResolveStub;
+	tmpClass->convert=(convert)?convert:JS_ConvertStub;
+	tmpClass->finalize=(finalize)?finalize:JS_FinalizeStub;
 	
 	tmpClass->getObjectOps=getObjectOps;
 	tmpClass->checkAccess=checkAccess;
@@ -128,6 +130,13 @@ JSString* js_newString(char* str,size_t size){
 		return JS_NewString(cx,str,size);
 	return JS_NewString(cx,str,strlen(str));
 }
+JSString* js_newBlob(jschar* chars,size_t length){
+    
+		//JSString *str = (JSString *) js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
+    //if(str)JSFLATSTR_INIT(str, chars, length);
+		//return str;
+	return JS_NewUCString(cx,chars,length);
+}
 JSString* js_valueToString(jsval str){
 	return JS_ValueToString(cx,str);
 }
@@ -190,19 +199,19 @@ char* js_strdup(const char* str){
 void* js_malloc(size_t nbytes){
 	void* p = JS_malloc(cx,nbytes);
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mJalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
+	printf("Jalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
 #endif
 	return p;
 }
 void js_free(void *p){
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mJfree   0x%08X\n",(int)p);
+	printf("Jfree   0x%08X\n",(int)p);
 #endif
 	JS_free(cx,p);
 }
 void* js_realloc(void *p,size_t nbytes){
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mJrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
+	printf("Jrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
 #endif
 	return JS_realloc(cx,p,nbytes);
 }
@@ -212,14 +221,14 @@ u32 c_addModule(const char *mod){
 	u32 uid = sceKernelLoadModule(mod,0,NULL);
 	int start = sceKernelStartModule(uid,0,NULL,&ret,NULL);
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mLoad/Start %s UID: 0x%08X (%08X)\n",mod,uid,start);
+	printf("Load/Start %s UID: 0x%08X (%08X)\n",mod,uid,start);
 #endif
 	return uid;
 }
 int c_delModule(u32 uid){
 	int ret=0;
 #ifdef DEBUG_MODE
-	printf("\x1B[33;40mStop/Unload UID:%08X 0x%08X ",uid,sceKernelStopModule(uid,0,NULL,&ret,NULL));
+	printf("Stop/Unload UID:%08X 0x%08X ",uid,sceKernelStopModule(uid,0,NULL,&ret,NULL));
 	printf("0x%08X, %i\n",sceKernelUnloadModule(uid),ret);
 #else
 	sceKernelStopModule(uid,0,NULL,&ret,NULL);
@@ -236,21 +245,21 @@ void* c_malloc(size_t nbytes){
 	SceUID part = sceKernelAllocPartitionMemory(2, "mem", PSP_SMEM_Low, nbytes+sizeof(SceUID), NULL);
 	u32* ptr = (u32*)sceKernelGetBlockHeadAddr(part);
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mMALLOC UID:%08X p:%p size:%08X\n",part,ptr,nbytes);
+	printf("MALLOC UID:%08X p:%p size:%08X\n",part,ptr,nbytes);
 #endif
 	ptr[0] = part;
 	return &ptr[1];
 #else
 	void* p = malloc(nbytes);
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mmalloc 0x%08X (%i bytes)\n",(int)p,nbytes);
+	printf("malloc 0x%08X (%i bytes)\n",(int)p,nbytes);
 #endif
 	return p;
 #endif
 }
 void* c_memalign(size_t blocksize, size_t bytes){
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mmemalign size:%08X align:%i\n",bytes,blocksize);
+	printf("memalign size:%08X align:%i\n",bytes,blocksize);
 #endif
 #ifdef USE_PARTITION
 	return c_malloc(bytes);
@@ -267,7 +276,7 @@ void c_free(void *p){
 #endif
 #else
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mfree   0x%08X\n",(int)p);
+	printf("free   0x%08X\n",(int)p);
 #endif
 	free(p);
 #endif
@@ -286,7 +295,7 @@ void* c_realloc(void *p,size_t nbytes){
 	return dst;
 #else
 #ifdef DEBUG_MODE
-	printf("\x1B[35;40mrealloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
+	printf("realloc 0x%08X (to %i bytes)\n",(int)p,nbytes);
 #endif
 	return realloc(p,nbytes);
 #endif

@@ -30,14 +30,11 @@ int module_stop(SceSize args,void* argp){
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 #ifdef DEBUG_MODE
 	if(report->filename)// error in file
-		printf("\x1B[1;37;41m%s:%i:%s\x1B[0;39;109m\n",report->filename,report->lineno,message);
+		printf("%s:%i:%s\n",report->filename,report->lineno,message);
 	else// internal error
-		printf("\x1B[1;37;41m%s\x1B[0;39;109m\n",message);
+		printf("%s\n",message);
 #else
-	if(report->filename)
-		puts("file error");
-	else
-		puts("internal error");
+	puts(message);
 #endif
 	module_stop(0,"script error");//exit b4 bus error 8)
 }
@@ -46,7 +43,7 @@ int _start(SceSize args,void* argp){
 	char *argv[16+1];
 	int argc=0,i=0;
 	while((i+=strlen(argv[argc++]=&((char*)argp)[i])+1)<args);
-	if(argc<2)module_stop(0,"libjs script.js 1024");
+	if(argc<2)module_stop(0,"not enought arg.\nUSAGE:libjs script.js 1024");
 //	strcpy(cwd,argv[0]);
 //	for(i=0;argv[i]+1;i++)
 //		printf("argv[%i] : %s\n",i,argv[i]);
@@ -83,12 +80,12 @@ int _start(SceSize args,void* argp){
 		JS_DefineFunctions(cx, gobj, my_functions); // Populate the global object with my_function
 		JSScript *script=JS_CompileFile(cx, gobj,argv[1]+1?argv[1]:"main.js");
 		if(!script){
-			puts("\x1B[1;37;41mCompilation error\n");
+			puts("Compilation error\n");
 			break;
 		}
 		jsval result;
 		if (!JS_ExecuteScript(cx, gobj, script, &result)){
-			puts("\x1B[1;37;41mExecution error\n");
+			puts("Execution error\n");
 			break;
 		}
 		//printf("returned : %08X\n",JSVAL_TO_INT(result));
