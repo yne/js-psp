@@ -10,6 +10,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <stdlib.h>
+#include "../../main/shared.h"
 #include "vp8i.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -40,9 +41,9 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   uint8_t* mem;
 
   if (needed > dec->mem_size_) {
-    free(dec->mem_);
+    c_free(dec->mem_);
     dec->mem_size_ = 0;
-    dec->mem_ = (uint8_t*)malloc(needed);
+    dec->mem_ = (uint8_t*)c_malloc(needed);
     if (dec->mem_ == NULL) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                          "no memory during frame initialization.");

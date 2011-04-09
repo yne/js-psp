@@ -38,23 +38,15 @@ inline static void VP8YuvToRgb(uint8_t y, uint8_t u, uint8_t v,
 
 inline static void VP8YuvToRgba(int y, int u, int v, uint8_t* const rgba) {
   VP8YuvToRgb(y, u, v, rgba);
-  rgba[3] = 0xff;
+	rgba[3]=0xFF;
+}
+inline static void VP8YuvToAlpha(int y, int u, int v, uint8_t* const rgba) {
+//	rgba[3]=y;
+	uint8_t pixel[4];
+  VP8YuvToRgb(y, u, v, pixel);
+	rgba[3]=(pixel[0]+pixel[1]+pixel[2])/3;
 }
 
-inline static void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
-                               uint8_t* const bgr) {
-  const int r_off = VP8kVToR[v];
-  const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
-  const int b_off = VP8kUToB[u];
-  bgr[0] = VP8kClip[y + b_off - YUV_RANGE_MIN];
-  bgr[1] = VP8kClip[y + g_off - YUV_RANGE_MIN];
-  bgr[2] = VP8kClip[y + r_off - YUV_RANGE_MIN];
-}
-
-inline static void VP8YuvToBgra(int y, int u, int v, uint8_t* const bgra) {
-  VP8YuvToBgr(y, u, v, bgra);
-  bgra[3] = 0xff;
-}
 
 // Must be called before everything, to initialize the tables.
 void VP8YUVInit();
