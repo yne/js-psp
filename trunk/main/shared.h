@@ -5,6 +5,7 @@
 #define J2I(j) JSVAL_TO_INT(j)
 #define J2S(j) js_getStringBytes(js_valueToString(j))
 #define J2SL(j) js_getStringLength(js_valueToString(j))
+#define J2V(j) js_valueToString(j)->u.base;
 #define J2U(j) js_valueToECMAUint32(j)
 #define J2u(j) js_valueToUint16(j)
 #define J2O(j) JSVAL_TO_OBJECT(j)//(j,op) js_valueToObject(j,op)
@@ -15,6 +16,7 @@
 #define D2J(i) js_numberToValue(i)
 #define O2J(i) OBJECT_TO_JSVAL(i)
 #define S2J(s,l) STRING_TO_JSVAL(js_newString(s,l))
+#define V2J(p,s) STRING_TO_JSVAL(js_newBlob(p,s))//skip inflate process
 
 /* for methode prupose */
 #define THIS   js_computeThis(cx, vp)
@@ -83,6 +85,7 @@ EXT jsval js_convertValue(jsval v,JSType type);
 EXT char* js_getStringBytes(JSString* str);
 EXT size_t js_getStringLength(JSString *str);
 EXT JSString* js_newString(const char* str,size_t size);
+EXT JSString* js_newBlob(void* str,size_t size);
 EXT JSObject** js_valueToObject(jsval v,JSObject** tobj);
 EXT JSString* js_valueToString(jsval v);
 EXT u32 js_valueToECMAUint32(jsval v);

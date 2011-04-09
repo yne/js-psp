@@ -30,9 +30,9 @@ JSFunctionSpec my_functions[] = {
 };
 void reportError(JSContext *cx, const char *message, JSErrorReport *report){
 	if(report->filename)// error in file
-		printf("\x1B[1;37;41m%s:%u:%s\x1B[0;39;109m\n",report->filename,(unsigned int) report->lineno,message);
+		printf("%s:%u:%s\n",report->filename,(unsigned int) report->lineno,message);
 	else// internal error
-		printf("\x1B[1;37;41m%s\x1B[0;39;109m\n",message);
+		printf("%s\n",message);
 	sceKernelExitGame();//exit b4 bus error 8)
 }
 int main(int argc, const char *argv[]){
@@ -42,7 +42,7 @@ int main(int argc, const char *argv[]){
 	}
 	boot();
 #ifdef DEBUG_MODE
-	printf("\x1B[39;49mSpiderMonkey 1.8 ["__DATE__" "__TIME__"]\n");
+	printf("SpiderMonkey 1.8 ["__DATE__" "__TIME__"]\n");
 #endif
 	while(1){
 		JSRuntime *rt = JS_NewRuntime(RunTimeSize*1024);// runtime
@@ -56,12 +56,12 @@ int main(int argc, const char *argv[]){
 		
 		JSScript *script=JS_CompileFile(cx, gobj,toExecute);
 		if(!script){
-			printf("\x1B[1;37;41mCompilation error\n");
+			printf("Compilation error\n");
 			break;
 		}
 		jsval result;
 		if (!JS_ExecuteScript(cx, gobj, script, &result)){
-			printf("\x1B[1;37;41mExecution error\n");
+			printf("Execution error\n");
 			break;
 		}
 		//printf("returned : %08X\n",JSVAL_TO_INT(result));
