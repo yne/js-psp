@@ -608,12 +608,8 @@ void sceUtility_private_C652A9B0 (){
 	return sceCtrl_driver_87B0677D ();
 }
 void sceUtility_private_E16F76D4 (int arg1){
-	var1 = k1;
-	k1 = k1 >> 0x10;
-	structInput = k1 & 0x18;
-	if ((((arg1 + 4) | arg1) & (0 - structInput)) >= 0)
+	if ((((arg1 + 4) | arg1) & -((k1 >> 0x10) & 0x18)) >= 0)
 		sceCtrl_driver_6D4BEA72 ();
-	return;
 }
 void sub_01330 (){
 	sceKernelWaitEventFlag (BusyEvent, 3, 0x20, 0, 0);
@@ -930,7 +926,7 @@ void sub_01A5C (){
 	spd = sceKernelCpuSuspendIntr ();
 	HVStatus = 0;
 	HVStruct = 0;
-	*((int *) 0xA150) = 0;
+	HVMode = 0;
 	sceKernelCpuResumeIntr (spd);
 	sceKernelExitDeleteThread (0);
 	return;
@@ -999,7 +995,7 @@ void HVInitStart (int arg1, int arg2){//1,struct
 				return 0x80110003;
 			}else{
 				if (arg1 != 1)return 0x80110003
-				var11 = ((int *) arg2)[0];
+				var11 = ((int *) arg2)[0];//0xA8
 				*((int *) 0xA160) = "flash0:/vsh/module/htmlviewer_utility.prx";
 				if (var11 == 0x70){
 					var12 = ((int *) arg2)[12];//pool
@@ -1010,9 +1006,9 @@ void HVInitStart (int arg1, int arg2){//1,struct
 					if ((((- k1&0x18) & (((arg2 + var11) | arg2) | var11)) < 0))return 0x80110002;
 					if ((((- k1&0x18) & (((var12 + var13) | var12) | var13)) < 0))return 0x80110002;
 					part = SysMemForKernel_5630F321 (2, "SceUtilityAppletPartition", 0, sub_024DC (arg1, var14, arg2), 0);
-					if (!(part <= 0)){
+					if (part>0){
 						HVType = arg1;
-						*((int *) 0xA150) = var14;
+						HVMode = var14;
 						HVPartition = part;
 						HVStatus = 1;
 						HVStruct = arg2;
@@ -1243,7 +1239,7 @@ void sub_02154 ()
 {
 	EventFlag = sceKernelCreateEventFlag ("SceUtilityAppletWorktime", 0x0200, 0, 0);
 	if (var3 < 0)return 0x80000042;
-	*((int *) 0xA150) = 0;
+	HVMode = 0;
 	var4 = 0;
 	HVType = 0;
 	HVStatus = 0;
@@ -1352,16 +1348,16 @@ void sceUtility_private_A1DF25E8 (int arg1){
 	HVStatus = arg1;
 }
 void sceUtility_private_3B76A6D0 (){
-	var1 = HVType;
+	return HVType;
 }
 void sceUtility_private_AEADFF11 (){
-	var1 = HVStruct;
+	return HVStruct;
 }
 void sceUtility_private_84FEFEAD (){
-	var1 = *((int *) 0xA150);
+	return HVMode;
 }
 void sceUtility_private_BF218ECC (){
-	var1 = HVFrame;
+	return HVFrame;
 }
 void sceUtility_private_6513E388 (int arg1){
 	ExternThread2 = arg1;
