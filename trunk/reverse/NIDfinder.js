@@ -38,7 +38,14 @@ function m(reg){//match
 function ctrl(){
 	solved=0;
 	know=0;
-	for(var i=0;i<res.length/2;i++){
+	for(var i=0;i<res.length/2;i++){//1st pass
+		var name=res[2*i+0];
+		var src =res[2*i+1];
+		if(!name.match(/[0-F]{6}$/)){//skip export
+			     if(src.haz(["0x80000104"])){res.replace(name,"getBuffer");}//reed|peek&pos|neg
+		}
+	}
+	for(var i=0;i<res.length/2;i++){//2nd pass
 		if(res[2*i].indexOf("sub_")!=-1)continue;//skip stub
 		var src=res[2*i+1];
 //		if(res[2*i]=="SysMemForKernel_C5485286")print(src.length+"\n");
@@ -53,11 +60,19 @@ function ctrl(){
 		else if(src.indexOf("((var8 & var3)) ? 0x00000000 : 0x00000002;")+1)result(2*i,"sceCtrlSetButtonIntercept");
 		else if(src.indexOf("((var7 & var2)) ? 0x00000000 : 0x00000002;")+1)result(2*i,"sceCtrlGetButtonIntercept");
 		else if((src.indexOf("0x80000102")+1)&&(src.indexOf("0x800001FE")+1))result(2*i,"sceCtrlSetRapidFire");
+		else if(src.haz(["[584]"])&&src.length<200)result(2*i,"sceCtrlClearRapidFire");
+		else if(src.haz(["(0x0000001E, 0x00000013)",", 0x000003F0, 0x00000000);"])&&src.length<400)result(2*i,"sceCtrlResume");
+		else if(src.haz(["(0x0000001E, 0x00000013)"])&&src.length<400)result(2*i,"sceCtrlSuspend");
+//		else if(src.haz(["^ 0x00000001)"])&&src.length<350)result(2*i,"sceCtrlGetSamplingCycle/Mode");
 		else if(src.match(/ = \(\(int \*\) var[0-9]+\)\[4\]/)&&(src.indexOf("[11]")==-1))result(2*i,"sceCtrlPeekLatch");
-		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000000\);/))result(2*i,"sceCtrlPeekBufferPositive");
-		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000001\);/))result(2*i,"sceCtrlPeekBufferNegative");
-		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000002\);/))result(2*i,"sceCtrlReadBufferPositive");
-		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000003\);/))result(2*i,"sceCtrlReadBufferNegative");
+		else if(src.haz(["getBuffer (arg1, arg2, 0x00000000);"]))result(2*i,"sceCtrlPeekBufferPositive");
+//		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000000\);/))result(2*i,"sceCtrlPeekBufferPositive");
+		else if(src.haz(["getBuffer (arg1, arg2, 0x00000001);"]))result(2*i,"sceCtrlPeekBufferNegative");
+//		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000001\);/))result(2*i,"sceCtrlPeekBufferNegative");
+		else if(src.haz(["getBuffer (arg1, arg2, 0x00000002);"]))result(2*i,"sceCtrlReadBufferPositive");
+//		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000002\);/))result(2*i,"sceCtrlReadBufferPositive");
+		else if(src.haz(["getBuffer (arg1, arg2, 0x00000000);"]))result(2*i,"sceCtrlReadBufferNegative");
+//		else if(src.match(/sub_[0-F]+ \(arg1, arg2, 0x00000000, 0x00000003\);/))result(2*i,"sceCtrlReadBufferNegative");
 		else if(src.length==95)result(2*i,"<set>");
 		else if(src.length==90&&(src.indexOf("= *")+1))result(2*i,"<get>");
 		else if(src.length==90)result(2*i,"<get2>");//get but don't return ...
@@ -65,24 +80,214 @@ function ctrl(){
 	}
 	print("\ntotal:"+exported+" solved:"+solved+" %"+Math.round(100*solved/exported)+"\n")
 }
-function sysmem(){
+function syscon(){
 	solved=0;
 	know=0;
+	/*
+	for(var i=0;i<res.length/2;i++){//1st pass
+		var name=res[2*i+0];
+		var src =res[2*i+1];
+		if(!name.match(/[0-F]{6}$/)){//skip export
+			     if(src.haz(["0x80000104"])){res.replace(name,"getBuffer");}//reed|peek&pos|neg
+		}
+	}
+		*/
+	for(var i=0;i<res.length/2;i++){//2nd pass
+		if(res[2*i].indexOf("sub_")!=-1)continue;//skip stub
+		var src=res[2*i+1];//some argX, should be removed
+		if(src.haz([" (arg1, arg2, 0x00000000);"]))result(2*i,"sceSysconSetLowBatteryCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000001);"]))result(2*i,"sceSysconSetPowerSwitchCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000002);"]))result(2*i,"sceSysconSetAlarmCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000003);"]))result(2*i,"sceSysconSetAcSupplyCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000004);"]))result(2*i,"sceSysconSetHPConnectCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000005);"]))result(2*i,"sceSysconSetWlanSwitchCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000006);"]))result(2*i,"sceSysconSetHoldSwitchCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000007);"]))result(2*i,"sceSysconSetUmdSwitchCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000008);"]))result(2*i,"sceSysconSetHRPowerCallback");
+		else if(src.haz([" (arg1, arg2, 0x00000009);"]))result(2*i,"sceSysconSetWlanPowerCallback");
+		else if(src.haz([" (arg1, 0x00000001);"]))result(2*i,"sceSysconGetBaryonVersion");
+		else if(src.haz([" (arg1, 0x00000005);"]))result(2*i,"sceSysconGetTachyonTemp");
+		else if(src.haz([" (arg1, 0x00000009);"]))result(2*i,"sceSysconReadClock");
+		else if(src.haz([" (arg1, 0x0000000A);"]))result(2*i,"sceSysconReadAlarm");
+		else if(src.haz([" (arg1, 0x0000000B);"]))result(2*i,"sceSysconGetPowerSupplyStatus");
+		else if(src.haz([" (arg1, 0x0000000C);"]))result(2*i,"sceSysconGetTachyonWDTStatus");
+		else if(src.haz([" (arg1, 0x0000000E);"]))result(2*i,"sceSysconGetWakeUpFactor");
+		else if(src.haz([" (arg1, 0x0000000F);"]))result(2*i,"sceSysconGetWakeUpReq");
+		else if(src.haz([" (arg1, 0x00000040);"]))result(2*i,"sceSysconGetPommelVersion");
+		else if(src.haz([" (arg1, 0x00000041);"]))result(2*i,"sceSyscon_driver_FB148FB6");
+		else if(src.haz([" (arg1, 0x00000046);"]))result(2*i,"sceSysconGetPowerStatus");
+		else if(src.haz([" (arg1, 0x0000004A);"]))result(2*i,"sceSysconGetPowerError");
+		else if(src.haz([" (0x00000062, arg1);"]))result(2*i,"sceSysconBatteryGetTemp");
+		else if(src.haz([" (0x00000063, arg1);"]))result(2*i,"sceSysconBatteryGetVolt");
+		else if(src.haz([" (0x00000064, arg1);"]))result(2*i,"sceSysconBatteryGetElec");
+		else if(src.haz([" (0x00000065, arg1);"]))result(2*i,"sceSysconBatteryGetRCap");
+		else if(src.haz([" (0x00000066, arg1);"]))result(2*i,"sceSysconBatteryGetCap");
+		else if(src.haz([" (0x00000067, arg1);"]))result(2*i,"sceSysconBatteryGetFullCap");
+		else if(src.haz([" (0x00000068, arg1);"]))result(2*i,"sceSysconBatteryGetIFC");
+		else if(src.haz([" (0x00000069, arg1);"]))result(2*i,"sceSysconBatteryGetLimitTime");
+		else if(src.haz([" (0x0000006A, arg1);"]))result(2*i,"sceSysconBatteryGetStatus");
+		else if(src.haz([" (0x0000006B, arg1);"]))result(2*i,"sceSysconBatteryGetCycle");
+		else if(src.haz([" (0x0000006C, arg1);"]))result(2*i,"sceSysconBatteryGetSerial");
+		else if(src.haz([" (0x0000006E, arg1);"]))result(2*i,"sceSysconBatteryGetTempAD");
+		else if(src.haz([" (0x0000006F, arg1);"]))result(2*i,"sceSysconBatteryGetVoltAD");
+		else if(src.haz([" (0x00000070, arg1);"]))result(2*i,"sceSysconBatteryGetElecAD");
+		else if(src.haz([" (0x00000071, arg1);"]))result(2*i,"sceSysconBatteryGetTotalElec");
+		else if(src.haz([" (0x00000072, arg1);"]))result(2*i,"sceSysconBatteryGetChargeTime");
+		else if(src.haz([" (arg1, 0x00000020, 0x00000006);"]))result(2*i,"sceSysconWriteClock");
+		else if(src.haz([" (arg1, 0x00000022, 0x00000006);"]))result(2*i,"sceSysconWriteAlarm");
+		else if(src.haz([" (arg1, 0x00000033, 0x00000003);"]))result(2*i,"sceSysconCtrlAnalogXYPolling");
+		else if(src.haz([" (arg1, 0x00000034, 0x00000003);"]))result(2*i,"sceSysconCtrlHRPower");
+		else if(src.haz([" (arg1, 0x00000042, 0x00000005);"]))result(2*i,"sceSysconCtrlVoltage");
+		else if(src.haz([" (arg1, 0x00000045, 0x00000005);"]))result(2*i,"sceSysconCtrlPower");
+		else if(src.haz([" (arg1, 0x00000047, 0x00000003);"]))result(2*i,"sceSysconCtrlLED");
+		else if(src.haz([" (arg1, 0x00000048, 0x00000005);"]))result(2*i,"sceSysconWritePommelReg");
+		else if(src.haz([" (arg1, 0x0000004B, 0x00000003);"]))result(2*i,"sceSysconCtrlLeptonPower");
+		else if(src.haz([" (arg1, 0x0000004C, 0x00000003);"]))result(2*i,"sceSysconCtrlMsPower");
+		else if(src.haz([" (arg1, 0x0000004D, 0x00000003);"]))result(2*i,"sceSysconCtrlWlanPower");
+		else if(src.haz([" (arg1, 0x0000004E, 0x00000005);"]))result(2*i,"sceSysconPermitChargeBattery");//0x0000FDFF
+		else if(src.haz([" (arg1, 0x0000004E, 0x00000005);"]))result(2*i,"sceSysconForbidChargeBattery");//0x0000FFFF
+		else if(src.haz(["0x800001FE"]))result(2*i,"sceSysconCtrlTachyonWDT");
+	}
+	print("\ntotal:"+exported+" solved:"+solved+" %"+Math.round(100*solved/exported)+"\n")
+}
+function sysmem(){
+	solved=0;
+	know=147;
 	for(var i=0;i<res.length/2;i++){
+		var name=res[2*i];
 		var src=res[2*i+1];
+		if(res[2*i].indexOf("sub_")!=-1)continue;//skip sub
 //		if(res[2*i]=="SysMemForKernel_C5485286")print(src.length+"\n");
 		if(src.length==58)result(2*i,"<empty>");
-		else if(src.indexOf("0x800200D9")+1)result(2*i,"sceKernelAllocPartitionMemory");
-		else if(src.indexOf("0x800200CC")+1)result(2*i,"sceKernelGetUIDcontrolBlockWithType");
-		else if(src.indexOf(" ^ arg2")+1)result(2*i,"SysMemForKernel_82D3CEE3");
-		else if(src.indexOf("<< UID list >>")+1)result(2*i,"sceKernelReleaseUID");
-		else if(src.indexOf("SysMemForKernel_82D3CEE3")+1)result(2*i,"sceKernelIsHold");
-		else if(src.match(/\(\(int \*\) var[0-9]+\)\[4\] = \(var[0-9]+ \+ 0x00000001\);/))result(2*i,"sceKernelHoldUID");
+		else if(src.haz(["0x87089863"]))result(2*i,"sceKernelDeleteUID");
+		else if(src.haz(["0xB9970352","0x800200CB"]))result(2*i,"sceKernelCallUIDFunction");
+		else if(src.haz(["0xB9970352",name]))result(2*i,"sceKernelCallUIDObjFunction");
+		else if(src.haz(["0x800200CC"]))result(2*i,"sceKernelGetUIDcontrolBlockWithType");
+		else if(src.haz(["0x800200CB","((int *) arg2)[0] = var"]))result(2*i,"sceKernelGetUIDcontrolBlock");
+		else if(src.haz(["0x800200CB","var1 = "])&&(src.length<600))result(2*i,"sceKernelGetUIDtype");
+		else if(src.haz(["  var1 = arg1;","  var2 = arg2;","SysMemForKernel_"])&&(!src.haz(["0x88000000"])))result(2*i,"sceKernelIsHold");
+		else if(src.haz(["0x00000002) + 0xBC000000"]))result(2*i,"sceKernelSetDdrMemoryProtection");
+		else if(src.haz(["if (!((var1 & 0x00001000) == 0x00000000))"]))result(2*i,"sceKernelGetCompiledSdkVersion");
+		else if(src.haz([", arg1, 0x00000010);"]))result(2*i,"sceKernelSetQTGP3");//todo get QTGP3 offest (1st arg)
+		else if(src.haz([" << 0x00000002)), arg2, 0x00000000);"]))result(2*i,"sceKernelAllocHeapMemory");
+		else if(src.haz(["sceKernelDeleteUID (arg1);"])&&(src.length<400))result(2*i,"sceKernelDeleteHeap");
+		//else if(src.haz([""]))result(2*i,"sceKernelFreeHeapMemory");
+		else if(src.haz([") ? 0x00000000 : 0x000000FF), var"]))result(2*i,"sceKernelCreateHeap");
+		else if(src.haz(["if (!(var1 == 0x00000000))","0x800200D2","0x800200D6"]))result(2*i,"sceKernelQueryMemoryPartitionInfo");
+/*
+		else if(src.haz([""]))result(2*i,"sceKernelPartitionMaxFreeMemSize");
+		else if(src.haz([""]))result(2*i,"sceKernelPartitionTotalFreeMemSize");
+		else if(src.haz([""]))result(2*i,"sceKernelAllocPartitionMemory");
+		else if(src.haz([""]))result(2*i,"sceKernelAllocHeapMemoryWithOption");
+		else if(src.haz([""]))result(2*i,"sceKernelFreePartitionMemory");
+		else if(src.haz([""]))result(2*i,"sceKernelGetBlockHeadAddr");
+		else if(src.haz([""]))result(2*i,"sceKernelGetModel");
+    else if(src.haz([""]))result(2*i,"sceKernelHeapTotalFreeSize");
+    else if(src.haz([""]))result(2*i,"sceKernelGetHeapTypeCB");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_EFF0C6DD");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_EFEEBAC7");
+    else if(src.haz([""]))result(2*i,"sceKernelIsValidHeap");
+    else if(src.haz([""]))result(2*i,"sceKernelFillFreeBlock");
+    else if(src.haz([""]))result(2*i,"sceKernelSizeLockMemoryBlock");
+    else if(src.haz([""]))result(2*i,"sceKernelResizeMemoryBlock");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_915EF4AC");
+    else if(src.haz([""]))result(2*i,"sceKernelJointMemoryBlock");
+    else if(src.haz([""]))result(2*i,"sceKernelQueryMemoryInfo");
+    else if(src.haz([""]))result(2*i,"sceKernelQueryBlockSize");
+    else if(src.haz([""]))result(2*i,"sceKernelQueryMemoryBlockInfo");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_2F3B7611");
+    else if(src.haz([""]))result(2*i,"sceKernelMemoryExtendSize");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_CE05CCB7");
+    else if(src.haz([""]))result(2*i,"sceKernelLookupUIDFunction");
+    else if(src.haz([""]))result(2*i,"sceKernelCreateUIDtypeInherit");
+    else if(src.haz([""]))result(2*i,"sceKernelCreateUIDtype");
+    else if(src.haz([""]))result(2*i,"sceKernelDeleteUIDtype");
+    else if(src.haz([""]))result(2*i,"sceKernelGetUIDname");
+    else if(src.haz([""]))result(2*i,"sceKernelRenameUID");
+    else if(src.haz([""]))result(2*i,"sceKernelGetUIDtype");
+    else if(src.haz([""]))result(2*i,"sceKernelCreateUID");
+    else if(src.haz([""]))result(2*i,"sceKernelDeleteUID");
+    else if(src.haz([""]))result(2*i,"sceKernelSearchUIDbyName");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_82D3CEE3");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_FC207849");
+    else if(src.haz([""]))result(2*i,"sceKernelHoldUID");
+    else if(src.haz([""]))result(2*i,"sceKernelReleaseUID");
+    else if(src.haz([""]))result(2*i,"sceKernelSysmemIsValidAccess");
+    else if(src.haz([""]))result(2*i,"sceKernelIsValidUserAccess");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemCheckCtlBlk");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemDump");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemDumpBlock");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemDumpTail");
+    else if(src.haz([""]))result(2*i,"sceKernelMemset");
+    else if(src.haz([""]))result(2*i,"sceKernelMemset32");
+    else if(src.haz([""]))result(2*i,"sceKernelMemmove");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemInit");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemMemSize");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemMaxFreeMemSize");
+    else if(src.haz([""]))result(2*i,"sceKernelSysMemTotalFreeMemSize");
+    else if(src.haz([""]))result(2*i,"sceKernelGetSysMemoryInfo");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_CDA3A2F7");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_960B888C");
+    else if(src.haz([""]))result(2*i,"sceKernelGetSystemStatus");
+    else if(src.haz([""]))result(2*i,"sceKernelSetSystemStatus");
+    else if(src.haz([""]))result(2*i,"sceKernelGetUMDData");
+    else if(src.haz([""]))result(2*i,"sceKernelGetUMDData (620 to 639)");
+    else if(src.haz([""]))result(2*i,"sceKernelRegisterGetIdFunc");
+    else if(src.haz([""]))result(2*i,"sceKernelQueryHeapInfo");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_03808C51");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_BB90D841");
+    else if(src.haz([""]))result(2*i,"sceKernelMemmoveWithFill");
+    else if(src.haz([""]))result(2*i,"sceKernelCopyGameInfo");
+    else if(src.haz([""]))result(2*i,"sceKernelSetUmdData");
+    else if(src.haz([""]))result(2*i,"sceKernelGetQTGP2");
+    else if(src.haz([""]))result(2*i,"sceKernelSetQTGP2");
+    else if(src.haz([""]))result(2*i,"sceKernelGetQTGP3");
+    else if(src.haz([""]))result(2*i,"sceKernelGetAllowReplaceUmd");
+    else if(src.haz([""]))result(2*i,"sceKernelSetParamSfo");
+    else if(src.haz([""]))result(2*i,"sceKernelGetCompilerVersion");
+    else if(src.haz([""]))result(2*i,"sceKernelGetDNAS");
+    else if(src.haz([""]))result(2*i,"sceKernelSetDNAS");
+    else if(src.haz([""]))result(2*i,"sceKernelRebootKernel");
+    else if(src.haz([""]))result(2*i,"sceKernelGetId");
+    else if(src.haz([""]))result(2*i,"sceKernelMemoryShrinkSize");
+    else if(src.haz([""]))result(2*i,"sceKernelMemoryOpenSize");
+    else if(src.haz([""]))result(2*i,"sceKernelMemoryCloseSize");
+    else if(src.haz([""]))result(2*i,"sceKernelGetSysmemIdList");
+    else if(src.haz([""]))result(2*i,"sceKernelSetAllowReplaceUmd");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_2269BFA2");
+    else if(src.haz([""]))result(2*i,"sceKernelGetGameInfo");
+    else if(src.haz([""]))result(2*i,"sceKernelSetCompilerVersion");
+    else if(src.haz([""]))result(2*i,"sceKernelGetInitialRandomValue");
+    else if(src.haz([""]))result(2*i,"sceKernelSetRebootKernel");
+    else if(src.haz([""]))result(2*i,"sceKernelApiEvaluationInit");
+    else if(src.haz([""]))result(2*i,"sceKernelRegisterApiEvaluation");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_1F7F7F40");
+    else if(src.haz([""]))result(2*i,"sceKernelApiEvaluationReport");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_39351245");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_D2E3A399");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_4852F8DD");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_4EC43DC4");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_1F01A9E2");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_B9F8561C");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_9452B542");
+    else if(src.haz([""]))result(2*i,"SysMemForKernel_EF2EE8C1");
+		else if(src.haz([""]))result(2*i,"");
+*/
+		//<empty func>
+		//sceKernelDevkitVersion
+		//SysMemForKernel_536AD5E1
+		//else if(src.haz([""]))result(2*i,"sceKernelPartitionMaxFreeMemSize");
+		
+//		else if(src.indexOf("0x800200D9")+1)result(2*i,"sceKernelAllocPartitionMemory");
+//		else if(src.indexOf(" ^ arg2")+1)result(2*i,"SysMemForKernel_82D3CEE3");
+//		else if(src.indexOf("<< UID list >>")+1)result(2*i,"sceKernelReleaseUID");
+//		else if(src.indexOf("SysMemForKernel_82D3CEE3")+1)result(2*i,"sceKernelIsHold");
+//		else if(src.match(/\(\(int \*\) var[0-9]+\)\[4\] = \(var[0-9]+ \+ 0x00000001\);/))result(2*i,"sceKernelHoldUID");
 		else if(src.length==95)result(2*i,"<set>");
 		else if(src.length==90&&(src.indexOf("= *")+1))result(2*i,"<get>");
 		else if(src.length==90)result(2*i,"<get?>");//get but don't return ...
 	}
-	print("\ntotal:"+res.length/2+" solved:"+solved+" %"+Math.round(100*solved/(res.length/2))+"\n")
+	//print("\ntotal:"+exported+" solved:"+solved+" know:"+know+" %"+Math.round(100*(solved+know)/exported)+"\n");
 }
 function loadcore(){
 	solved=0;
@@ -121,6 +326,9 @@ function loadcore(){
 	}
 	print("\ntotal:"+exported+" solved:"+solved+" %"+Math.round(100*solved/exported)+"\n")
 }
+function loadexec_01g(){loadexec();}
+function loadexec_02g(){loadexec();}
+function loadexec_03g(){loadexec();}
 function loadexec(){
 	solved=0;
 	know=0;
@@ -161,12 +369,22 @@ function loadexec(){
 		else if(src.length<100&&m(/\*\(\(int \*\) 0x[0-F]{8}\) = arg1;/))result(2*l,"sceKernelRegisterExitCallback");
 		else if(src.length<100&&m(/\*\(\(int \*\) 0x[0-F]{8}\) = 0x00000000;/))result(2*l,"sceKernelUnregisterExitCallback");
 		else if(src.length<100&&m(/var1 = \*\(\(int \*\) 0x[0-F]{8}\);/))result(2*l,"sceKernelCheckExitCallback");
+		/*
+			sceKernelExitVSHKernel
+			sceKernelLoadExecVSHFromHost
+			sceKernelLoadExecBufferVSHPlain
+			sceKernelLoadExecBufferVSHFromHost
+			sceKernelLoadExecBufferPlain0
+			sceKernelLoadExecBufferPlain
+			LoadExecForKernel_11412288
+			LoadExecForKernel_6D8D3A3A
+		*/
 	}
 	print("\ntotal:"+exported+" solved:"+solved+" %"+Math.round(100*solved/exported)+"\n")
 }
-function loadexec_01g(){loadexec();}
-function loadexec_02g(){loadexec();}
-function loadexec_03g(){loadexec();}
+function codec_01g(){codec();}
+function codec_02g(){codec();}
+function codec_03g(){codec();}
 function codec(){
 	solved=0;
 	know=0;
@@ -190,9 +408,24 @@ function codec(){
 	}
 	print("\ntotal:"+exported+" solved:"+solved+" %"+Math.round(100*solved/exported)+"\n")
 }
-function codec_01g(){codec();}
-function codec_02g(){codec();}
-function codec_03g(){codec();}
+function display_01g(){display();}
+function display_02g(){display();}
+function display_03g(){display();}
+function display(){
+	solved=0;
+	know=0;
+	for(var i=0;i<res.length/2;i++){
+		var src=res[2*i+1];
+		if(!res[2*i].match(/[0-F]{6}$/))continue;//skip stub
+		else if(src.haz(["0x80000104"]))result(2*i,"sceDisplay_driver_63E22A26");
+		else if(src.haz(["sceDisplay_driver_63E22A26 (0x00000002, arg1, arg2, arg3, arg4);"]))result(2*i,"sceDisplaySetFrameBuf");
+		else if(src.haz(["sceLcdcGetVsyncFreq"]))result(2*i,"sceDisplayGetFramePerSec");
+		//init: 0x........ = 0xFFFFFFFE -> foreground
+		else if(src.haz(["if (!(((arg1 < 0x00000004)) == 0x00000000))"]))result(2*i,"sceCtrl_driver_5C56C779");
+		else if(src.haz(["((arg1 ^ 0x00000001)) ? 0x00000000 : arg1"]))result(2*i,"sceCtrl_driver_348D99D4");//*((int *) 0x........) -> sceCtrl_driver_AF5960F3
+	}
+	print("\ntotal:"+res.length/2+" solved:"+solved+" %"+Math.round(100*solved/(res.length/2))+"\n");
+}
 function me_wrapper(){
 	solved=0;
 	know=0;
@@ -209,7 +442,12 @@ function audio(){
 	for(var i=0;i<res.length/2;i++){
 		var src=res[2*i+1];
 		if(!res[2*i].match(/[0-F]{6}$/))continue;//skip stub
+		else if(src.haz(['"SceAudio"']))result(2*i,"sceAudioInit");
 		else if(src.haz(["0xBE000040) = 0x00000001"]))result(2*i,"sceAudioSetFrequency");
+		else if(src.haz(["(0x00000000, 0x00000000);"]))result(2*i,"sceAudioEnd");
+		else if(src.haz(["(((arg1 << 0x00000001) + arg1) << 0x00000001)"]))result(2*i,"sceAudioSetVolumeOffset");
+		else if(src.haz(["*((int *) 0xBE000004) = 0x00000007;"]))result(2*i,"sceAudioLoopbackTest");
+		else if(src.haz(["*((int *) 0xBE000004) = 0x00000007;"]))result(2*i,"sceAudioLoopbackTest");
 	}
 	print("\ntotal:"+res.length/2+" solved:"+solved+" %"+Math.round(100*solved/(res.length/2))+"\n");
 }
@@ -239,7 +477,19 @@ function lowio(){
 		var src =res[2*i+1];
 		if(!name.match(/[0-F]{6}$/))continue;
 		//if(src.length<59)result(2*i,"<empty>");
-//dmaplus
+//ddr
+		else if(src.haz(["*((int *) 0xBD000020) = (arg1 | 0x00008000);"]))result(2*i,"sceDdrExecSeqCmd");
+		else if(src.haz(["*((int *) 0xBD00002C) = ((((arg1"]))result(2*i,"sceDdrSetPowerDownCounter");
+		else if(src.haz(["*((int *) 0xBD000040) = 0x0000002B;"])&&src.length<500)result(2*i,"sceDdrWriteMaxAllocate");
+		else if(src.haz([" = *((int *) 0xBD00002C);"]))result(2*i,"sceDdrGetPowerDownCounter");
+		else if(src.haz(["(0x00000025, 0x00000000, 0x00000000)"]))result(2*i,"sceDdrResetDevice");
+		else if(src.haz(["sceDdrResetDevice ("]))result(2*i,"sceDdrSetup");
+		else if(src.haz(["sceDdrFlush ("]))result(2*i,"sceDdrChangePllClock");
+		else if(src.haz([" | 0x00000031) ^ 0x00000031) | "]))result(2*i,"sceDdr_driver_19423D2C");
+		else if(src.haz([" = *((int *) 0xBD000030);"])&&src.length<100)result(2*i,"sceDdr_driver_F23B7983");
+		else if(src.haz(["*((int *) 0xBD000034) = ("]))result(2*i,"sceDdr_driver_D341BACD");
+		else if(src.haz(["*((int *) 0xBD000040) = (arg2 | 0x00000010);"]))result(2*i,"sceDdr_driver_6955346C");
+//dmacplus
 		else if((src.length==96)&&(src.indexOf("*((int *) 0xBC800160) = 0x00000000;")+1))result(2*i,"sceDmacplusAvcSuspend");
 		else if(src.haz(["0x80000108","0x80000104","0x80000021"]))result(2*i,"sceDmacplusLcdcSetFormat");
 		else if(src.haz(["(0xA0000000 & 0xE0000000)"]))result(2*i,"sceDmacplusSc128LLI");
@@ -248,7 +498,8 @@ function lowio(){
 		else if(src.haz(["*((int *) 0xBC8001A8) = "]))result(2*i,"sceDmacplusMe2ScLLI");
 		else if(src.haz(["if (!(arg3 == 0x00000000))","var3 = *((int *) 0x0000"])&&src.length<400)result(2*i,"sceDmacplusLcdcGetFormat");
 		else if(src.haz(["0xBC800110","0xBC800100","0xBC80010C","0x00007FFF","0x80000103"]))result(2*i,"sceDmacplusLcdcSetBaseAddr");
-		else if(src.haz(["0xBC800110","0xBC800100","0xBC80010C","0x00007FFF"]))result(2*i,"sceDmacplusLcdcEnable");
+		else if(src.haz(["0xBC800110","0xBC800100","0xBC80010C","0x00007FFF"]))result(2*i,"sceDmacplusLcdcEnable");//sceKernelCpuSuspendIntr ();\n    var6 = *((int *) 0x........); -> sceDmacplusLcdcGetBaseAddr
+		else if(src.haz(["(0x00000015, 0x00000001);"])&&src.length<400)result(2*i,"sceDmacplusLcdcDisable");
 		else if(src.haz(["*((int *) 0xBC800110) = 0x00000002;"]))result(2*i,"sceDmacplusLcdcResume");
 		else if(src.haz(["*((int *) 0xBC800110) = 0x00000000;"]))result(2*i,"sceDmacplusLcdcSuspend");
 		else if(src.haz(["*((int *) 0xBC800150) = var1;"]))result(2*i,"sceDmacplusAvcResume");
@@ -257,7 +508,7 @@ function lowio(){
 		else if(src.haz(["*((int *) 0xBC800010) = ("]))result(2*i,"sceDmacplusAcquireIntr");
 		else if(src.haz(["sceKernelEnableIntr (0x00000015);"]))result(2*i,"sceDmacplusInit");
 		else if(src.haz(["sceKernelEnableSubIntr (0x00000015, 0x00000001);"]))result(2*i,"sceDmacplusLcdcInit");
-		else if(src.haz(["sceKernelEnableSubIntr (0x00000015, 0x00000003);"]))result(2*i,"sceDmacplusAvcInit");
+		else if(src.haz(["sceKernelEnableSubIntr (0x00000015, 0x00000003);"]))result(2*i,"sceDmacplusAvcInit");//get memset(0x........ -> sceDmacplusAvcSync
 		else if(src.haz(["sceKernelEnableSubIntr (0x00000015, 0x00000005);"]))result(2*i,"sceDmacplusSc2MeInit");
 		else if(src.haz(["sceKernelEnableSubIntr (0x00000015, 0x00000007);"]))result(2*i,"sceDmacplusMe2ScInit");
 		else if(src.haz(["sceKernelEnableSubIntr (0x00000015, 0x00000009);"]))result(2*i,"sceDmacplusSc128Init");
@@ -267,6 +518,8 @@ function lowio(){
 		else if(src.haz(["sceKernelReleaseSubIntrHandler (0x00000015, 0x00000003);"]))result(2*i,"sceDmacplusAvcEnd");//2 3
 		else if(src.haz(["sceKernelReleaseSubIntrHandler (0x00000015, 0x00000001);"]))result(2*i,"sceDmacplusLcdcEnd");//1
 		else if(src.haz(["& 0xFFFFFFF7) | ("]))result(2*i,"sceDmacplusMe2ScSync");
+		else if(src.haz(["*((int *) 0xBC800188) = 0x00000000;"]))result(2*i,"sceDmacplusSc2MeNormal16");//1
+		else if(src.haz(["*((int *) 0xBC800190) = 0x0000C001;"]))result(2*i,"sceDmacplusSc2MeLLI");//2
 		else if(src.haz(["sceKernelReleaseIntrHandler (0x00000015);"]))result(2*i,"sceDmacplusEnd");
 //sysreg
 		//else if(src.haz(["var1 = *((int *) 0xBC100080);"])&&src.length<100)result(2*i,"sceSysregUsbGetConnectStatus/sceSysregUsbQueryIntr");
@@ -366,7 +619,7 @@ function lowio(){
 		else if(src.haz(["clck (0x00000001, 0x00000000)"]))result(2*i,"sceSysregAtaClkDisable");
 		else if(src.haz(["clck ((0x00000100 << arg1), 0x00000001)"]))result(2*i,"sceSysregMsifClkEnable");
 		else if(src.haz(["clck ((0x00000100 << arg1), 0x00000000)"]))result(2*i,"sceSysregMsifClkDisable");
-		else if(src.haz(["var1 = *((int *) 0xBC100068);" ]))result(2*i,"sceSysregPllUpdateFrequency");
+		else if(src.haz(["var1 = *((int *) 0xBC100068);"," = *((int *) 0xBC1000FC);"]))result(2*i,"sceSysregPllUpdateFrequency");
 //		else if(src.haz(["lwc1       $fpr00, 11264($v1);"]))result(2*i,"sceSysregPllGetFrequency");
 		else if(src.haz(["var1 = *((int *) 0xBC100068);"]))result(2*i,"sceSysregPllGetOutSelect");
 //		else if(src.haz(["lwc1       $fpr00, 11120($v1);"]))result(2*i,"sceSysregPllGetBaseFrequency");
