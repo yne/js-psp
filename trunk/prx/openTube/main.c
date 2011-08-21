@@ -30,11 +30,35 @@ unsigned short* expandChrStr(char* chr_str, unsigned short* int_str) { //Convert
 	return int_str;
 }
 JS_FUN(edit){
-	Edit(J2I(argv[0]),J2S(argv[1]));
+	char*res=Edit(J2I(argv[0]),argc>1?J2S(argv[1]):NULL);
+	if(!res)return JS_TRUE;
+	int len=strlen(res);
+	char*out=js_malloc(len+1);
+	memcpy(out,res,len);out[len]=0;
+	*rval=S2J(out,len);
+	return JS_TRUE;
+}
+JS_FUN(myopen){
+	if(!argc)return JS_TRUE;
+	int length=0,ret,fd=Open(J2S(argv[0]),PSP_O_RDONLY,0777);
+	if(fd<0)return JS_TRUE;
+	void*result=js_malloc(1024);
+	while((ret=Read(fd,result+length,1024))>0){
+		length+=ret;
+		result=js_realloc(result,length+1024);
+	}
+	Close(fd);
+	*rval=S2J(result,0);
 	return JS_TRUE;
 }
 JS_FUN(play){
-//	Edit(J2I(argv[0]),J2S(argv[1]));
+	if(!argc)return JS_TRUE;
+	char*res=Play(J2S(argv[0]));
+	if(!res)return JS_TRUE;
+	int len=strlen(res);
+	char*out=js_malloc(len+1);
+	memcpy(out,res,len);out[len]=0;
+	*rval=S2J(out,len);
 	return JS_TRUE;
 }
 JS_FUN(alert){
@@ -135,10 +159,11 @@ JS_FUN(prompt){
 }
 static JSFunctionSpec fun[] = {
 	{"edit",edit,0},
-	{"play",play,0},
 	{0}
 };
 static JSFunctionSpec gfun[] = {
+	{"open",myopen,0},
+	{"play",play,0},
 	{"alert",alert,0},
 	{"prompt",prompt,0},
 	{"confirm",confirm,0},
