@@ -40,7 +40,9 @@ JS_FUN(edit){
 }
 JS_FUN(myopen){
 	if(!argc)return JS_TRUE;
+	Mode=0;//interrupt draw loop (in case of netconf gui)
 	int length=0,ret,fd=Open(J2S(argv[0]),PSP_O_RDONLY,0777);
+	Mode=1;
 	if(fd<0)return JS_TRUE;
 	void*result=js_malloc(1024);
 	while((ret=Read(fd,result+length,1024))>0){
@@ -53,7 +55,9 @@ JS_FUN(myopen){
 }
 JS_FUN(play){
 	if(!argc)return JS_TRUE;
+	Mode=0;//interrupt draw loop
 	char*res=Play(J2S(argv[0]));
+	Mode=1;
 	if(!res)return JS_TRUE;
 	int len=strlen(res);
 	char*out=js_malloc(len+1);
