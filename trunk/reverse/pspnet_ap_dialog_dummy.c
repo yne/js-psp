@@ -100,9 +100,8 @@ int _connect (int arg1){//arg for setNetParam (finish him !)
   label126:return
 
     sceKernelMemcpy (sp, arg1, 0x00000021);
-    var10 = sp;
     ((char *) sp)[32] = 0;
-    if ((sceUtilitySetNetParam(1,var10))<0)return;
+    if ((sceUtilitySetNetParam(1,sp))<0)return;
 
 		var13 = ((int *) arg1)[9];
       if (var13 >= 5)
@@ -123,98 +122,97 @@ int _connect (int arg1){//arg for setNetParam (finish him !)
         label72:
           (ret=sceUtilitySetNetParam (4, sp));
           if ((ret=sceUtilitySetNetParam (4, sp)) < 0)return ret;
-						switch(((int *) arg1)[79]){
-							case 0 : ((int *) sp)[0] = 0;break;
-							case 1 : ((int *) sp)[0] = 1;break;
-							default: ((int *) sp)[0] = 0;break;
+					switch(((int *) arg1)[79]){
+						case 0 : ((int *) sp)[0] = 0;break;
+						case 1 : ((int *) sp)[0] = 1;break;
+						default: ((int *) sp)[0] = 0;break;
+					}
+						if ((ret=sceUtilitySetNetParam (0x00000008, sp)) < 0)return ret;
+						sceNetStrncpy (sp, (arg1 + 0x00000140), 0x00000010);
+						if ((ret = sceUtilitySetNetParam (0x00000009, sp);) < 0)return ret;
+						sceNetStrncpy (sp, (arg1 + 0x00000150), 0x00000010);
+						(ret = sceUtilitySetNetParam (0x0000000A, sp));
+						if ((ret = sceUtilitySetNetParam (0x0000000A, sp)) < 0))
+						{
+							var38 = ((int *) arg1)[88];
+							if (var38 == 0)
+							{
+								((int *) sp)[0] = 0;
+
+							label106:
+								var39 = sp;
+								ret = sceUtilitySetNetParam (0x0000000D, var39);
+								ra = ((int *) sp)[34];
+								if (!(ret < 0))
+								{
+									var42 = ((int *) arg1)[122];
+									if (var42 == 0)
+									{
+										((int *) sp)[0] = 0;
+
+									label124:
+										var43 = sp;
+										ret = sceUtilitySetNetParam (0x00000012, var43);
+										goto label126;
+									}
+									else
+									{
+										if (var42 == 1)
+										{
+											var48 = sp;
+											sceNetStrncpy (var48, (arg1 + 0x000001EC), 0x00000080);
+											var51 = sp;
+											ret = sceUtilitySetNetParam (0x00000013, var51);
+											var54 = sp;
+											if (ret < 0)
+												goto label126;
+											sceNetStrncpy (var54, (arg1 + 0x0000026C), 0x00000080);
+											var57 = sp;
+											ret = sceUtilitySetNetParam (0x00000014, var57);
+											ra = ((int *) sp)[34];
+											if (!(ret < 0))
+											{
+												((int *) sp)[0] = var42;
+												goto label124;
+											}
+										}
+										else
+										{
+											((int *) sp)[0] = 0;
+											goto label124;
+										}
+									}
+								}
+							}
+							else
+							{
+								if (var38 == 1)
+								{
+									var60 = sp;
+									sceNetStrncpy (var60, (arg1 + 0x00000164), 0x00000080);
+									var63 = sp;
+									ret = sceUtilitySetNetParam (0x0000000E, var63);
+									if (ret < 0)
+										goto label126;
+									var66 = ((unsigned short *) arg1)[242];
+									var67 = sp;
+									((int *) sp)[0] = var66;
+									ret = sceUtilitySetNetParam (0x0000000F, var67);
+									ra = ((int *) sp)[34];
+									if (!(ret < 0))
+									{
+										((int *) sp)[0] = var38;
+										goto label106;
+									}
+								}
+								else
+								{
+									((int *) sp)[0] = 0;
+									goto label106;
+								}
+							}
 						}
-              if ((ret=sceUtilitySetNetParam (0x00000008, sp)) < 0)return ret;
-              sceNetStrncpy (sp, (arg1 + 0x00000140), 0x00000010);
-              if ((ret = sceUtilitySetNetParam (0x00000009, sp);) < 0)return ret;
-              sceNetStrncpy (sp, (arg1 + 0x00000150), 0x00000010);
-              (ret = sceUtilitySetNetParam (0x0000000A, sp));
-              if ((ret = sceUtilitySetNetParam (0x0000000A, sp)) < 0))
-              {
-                var38 = ((int *) arg1)[88];
-                if (var38 == 0)
-                {
-                  ((int *) sp)[0] = 0;
-
-                label106:
-                  var39 = sp;
-                  ret = sceUtilitySetNetParam (0x0000000D, var39);
-                  ra = ((int *) sp)[34];
-                  if (!(ret < 0))
-                  {
-                    var42 = ((int *) arg1)[122];
-                    if (var42 == 0)
-                    {
-                      ((int *) sp)[0] = 0;
-
-                    label124:
-                      var43 = sp;
-                      ret = sceUtilitySetNetParam (0x00000012, var43);
-                      goto label126;
-                    }
-                    else
-                    {
-                      if (var42 == 1)
-                      {
-                        var48 = sp;
-                        sceNetStrncpy (var48, (arg1 + 0x000001EC), 0x00000080);
-                        var51 = sp;
-                        ret = sceUtilitySetNetParam (0x00000013, var51);
-                        var54 = sp;
-                        if (ret < 0)
-                          goto label126;
-                        sceNetStrncpy (var54, (arg1 + 0x0000026C), 0x00000080);
-                        var57 = sp;
-                        ret = sceUtilitySetNetParam (0x00000014, var57);
-                        ra = ((int *) sp)[34];
-                        if (!(ret < 0))
-                        {
-                          ((int *) sp)[0] = var42;
-                          goto label124;
-                        }
-                      }
-                      else
-                      {
-                        ((int *) sp)[0] = 0;
-                        goto label124;
-                      }
-                    }
-                  }
-                }
-                else
-                {
-                  if (var38 == 1)
-                  {
-                    var60 = sp;
-                    sceNetStrncpy (var60, (arg1 + 0x00000164), 0x00000080);
-                    var63 = sp;
-                    ret = sceUtilitySetNetParam (0x0000000E, var63);
-                    if (ret < 0)
-                      goto label126;
-                    var66 = ((unsigned short *) arg1)[242];
-                    var67 = sp;
-                    ((int *) sp)[0] = var66;
-                    ret = sceUtilitySetNetParam (0x0000000F, var67);
-                    ra = ((int *) sp)[34];
-                    if (!(ret < 0))
-                    {
-                      ((int *) sp)[0] = var38;
-                      goto label106;
-                    }
-                  }
-                  else
-                  {
-                    ((int *) sp)[0] = 0;
-                    goto label106;
-                  }
-                }
-              }
-            }
-          }
+					}
         }
         else
         {
@@ -277,13 +275,9 @@ int _connect (int arg1){//arg for setNetParam (finish him !)
           var110 = ((int *) arg1)[187];
           var111 = sp;
           ((int *) sp)[0] = var110;
-          ret = sceUtilitySetNetParam (0x00000015, var111);
-          var114 = sp;
-          if (ret < 0)
-            goto label126;
-          sceKernelMemcpy (var114, (arg1 + 0x000002F0), 0x00000040);
-          var117 = sp;
-          ret = sceUtilitySetNetParam (0x00000016, var117);
+          if (sceUtilitySetNetParam (0x00000015, var111) < 0)return;
+          sceKernelMemcpy (sp, (arg1 + 0x000002F0), 0x00000040);
+          ret = sceUtilitySetNetParam (0x00000016, sp);
           ra = ((int *) sp)[34];
           if (!(ret < 0))
           {
