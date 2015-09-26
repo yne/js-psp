@@ -1,0 +1,58 @@
+register a mendatory plugin :
+
+sceHVFlash_Module_C6A63B83(){
+	int t[42]
+	t[0] = sizeof(t);
+	t[2] = sceHVNetfront_Module_27D353B1 ("name");
+	t[3] = sceHVNetfront_Module_27D353B1 ("title");
+	t[4] = sceHVNetfront_Module_27D353B1 ("mime-type");
+	t[5] = sceHVNetfront_Module_27D353B1 ("ext");
+	t[6] = sceHVNetfront_Module_27D353B1 ("type");
+	t[7] = void f(int arg1, int arg2, int arg3);
+	t[8] = void f(int arg1, int arg2, int arg3);
+	t[9] = 60;//??
+  t[10] = init(int);
+  t[11] = exit(int);
+  t[12] = open(int,int);
+  t[13] = f(int,int,int,int,int);
+  t[14] = f(int,int,int);
+  t[15] = f();
+  t[16] = f(int,int);
+  t[17] = f(int,int,int,int,int);
+  t[22] = f(int,int);
+  t[19] = f(int,int);
+  t[30] = NULL;
+	sceHVWWW_Library_88D97A6B(arg1,t)
+}
+
+register a custom plugin :
+
+#define RETURN_S(s) {*rtype=1;*rval=(int)(s);return 0;}
+#define RETURN_I(i) {*rtype=0;*rval=(int)(i);return 0;}
+#define JS_FUN(fun) int fun(int arg1,int argc,jsval vp[],int parent,int* rtype,int* rval)
+
+JS_FUN(GetFW){
+	RETURN_I(sceKernelDevkitVersion());
+}
+main(){
+	pspUtilityHtmlViewerParam param;
+	...
+	char* mime="application/x-psp-extplugin";
+	params.unknown4[0]=(int)"WipEoutPulse";
+	params.unknown4[6]=9;//number of function
+	jsMeth funList[]={
+		{mime,"dopen",Dopen,&params,0},
+		{mime,"dread",Dread,&params,0},
+		{mime,"write",Fwrite,&params,0},
+		{mime,"read",Fread,&params,0},
+		{mime,"wget",Wget,&params,0},
+		{mime,"play",Play,&params,0},
+		{mime,"setDlDir",SetDlDir,&params,0},
+		{mime,"getFW",GetFW,&params,0},
+		{mime,"delay",Delay,&params,0},
+		{0,0,0,0,0}
+	};
+	params.unknown4[7]=(int)funList;
+	params.unknown4[9]=1;
+	sceUtilityHtmlViewerInitStart (params)
+}

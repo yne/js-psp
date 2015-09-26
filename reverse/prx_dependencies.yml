@@ -1,0 +1,2064 @@
+adhoc_transfer:
+	sceUtility
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceNet
+	sceNetAdhoc
+	sceNetAdhocctl
+	sceNetAdhocMatching
+	sceNetAdhocTransInt
+	sceVshBridge
+	ModuleMgrForUser
+	ThreadManForUser
+sceAmctrl:
+	ThreadManForKernel
+	semaphore
+sceATA_ATAPI:
+	InterruptManagerForKernel
+	ThreadManForKernel
+	KDebugForKernel
+	sceSysreg
+sceAudiocodec:
+	sceMeMemory
+	sceMeAudio
+	UtilsForKernel
+sceAudio:
+	ThreadManForKernel
+	DmacManForKernel
+	UtilsForKernel
+	SysclibForKernel
+	InterruptManagerForKernel
+	sceSysEventForKernel
+	SysMemForKernel
+	sceClockgen
+	sceCodec
+	sceDdr
+	sceSysreg
+	sceGpio
+sceVshAuthPlugin:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+sceAvcodec_wrapper:
+	sceMePower
+	sceMeMemory
+	sceMeAudio
+	sceMeVideo
+	sceMeCore
+	sceDmacplus
+	ThreadManForKernel
+	UtilsForKernel
+camera:
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+	scePower
+	sceRtc
+	sceUsb
+	sceUsbAcc
+	sceUsbCam
+	sceJpeg
+	sceAudioRouting
+sceCert_Loader:
+	SysMemForKernel
+	IoFileMgrForKernel
+sceChkreg:
+	ThreadManForKernel
+	sceIdStorage
+	semaphore
+sceChnnlsv:
+	ThreadManForKernel
+	semaphore
+sceClockgen:
+	ThreadManForKernel
+	sceSysEventForKernel
+	sceI2c
+sceWM8750:
+	ThreadManForKernel
+	sceSysEventForKernel
+	sceI2c
+	sceSysreg
+	sceGpio
+sceVshCommonGui:
+	scePaf
+sceVshCommonUtil:
+	scePaf
+	sceReg
+	scePower
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+content_browser:
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	sceFileParserBase
+	scePaf
+	IoFileMgrForUser
+	ThreadManForUser
+	sceVshBridge
+sceController:
+	SysMemForKernel
+	sceSuspendForKernel
+	sceSysEventForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	SysTimerForKernel
+	sceDisplay
+	sceSyscon
+dd_helper:
+	sceHtmlViewerHelper
+	scePaf
+	sceVshCommonUtil
+	sceVshCommonGui
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+	sceHttp
+	sceParseHttp
+	sceNetApctl
+	sceVshBridge
+sceVshDdHelper:
+	sceHtmlViewerHelper
+	scePaf
+	sceVshCommonUtil
+	sceVshCommonGui
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+	sceHttp
+	sceParseHttp
+	sceNetApctl
+sceDialogmain:
+	sceUtility_private
+	sceVshCommonUtil
+	scePaf
+	sceGe_user
+	sceCtrl
+	scePower
+	IoFileMgrForUser
+	ThreadManForUser
+sceDisplay:
+	SysMemForKernel
+	sceSysEventForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	InitForKernel
+	UtilsForKernel
+	sceSysreg
+	sceGpio
+	scePwm
+	sceI2c
+	sceDmacplus
+	sceLcdc
+	sceGe
+	sceSyscon
+	sceIdStorage
+sceDMAManager:
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	sceSuspendForKernel
+	KDebugForKernel
+sceVshDNASPlugin:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	ThreadManForUser
+	sceNetApctl
+	sceDNAS_lib
+sceExceptionManager:
+sceMSFAT:
+	InterruptManagerForKernel
+	IoFileMgrForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	SysclibForKernel
+	SysMemForKernel
+	sceSysEventForKernel
+	sceRtc
+sceFileParserBase:
+	scePaf
+	sceHttp
+	IoFileMgrForUser
+	ThreadManForUser
+sceG729:
+	sceMeCore
+	UtilsForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	SysclibForKernel
+sceVshInstall:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePsheet
+	sceUtility_private
+	scePaf
+	scePower
+	IoFileMgrForUser
+game:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	vsh
+	sceVshBridge
+	sceRtc
+	IoFileMgrForUser
+	ThreadManForUser
+	scePspNpDrm_user
+sceGE_Manager:
+	SysMemForKernel
+	sceSysEventForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	InitForKernel
+	sceSysreg
+sceHP_Remote:
+	SysMemForKernel
+	sceSuspendForKernel
+	KDebugForKernel
+	sceSysEventForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	sceSysreg
+	sceSyscon
+	sceCtrl
+htmlviewer:
+	sceHVUI
+	sceHVAuth
+	scePaf
+	vsh
+	sceVshCommonUtil
+	sceVshCommonGui
+	sceUtility_private
+	sceGe_user
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	sceNetApctl
+	sceHttp
+	sceHttpStorage_bridge
+	sceReg
+	sceDisplay
+	sceVshBridge
+	sceNetApctl_lib2
+sceHVUI:
+	sceDisplay
+	sceGe_user
+	sceUtility
+	sceRtc
+	sceLibFont_HV
+	sceNetInet
+	sceNetApctl
+	sceHttp
+	sceParseHttp
+	sceWlanDrv
+	sceHVSlim
+	sceHVNetfront
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	StdioForUser
+	SysMemUserForUser
+	ThreadManForUser
+	UtilsForUser
+	sceSuspendForUser
+	sceAudio
+sceVshHVUtility:
+	sceHVUI
+	sceUtility
+	sceUtility_private
+	sceReg
+	sceDisplay
+	sceHttpStorage_bridge
+	sceImpose
+	sceGe_user
+	sceCtrl
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	sceHttp
+	sceNetApctl
+	sceNetApctl_lib2
+sceHttpStorage:
+	IoFileMgrForKernel
+	ModuleMgrForKernel
+	sceChkreg
+sceHVAuth:
+	ThreadManForUser
+sceIdManager:
+	IoFileMgrForKernel
+	InitForKernel
+	SysclibForKernel
+	SysMemForKernel
+	ThreadManForKernel
+	scePspNpDrm
+sceIdStorage:
+	KDebugForKernel
+	sceSuspendForKernel
+	sceSysEventForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	sceSysreg
+	sceNand
+sceNetInterface:
+	sceWlanDrv
+	ModuleMgrForKernel
+	SysMemForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	InterruptManagerForKernel
+	KDebugForKernel
+sceImpose:
+	sceSysEventForKernel
+	SysMemForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	LoadExecForKernel
+	sceVaudio
+	InitForKernel
+	sceCtrl
+	sceDisplay
+	sceRtc
+	sceCodec
+	scePower
+	sceReg
+	sceHprm
+	sceUmdMan
+	IoFileMgrForKernel
+	sceDve
+	sceAudio
+impose:
+	vsh
+	scePaf
+	sceCtrl
+	scePower
+	sceVshBridge
+sceInit:
+	KDebugForKernel
+	SysMemForKernel
+	sceSuspendForKernel
+	LoadCoreForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	StdioForKernel
+	ThreadManForKernel
+	ModuleMgrForKernel
+	LoadExecForKernel
+sceInterruptManager:
+	ExceptionManagerForKernel
+	LoadCoreForKernel
+	SysMemForKernel
+	SysclibForKernel
+	sceSuspendForKernel
+sceIOFileManager:
+	InterruptManagerForKernel
+	SysMemForKernel
+	sceSuspendForKernel
+	KDebugForKernel
+	SysclibForKernel
+	ThreadManForKernel
+sceIoFilemgrDNAS:
+	sceAmctrl
+	KDebugForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	InitForKernel
+sceIrDA:
+	sceSysEventForKernel
+	IoFileMgrForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	sceSuspendForKernel
+	sceSysreg
+	sceGpio
+sceIsofs:
+	InterruptManagerForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	SysclibForKernel
+	SysMemForKernel
+	sceRtc
+	sceUmd
+	sceUmdMan
+	sceUmd9660
+launcher:
+	sceUtility
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceVshBridge
+	Kernel
+	ModuleMgrForUser
+	ThreadManForUser
+	sceNetApctl
+sceLED:
+	sceSysEventForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	sceSyscon
+	sceGpio
+sceLFatFs:
+	LoadExecForKernel
+	InitForKernel
+	InterruptManagerForKernel
+	IoFileMgrForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	SysclibForKernel
+	KDebugForKernel
+	sceNand
+	sceRtc
+	sceSysreg
+	sceSuspendForKernel
+	sceSysEventForKernel
+sceLflashFatfmt:
+	InterruptManagerForKernel
+	ThreadManForKernel
+	SysclibForKernel
+	IoFileMgrForKernel
+	sceLFatFs
+lftv_main:
+	sceUtility
+	sceVshNetconf
+	sceVshLftvMw
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePower
+	scePaf
+	sceWlanDrv
+	sceNet
+	sceNetInet
+	sceNetResolver
+	sceNetApctl
+	sceMpegbase
+	sceRtc
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+	sceVshBridge
+sceVshLftvMw:
+	scePaf
+	sceNetInet
+	sceNet
+	sceNetResolver
+	sceRtc
+	sceVshBridge
+	sceMpeg
+	sceVideocodec
+	sceAudiocodec
+	sceMpegbase
+	IoFileMgrForUser
+	ThreadManForUser
+	sceNetApctl
+lftv:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceUtility
+	sceNet
+	sceNetApctl
+	sceSuspendForUser
+	ThreadManForUser
+sceAac:
+	Kernel
+	ThreadManForUser
+	sceAudiocodec
+sceASFParser:
+sceATRAC3plus:
+	Kernel
+	sceAudiocodec
+sceAudiocodec2:
+sceDNAS:
+	ThreadManForUser
+	sceDNASCore_lib
+	sceSsl_lib
+	sceNetApctl
+	sceNet
+	sceNet_lib
+	sceNetInet
+	sceNetResolver
+	sceCertLoader
+sceDNASCore_lib:
+	SysclibForKernel
+	sceChkreg
+	SysMemForKernel
+	ModuleMgrForKernel
+	sceRtc
+	sceMcctrl
+sceFont_ARIB:
+	sceReg
+	IoFileMgrForUser
+sceFont_HV:
+	sceReg
+	IoFileMgrForUser
+SceHttp:
+	sceParseUri
+	sceParseHttp
+	sceNetApctl
+	sceNetResolver
+	sceNetInet
+	sceSsl_lib
+	sceCertLoader
+	sceRtc
+	Kernel
+	ThreadManForUser
+	UtilsForUser
+	sceNet_lib
+	SysMemUserForUser
+	sceHttpStorage
+sceMp3:
+	Kernel
+	sceAudiocodec
+	SysMemUserForUser
+SceParseHTTPheader:
+	ThreadManForUser
+SceParseURI:
+	ThreadManForUser
+pspvmc:
+	sceChnnlsv
+	sceVshCommonUtil
+	sceRtc
+	IoFileMgrForUser
+	ThreadManForUser
+	scePaf
+sceHVSlim:
+	sceRtc
+sceSsl:
+	sceNet_lib
+	ThreadManForUser
+	sceRtc
+	sceNetInet
+	SysMemUserForUser
+SceUpdateDL:
+	sceNet_lib
+	sceHttp
+	sceParseHttp
+	sceNetApctl
+	ThreadManForUser
+sceHVWWW:
+	sceHVNetfront
+sceLoaderCore:
+	SysMemForKernel
+	KDebugForKernel
+	UtilsForKernel
+	InterruptManagerForKernel
+	memlmd
+	sceMesgLed
+sceLoadExec:
+	SysMemForKernel
+	sceSuspendForKernel
+	KDebugForKernel
+	LoadCoreForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	ModuleMgrForKernel
+	InitForKernel
+	UtilsForKernel
+sceLowIO:
+	sceSysEventForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	DmacManForKernel
+	UtilsForKernel
+sceMcctrl:
+	sceDdrdb
+	sceIdStorage
+mcore:
+	scePaf
+	sceRtc
+	sceUtility
+	sceVshBridge
+	sceMlnBridge
+sceUmd:
+	InterruptManagerForKernel
+	IoFileMgrForKernel
+	ThreadManForKernel
+	SysclibForKernel
+	SysMemForKernel
+sceMediaSync:
+	SysMemForKernel
+	SysclibForKernel
+	IoFileMgrForKernel
+	ThreadManForKernel
+	InitForKernel
+	sceUmd
+	sceLFatFs
+sceMemab:
+	ThreadManForKernel
+	sceIdStorage
+	semaphore
+sceMemlmd:
+	sceSysEventForKernel
+	ThreadManForKernel
+	InterruptManagerForKernel
+	UtilsForKernel
+	sceSuspendForKernel
+sceMesgLed:
+	ThreadManForKernel
+	semaphore
+sceMeCodecWrapper:
+	sceSysreg
+	UtilsForKernel
+	IoFileMgrForKernel
+	sceSysEventForKernel
+	SysclibForKernel
+	SysMemForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	sceDdr
+	sceSyscon
+	sceWmd
+sceMgr:
+	KDebugForKernel
+	SysclibForKernel
+	InterruptManagerForKernel
+	sceSuspendForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	UtilsForKernel
+	sceMScm
+	sceIdStorage
+sceMGVideo:
+	sceMgr
+	SysclibForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	sceSuspendForKernel
+	sceRtc
+sceMlnBridge:
+	UtilsForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	sceRtc
+	sceOpenPSID
+	sceMgr
+	sceMlnpsnl
+mlnusb:
+	mcore
+	sceUsbstormln
+	scePaf
+	sceVshBridge
+	ThreadManForUser
+	sceMlnBridge
+sceHVFlash:
+	sceHVWWW
+	sceHVNetfront
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	StdioForUser
+	SysMemUserForUser
+	ThreadManForUser
+	UtilsForUser
+sceModuleManager:
+	KDebugForKernel
+	SysMemForKernel
+	LoadCoreForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	UtilsForKernel
+sceMpegbase:
+	sceDmacplus
+	ThreadManForKernel
+	UtilsForKernel
+	SysclibForKernel
+	SysMemForKernel
+sceMpeg:
+	ThreadManForUser
+	UtilsForUser
+	sceVideocodec
+	sceAudiocodec
+	sceMpegbase
+sceMpegVsh:
+	ThreadManForUser
+	UtilsForUser
+	sceVideocodec
+	sceAudiocodec
+	sceMpegbase
+sceMsAudio:
+	sceMgr
+	SysclibForKernel
+	ThreadManForKernel
+	sceSuspendForKernel
+	sceRtc
+sceVshMSDPlugin:
+	sceUtility_private
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+sceMSstor:
+	InterruptManagerForKernel
+	SysMemForKernel
+	sceSysEventForKernel
+	IoFileMgrForKernel
+	ThreadManForKernel
+	DmacManForKernel
+	UtilsForKernel
+	KDebugForKernel
+	SysclibForKernel
+	sceSuspendForKernel
+	sceSysreg
+	sceSyscon
+	sceLed
+	scePower
+msvideo_main:
+	sceMsVideoPluginHeap
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	sceLibFont_ARIB
+	scePaf
+	sceDisplay
+	sceMpegbase
+	sceMpeg
+	sceAudiocodec
+	sceVideocodec
+	sceJpeg
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+	sceRtc
+	sceNetApctl
+	scePower
+	sceVshBridge
+	sceVaudio
+	mcore
+msvideo:
+	sceUtility
+	sceVshCommonUtil
+	sceVshCommonGui
+	vsh
+	scePaf
+	Kernel
+	ThreadManForUser
+	sceNetApctl
+music_browser:
+	music_player
+	music_parser
+	content_browser
+	sceFileParserBase
+	vsh
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+	sceVshBridge
+	IoFileMgrForUser
+	ThreadManForUser
+music_2:
+	music_browser
+	music_player
+	content_browser
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+music_parser:
+	sceFileParserBase
+	sceVshCommonUtil
+	scePaf
+	sceAsfParser
+	IoFileMgrForUser
+music_player:
+	music_parser
+	content_browser
+	sceFileParserBase
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceAudiocodec
+	sceVshBridge
+	IoFileMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	scePower
+sceVshNetconf:
+	sceVshNetconfRaku
+	sceVshNetconfAoss
+	sceUtility_netparam_internal
+	sceUtility
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceSuspendForUser
+	ThreadManForUser
+	sceHttp
+	sceNetUpnp
+	sceNet
+	sceNetApctl
+	sceNetAdhocctl
+	sceNetApctl_lib
+	sceNetAdhocctl_lib
+	sceNetApctl_lib2
+	sceNetWispr
+sceVshNetconfAoss:
+	scePaf
+	sceWlanDrv
+	ThreadManForUser
+	sceUtility_netparam_internal
+	sceNet
+	sceNetInet
+	sceNetApctl
+	sceNetApctl_lib
+sceVshNetconfRaku:
+	scePaf
+	sceWlanDrv
+	ThreadManForUser
+	sceUtility_netparam_internal
+	sceNet
+	sceNetApctl_internal_user
+	sceNetInet
+	sceNetApctl
+	sceRtc
+sceHVNetfront:
+	sceHVFlash
+	sceHVWWW
+	sceHttp
+	sceRtc
+	sceSsl
+	sceParseHttp
+	sceParseUri
+	sceUtility
+	sceLibFont_HV
+	sceNetApctl
+	sceAudiocodec
+	sceOpenPSID
+	sceAudio
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	StdioForUser
+	SysMemUserForUser
+	ThreadManForUser
+	UtilsForUser
+	sceSuspendForUser
+sceVshGSPlugin:
+	sceUtility
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceNet
+	sceNetAdhoc
+	sceNetAdhocctl
+	sceNetAdhocMatching
+	sceNetAdhocDownload
+	sceNetAdhocAuth_lib
+	sceVshBridge
+	ModuleMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+sceVshGSpUtility:
+	sceUtility
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceWlanDrv
+	sceNetAdhocDownload
+	sceNetAdhocctl_lib
+	IoFileMgrForUser
+	ThreadManForUser
+sceVshGSUtility:
+	sceUtility
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceWlanDrv
+	sceNetAdhocDownload
+	sceNetAdhocctl_lib
+	IoFileMgrForUser
+sceNp9660:
+	sceAmctrl
+	sceDdrdb
+	SysMemForKernel
+	sceSysEventForKernel
+	InterruptManagerForKernel
+	InitForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	SysclibForKernel
+	scePspNpDrm
+npadmin:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	vsh
+	ThreadManForUser
+	sceRtc
+	sceHttp
+	sceNet
+	sceNetApctl
+	sceWlanDrv
+	sceNp
+	sceNpCore
+	sceNpService
+	sceNpCommerce2
+	sceNpCommerce2Store
+	sceNpCommerce2RegCam
+scePspNpDrm:
+	sceDdrdb
+	sceAmctrl
+	ThreadManForKernel
+	ModuleMgrForKernel
+	SysclibForKernel
+	KDebugForKernel
+	sceRtc
+	sceOpenPSID
+	IoFileMgrForKernel
+	sceMgMemoryStick
+sceNp:
+	sceRtc
+	sceReg
+	sceNpCore
+	ThreadManForUser
+sceVshNpInstaller:
+	scePaf
+	sceUtility_private
+	sceUtility
+	sceVshCommonGui
+	sceVshCommonUtil
+	sceDdrdb
+	IoFileMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	sceNet
+	sceHttp
+	sceParseHttp
+	sceParseUri
+	sceNp
+	sceNpCore
+	sceNpInstall_user
+sceVshNpSignin:
+	sceUtility_private
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceHttpStorage_bridge
+	sceNet
+	sceNetApctl
+	sceWlanDrv
+	sceNp
+	sceNpService
+	sceLibUpdateDL
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+npsignup:
+	scePaf
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	sceRtc
+	sceHttp
+	sceNet
+	sceNetApctl
+	sceWlanDrv
+	sceNpCommerce2
+	sceNpCommerce2Store
+	sceNpCommerce2RegCam
+	sceNpCore
+	sceLibUpdateDL
+	sceVshBridge
+sceNpAuth:
+	sceNpCore
+	SysMemUserForUser
+	sceNet
+	sceNet_lib
+	sceParseUri
+	sceParseHttp
+	sceHttp
+	sceNp
+	Kernel
+	ModuleMgrForUser
+	ThreadManForUser
+sceNpCommerce2:
+	sceNetIfhandle_lib
+	sceNpCore
+	sceRtc
+	sceNet_lib
+	sceParseUri
+	sceHttp
+	sceNp
+	Kernel
+	ThreadManForUser
+sceNpCommerce2RegCam:
+	sceNpCommerce2
+	sceNetIfhandle_lib
+	sceNet_lib
+sceNpCommerce2Store:
+	sceNpCommerce2
+	sceNetIfhandle_lib
+	sceNet_lib
+sceNpCore:
+	sceOpenPSID
+	sceReg
+	SysclibForKernel
+	UtilsForKernel
+	KDebugForKernel
+sceNpInstall:
+	ThreadManForKernel
+	SysclibForKernel
+	IoFileMgrForKernel
+	scePspNpDrm
+	scePcact
+	sceRtc
+	sceOpenPSID
+sceNpMatching2:
+	sceOpenPSID
+	SysMemUserForUser
+	sceCertLoader
+	sceNpCore
+	sceNet
+	sceNet_lib
+	sceNetInet
+	sceNetResolver
+	sceNetUpnp
+	sceNetStun
+	sceSsl_lib
+	sceNp
+	sceNpService
+	sceNetApctl
+	sceNetInet_lib
+	Kernel
+	ThreadManForUser
+sceNpService:
+	sceNpCore
+	SysMemUserForUser
+	sceRtc
+	sceNet
+	sceNet_lib
+	sceParseHttp
+	sceHttp
+	sceNp
+	sceNpAuth
+	Kernel
+	ModuleMgrForUser
+	ThreadManForUser
+oneseg_core:
+	onesegSdk
+	onesegSdkCore
+	onesegHalToolbox
+	onesegSal
+	sceNetApctl
+	sceHttp
+	sceWlanDrv
+	sceMpegbase
+	sceMpeg
+	sceAudiocodec
+	sceVaudio
+	sceVshCommonUtil
+	vsh
+	sceChnnlsv
+	scePaf
+	sceUsb1Seg
+	sceDisplay
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+	UtilsForUser
+	sceVshBridge
+	sceUsb
+	sceUsbAcc
+oneseg_hal_toolbox:
+	onesegSal
+	onesegCore
+	sceLibFont_ARIB
+	scePaf
+	IoFileMgrForUser
+oneseg_lnch:
+	sceUtility
+	sceVshCommonUtil
+	sceVshCommonGui
+	vsh
+	scePaf
+	Kernel
+	ThreadManForUser
+	sceNetApctl
+	sceHttp
+oneseg:
+	onesegSdk
+	onesegCore
+	onesegSal
+	sceNetApctl
+	sceMpegbase
+	sceRtc
+	sceOnesegLnch
+	sceVshCommonGui
+	sceVshCommonUtil
+	vsh
+	scePaf
+	scePower
+	sceUmdUser
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+	sceVshBridge
+	sceUsb
+	sceUsbAcc
+	sceUtility
+oneseg_sal:
+	onesegCore
+	sceRtc
+	scePaf
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+oneseg_sdkcore:
+	onesegSdk
+	onesegSal
+	onesegHalToolbox
+	onesegCore
+	scePaf
+oneseg_sdk:
+	onesegCore
+	onesegSdkCore
+	onesegSal
+	onesegHalToolbox
+	scePaf
+	ThreadManForUser
+opening:
+	sceVshCommonUtil
+	vsh
+	scePaf
+	scePower
+	sceAtrac3plus
+	sceAudio
+	sceSuspendForUser
+	ThreadManForUser
+sceOpenPSID:
+	ThreadManForKernel
+	sceIdStorage
+	semaphore
+sceVshOSK:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceSuspendForUser
+	sceUtility_private
+scePaf:
+	sceGe_user
+	sceCtrl
+	sceDisplay
+	sceDmac
+	InterruptManager
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	SysMemUserForUser
+	ThreadManForUser
+	UtilsForUser
+	sceRtc
+	sceMpeg
+	sceAudio
+	sceReg
+	sceAtrac3plus
+	sceVshBridge
+scePaf:
+	sceGe_user
+	sceCtrl
+	sceDisplay
+	sceDmac
+	InterruptManager
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	SysMemUserForUser
+	ThreadManForUser
+	UtilsForUser
+	sceRtc
+	sceAudio
+	sceReg
+photo_browser:
+	content_browser
+	sceFileParserBase
+	vsh
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+	IoFileMgrForUser
+	ThreadManForUser
+photo_main:
+	photo_player
+	photo_browser
+	content_browser
+	sceFileParserBase
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+photo_player:
+	content_browser
+	sceFileParserBase
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	IoFileMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+pops:
+	pspvmc
+	sceLibFont_HV
+	scePaf
+	sceVshCommonUtil
+	sceDmac
+	sceDisplay
+	sceCtrl
+	sceGe_user
+	sceUtility
+	sceRtc
+	scePower
+	sceImpose
+	sceMeAudio
+	scePopsMan
+	IoFileMgrForUser
+	LoadExecForUser
+	SysMemUserForUser
+	ThreadManForUser
+	UtilsForUser
+scePops_Manager:
+	sceSuspendForKernel
+	sceSysEventForKernel
+	SysMemForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	InitForKernel
+	ModuleMgrForKernel
+	IoFileMgrForKernel
+	LoadExecForKernel
+	sceAmctrl
+	sceImpose
+	sceSysreg
+	sceDdr
+	sceSyscon
+	sceClockgen
+	sceGe
+	sceDisplay
+	sceIdMgr
+	scePspNpDrm
+	sceHprm
+	sceDve
+	sceCodec
+scePower:
+	SysMemForKernel
+	sceSuspendForKernel
+	sceSysEventForKernel
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	InitForKernel
+	KDebugForKernel
+	sceSysreg
+	sceGpio
+	sceDdr
+	sceGe
+	sceSyscon
+	sceRtc
+	sceCtrl
+	sceDisplay
+	sceIdStorage
+premo:
+	sceAudiocodec2
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+	sceHttp
+	sceParseHttp
+	sceNet
+	sceNetInet
+	sceNetApctl
+	sceNetApctl_lib2
+	sceWlanDrv
+	sceOpenPSID
+	sceMlnBridge
+	sceMpegbase
+	sceVideocodec
+	sceAudiocodec
+	sceMpeg
+	sceNp
+	sceNpService
+	sceVshBridge
+sceVshPS3Scan:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	Kernel
+	ThreadManForUser
+	sceNetInet
+	sceNetApctl
+	sceWlanDrv
+scePsheet:
+	sceAmctrl
+	sceMesgIns
+	KDebugForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+psn:
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	Kernel
+	ThreadManForUser
+	sceNetApctl
+	sceNpService
+sceNet:
+	sceNetIfhandle_lib
+	sceWlanDrv_lib
+	SysMemUserForUser
+	Kernel
+	ThreadManForUser
+	UtilsForUser
+sceNetAdhocctl:
+	sceUtility
+	SysMemUserForUser
+	scePower
+	sceNetAdhocAuth_lib
+	sceWlanDrv_lib
+	sceWlanDrv
+	sceNet
+	sceNet_lib
+	sceNetAdhoc
+	ModuleMgrForUser
+	ThreadManForUser
+sceNetAdhoc:
+	sceWlanDrv_lib
+	sceNetIfhandle_lib
+	sceNetAdhocAuth_lib
+	sceNet
+	sceNet_lib
+	ThreadManForUser
+sceNetAdhocAuth:
+	sceNetIfhandle
+	sceMemab
+	SysclibForKernel
+	ThreadManForKernel
+	InterruptManagerForKernel
+	SysMemForKernel
+sceNetAdhocDiscover:
+	sceUtility
+	sceNetIfhandle_lib
+	sceNet_lib
+	sceNetAdhocctl
+	sceNetAdhocctl_lib
+	ThreadManForUser
+sceNetAdhocDownload:
+	sceUtility
+	sceNetAdhocMatching
+	sceNet_lib
+	sceNet
+	sceNetAdhoc
+	Kernel
+	ThreadManForUser
+sceNetAdhocMatching:
+	sceNet
+	sceNet_lib
+	sceNetAdhoc
+	sceWlanDrv
+	Kernel
+	ModuleMgrForUser
+	ThreadManForUser
+sceNetAdhocTransInt:
+	sceNet
+	sceNet_lib
+	sceNetAdhoc
+	sceNetAdhocMatching
+	Kernel
+	ThreadManForUser
+sceNetApctl:
+	sceWlanDrv
+	sceWlanDrv_lib
+	sceUtility
+	sceUtility_netparam_internal
+	SysMemUserForUser
+	sceNet
+	sceNet_lib
+	sceNetInet
+	sceNetInet_lib
+	ModuleMgrForUser
+	ThreadManForUser
+	UtilsForUser
+sceNetInet:
+	sceNetIfhandle_lib
+	sceNet_lib
+	ThreadManForUser
+	UtilsForUser
+sceNetResolver:
+	sceNetIfhandle_lib
+	sceNet_lib
+	sceNetInet
+	sceNetInet_lib
+	Kernel
+	ThreadManForUser
+sceNetUpnp:
+	sceNetIfhandle_lib
+	sceNet
+	sceNet_lib
+	sceNetInet
+	sceNetApctl
+	sceNetResolver
+	sceReg
+	ThreadManForUser
+sceNetWispr:
+	sceWlanDrv
+	sceUtility
+	sceUtility_netparam_internal
+	sceNet
+	sceNet_lib
+	sceHttp
+	sceParseHttp
+	sceParseUri
+	sceNetApctl
+	ThreadManForUser
+radioshack:
+	sceVshBridge
+	sceWlanDrv
+	sceNetApctl
+	sceParseHttp
+	sceParseUri
+	sceNetInet
+	sceNetResolver
+	sceRtc
+	scePower
+	sceVshCommonGui
+	sceVshCommonUtil
+	vsh
+	scePaf
+	sceHttp
+	sceAudiocodec
+	IoFileMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+sceRegistry:
+	ThreadManForKernel
+	SysclibForKernel
+	IoFileMgrForKernel
+	sceSuspendForKernel
+	UtilsForKernel
+rss_browser:
+	rss_common
+	rss_downloader
+	music_player
+	content_browser
+	sceFileParserBase
+	vsh
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+	ThreadManForUser
+	sceRtc
+sceVshRssCommon:
+	sceFileParserBase
+	sceVshCommonUtil
+	scePaf
+	sceOpenPSID
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+	sceRtc
+	scePower
+rss_downloader:
+	rss_common
+	content_browser
+	sceFileParserBase
+	vsh
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+	sceUtility
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	sceNetApctl
+	sceRtc
+rss_main:
+	rss_browser
+	rss_downloader
+	music_player
+	content_browser
+	sceVshCommonUtil
+	sceVshCommonGui
+	scePaf
+	ThreadManForUser
+sceVshRssReader:
+	rss_common
+	sceFileParserBase
+	scePaf
+	ThreadManForUser
+	sceRtc
+sceVshRssSubscriber:
+	rss_common
+	sceFileParserBase
+	sceHtmlViewerHelper
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+sceRTC:
+	SysMemForKernel
+	sceSysEventForKernel
+	sceSuspendForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	SysclibForKernel
+	KDebugForKernel
+	UtilsForKernel
+	InitForKernel
+	sceSyscon
+sceVshSDAuto:
+	sceChnnlsv
+	sceUtility_private
+	sceRtc
+	scePower
+	SysMemUserForUser
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+sceVshSDPlugin:
+	sceChnnlsv
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceRtc
+	sceVshBridge
+	IoFileMgrForUser
+	ThreadManForUser
+sceVshSDUtility:
+	sceChnnlsv
+	sceUtility_private
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceRtc
+	IoFileMgrForUser
+	SysMemUserForUser
+	ThreadManForUser
+sceVshSSPlugin:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceGe_user
+	IoFileMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+sceSAScore:
+	sceMeCore
+	sceMeMemory
+	UtilsForKernel
+	ThreadManForKernel
+	SysMemForKernel
+sceSemawm:
+	semaphore
+sceSIRCS_IrDA:
+	sceSysEventForKernel
+	IoFileMgrForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	sceSuspendForKernel
+	sceSysreg
+	sceGpio
+skype_main:
+	sceVe
+	vsh
+	sceUtility
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceHttp
+	sceNetResolver
+	sceNet
+	sceNetApctl
+	sceNetApctl_lib2
+	sceVshBridge
+	sceRtc
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	SysMemUserForUser
+	ThreadManForUser
+	scePower
+skype:
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceNetApctl
+	sceVshBridge
+	Kernel
+	ThreadManForUser
+	sceUsb
+	sceUsbAcc
+Skyhost:
+	sceNet
+	sceNetInet
+	sceRtc
+	sceNetApctl
+	sceOpenPSID
+	IoFileMgrForUser
+	SysMemUserForUser
+	ThreadManForUser
+	sceVe
+sceVe:
+	ThreadManForUser
+	sceAudioRouting
+	sceAudio
+	sceG729
+	sceAudiocodec
+	sceUsb
+	sceUsbAcc
+	sceUsbMic
+	sceUtility
+	sceVshBridge
+	scePaf
+sceVshStoreBrowser:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	vsh
+	sceHttp
+	sceParseUri
+	sceParseHttp
+	sceNet
+	sceNetApctl
+	IoFileMgrForUser
+	Kernel
+	ThreadManForUser
+	sceNp
+	sceNpCore
+	sceNpCommerce2
+	sceNpCommerce2Store
+	sceRtc
+sceVshStoreCheckout:
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	Kernel
+	ThreadManForUser
+	sceRtc
+	sceNet
+	sceNetApctl
+	sceParseUri
+	scePower
+	sceHttp
+	sceNp
+	sceNpCore
+	sceNpCommerce2
+	sceNpCommerce2Store
+	sceNpCommerce2RegCam
+sysconf:
+	sceUtility
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	pspvmc
+	scePaf
+	sceRtc
+	sceUsb
+	sceUsbstor
+	sceVshBridge
+	scePower
+	sceVaudio
+	IoFileMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	sceNetApctl
+	scePspNpDrm_user
+	sceHttp
+	sceOpenPSID
+	mlnusb
+sceSYSCON:
+	sceSysEventForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	SysclibForKernel
+	UtilsForKernel
+	sceSysreg
+	sceGpio
+sceSystemMemoryManager:
+sceSystimer:
+	InterruptManagerForKernel
+	sceSuspendForKernel
+sceThreadManager:
+	InterruptManagerForKernel
+	ExceptionManagerForKernel
+	SysMemForKernel
+	KDebugForKernel
+	sceSuspendForKernel
+	SysclibForKernel
+	LoadCoreForKernel
+sceUmd9660:
+	SysMemForKernel
+	ModuleMgrForKernel
+	KDebugForKernel
+	InterruptManagerForKernel
+	InitForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	SysclibForKernel
+	UtilsForKernel
+	sceUmd
+	sceUmdMan
+	sceUmdCache
+sceUmdCache:
+	SysMemForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	SysclibForKernel
+	DmacManForKernel
+	UtilsForKernel
+	sceDdr
+	KDebugForKernel
+sceUmdMan:
+	InterruptManagerForKernel
+	InitForKernel
+	KDebugForKernel
+	LoadExecForKernel
+	ThreadManForKernel
+	sceSysEventForKernel
+	SysMemForKernel
+	UtilsForKernel
+	SysclibForKernel
+	sceSysreg
+	sceGpio
+	sceClockgen
+	sceIdStorage
+	sceSyscon
+	sceAta
+	sceUmd
+	sceDdr
+update:
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	scePower
+	sceLibUpdateDL
+	sceNetApctl
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	sceRtc
+	sceVshBridge
+sceUSB:
+	InterruptManagerForKernel
+	SysclibForKernel
+	sceSysEventForKernel
+	SysMemForKernel
+	sceSuspendForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	sceDdr
+	sceGpio
+	sceIdStorage
+	sceOpenPSID
+	scePower
+	sceSyscon
+	sceSysreg
+sceUSB1Seg:
+	sceUsbBus
+	sceUsbAcc_internal
+	InterruptManagerForKernel
+	KDebugForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	sceClockgen
+sceUSBCam:
+	sceUsbBus
+	sceUsbAcc_internal
+	InterruptManagerForKernel
+	KDebugForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	DmacManForKernel
+	sceSuspendForKernel
+	sceDdr
+sceUSBDmb:
+	sceUsbBus
+	sceUsbAcc_internal
+	InterruptManagerForKernel
+	KDebugForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	sceClockgen
+sceUSBGps:
+	sceUsbBus
+	sceUsbAcc_internal
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	IoFileMgrForKernel
+	sceSysEventForKernel
+	scePower
+	sceRtc
+sceUSBMic:
+	sceUsbBus
+	sceUsbAcc_internal
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+sceUSB_Acc:
+	sceUsbBus
+	InterruptManagerForKernel
+	ThreadManForKernel
+	UtilsForKernel
+sceUSB_PSPComm:
+	sceUsbBus
+	InterruptManagerForKernel
+	IoFileMgrForKernel
+	KDebugForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	SysclibForKernel
+	SysMemForKernel
+sceUSB_Stor_Boot:
+	SysclibForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	sceUsbstor_internal
+	sceRtc
+	scePspNpDrm
+	sceSemawm
+	scePcact
+sceUSB_Stor:
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	UtilsForKernel
+	sceUsbBus
+	sceIdStorage
+sceUSB_Stor_Mgr:
+	SysclibForKernel
+	ThreadManForKernel
+	sceSuspendForKernel
+	sceRtc
+	sceUsbstor_internal
+	sceMgr
+sceUSB_Stor_Ms:
+	InterruptManagerForKernel
+	SysclibForKernel
+	ThreadManForKernel
+	IoFileMgrForKernel
+	sceSuspendForKernel
+	sceSysEventForKernel
+	SysMemForKernel
+	sceUsbstor_internal
+	sceIdStorage
+	sceOpenPSID
+	scePower
+	sceReg
+sceKernelLibrary:
+	SysMemUserForUser
+	InterruptManager
+	ThreadManForUser
+sceUtility:
+	sceReg
+	scePower
+	sceCtrl
+	SysclibForKernel
+	InterruptManagerForKernel
+	ThreadManForKernel
+	ModuleMgrForKernel
+	IoFileMgrForKernel
+	sceSysEventForKernel
+	sceSuspendForKernel
+	KDebugForKernel
+	SysMemForKernel
+	InitForKernel
+	sceMeCore
+sceVaudio:
+	sceMeCore
+	UtilsForKernel
+	InitForKernel
+	ThreadManForKernel
+	SysclibForKernel
+	sceAudio
+sceVideocodec:
+	sceMePower
+	sceMeMemory
+	sceMeVideo
+	UtilsForKernel
+video_main:
+	vsh
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	scePower
+	sceDisplay
+	sceMpegbase
+	sceMpeg
+	sceVaudio
+	IoFileMgrForUser
+	Kernel
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+	sceVshBridge
+video:
+	sceVshCommonUtil
+	vsh
+	scePaf
+	sceNetApctl
+	sceHttp
+	sceParseUri
+	Kernel
+	ThreadManForUser
+visualizer:
+	scePaf
+	ThreadManForUser
+	UtilsForUser
+	sceRtc
+sceVshBridge:
+	ModuleMgrForKernel
+	sceCtrl
+	sceDisplay
+	sceUmd
+	sceAudio
+	sceRtc
+	LoadExecForKernel
+	LflashFatfmt
+	sceMeCore
+	sceMePower
+	IoFileMgrForKernel
+	sceIdStorage
+	sceImpose
+	sceVaudio
+	sceChkreg
+	scePower
+	KDebugForKernel
+	SysMemForKernel
+	ThreadManForKernel
+	sceSysEventForKernel
+	sceUSB_Stor_Ms
+	sceGe
+	sceDve
+	scePspNpDrm
+	sceHprm
+	sceMSAudio
+	sceMgVideo
+vsh:
+	sceGe_user
+	sceHttp
+	sceNet
+	sceNetInet
+	sceNetResolver
+	sceNetApctl
+	sceNetAdhocctl
+	sceNp
+	sceNpAuth
+	sceNpService
+	sceNpCommerce2
+	sceNpCommerce2Store
+	sceNpCommerce2RegCam
+	scePspNpDrm_user
+	sceSsl
+	sceUtility_netparam_internal
+	sceResmgr
+	sceMlnBridge
+	SysMemUserForUser
+	sceDisplay
+	sceReg
+	sceRtc
+	sceUsb
+	sceVshBridge
+	sceVshCommonGui
+	sceVshCommonUtil
+	scePaf
+	sceMpeg
+	sceAtrac3plus
+	sceCtrl
+	scePower
+	sceVaudio
+	sceUmdUser
+	IoFileMgrForUser
+	Kernel
+	ModuleMgrForUser
+	sceSuspendForUser
+	ThreadManForUser
+	UtilsForUser
+sceWlanFirmMagpie:
+	sceIdStorage
+	sceWlanDrv
+sceWlanFirmVoyager:
+	sceIdStorage
+	sceWlanDrv
+sceWlan:
+	DmacManForKernel
+	sceSysEventForKernel
+	ModuleMgrForKernel
+	sceSysreg
+	sceSyscon
+	sceLed
+	sceIdStorage
+	scePower
+	sceNetIfhandle
+	SysclibForKernel
+	ThreadManForKernel
+	InterruptManagerForKernel
+	UtilsForKernel
+	KDebugForKernel
